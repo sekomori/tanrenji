@@ -38,7 +38,24 @@
 
   /* ===== APP ===== */
   #app{ display:none; min-height:100vh; }
-  #view{ padding:14px 14px 72px; }
+  #view{
+    padding:14px 14px 72px;
+    min-height:100vh;
+    background-attachment:fixed;
+  }
+  /* 背景画像：画面タイプごとに切り替え */
+  #view.bg-top{
+    background-image:linear-gradient(rgba(13,15,20,.82),rgba(13,15,20,.92)), url('images/t1.jpg');
+    background-size:cover; background-position:center;
+  }
+  #view.bg-steps{
+    background-image:linear-gradient(rgba(13,15,20,.78),rgba(13,15,20,.90)), url('images/t2.jpg');
+    background-size:cover; background-position:center;
+  }
+  #view.bg-input{
+    background-image:linear-gradient(rgba(13,15,20,.80),rgba(13,15,20,.92)), url('images/t3.jpg');
+    background-size:cover; background-position:center;
+  }
 
   /* ===== COMMON ===== */
   h1{ font-size:18px; font-weight:800; margin:0 0 10px; letter-spacing:.04em; }
@@ -515,6 +532,7 @@ async function initApp(){
 /* ===== LEVEL 1: DASHBOARD ===== */
 function renderDash(){
   window.onscroll=null; _rows=[];
+  document.getElementById('view').className='bg-top';
   const sd=_streakData;
   let h=`<h1>六大修行 <span class="sub-txt">鍛錬寺 Big6</span></h1>
   <div class="streak-bar" id="streakBar">
@@ -569,6 +587,7 @@ window.addEventListener('popstate',()=>{ goBack(); });
 /* ===== LEVEL 2: STEP LIST ===== */
 function openSteps(k){
   window.onscroll=null; _rows=[];
+  document.getElementById('view').className='bg-steps';
   const e=exOf(k), cur=STEPS[k]||1;
   let h=`<div class="top-nav">
     <button class="back-btn" onclick="goBack()">← トップ</button>
@@ -623,6 +642,7 @@ function applyFocus(){
 /* ===== LEVEL 3: INPUT SCREEN ===== */
 function openInput(k,n){
   window.onscroll=null; _rows=[];
+  document.getElementById('view').className='bg-input';
   _cur={k,n}; _selStd=null;
   const e=exOf(k), s=stepObj(k,n);
 
@@ -716,12 +736,15 @@ async function doSave(){
   const btn=document.getElementById('saveBtn');
   _saving=true; if(btn){btn.disabled=true;btn.textContent='記録中…';}
   try{
+    const prevBest = _records.length ? Math.max(..._records.map(r=>Number(r.reps)||0)) : 0;
     const s=stepObj(k,n);
     const data=await saveLog({exKey:k,exName:exOf(k).name,step:n,stepName:s.name,
       sets:Math.max(1,sets),reps,note:document.getElementById('inNote').value,intensity:_selStd||''});
     renderStepData(data);
     document.getElementById('inReps').value='';
     document.getElementById('inNote').value='';
+    if(reps > prevBest && prevBest > 0){ playSound('sound_newrecord'); }
+    else { playSound('sound_record'); }
     toast('記録しました');
     calcStreak().then(d=>{_streakData=d;});
   }catch(e){ toast('保存に失敗しました'); }
@@ -843,6 +866,28 @@ function lineChart(records, targets){
   const leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.color}"></i>${se.label}</span>`).join('')+(present['']?`<span><i style="background:${FREE.color}"></i>${FREE.label}</span>`:'')+  '</div>';
   return s+leg;
 }
+
+/* ===== SOUND MANAGER ===== */
+const SND = {};
+const MAX_SND_SEC = 14; // 長い音声ファイルも最大14秒で止める
+function playSound(name){
+  try{
+    if(!SND[name]){
+      const a = new Audio(`sounds/${name}.mp3`);
+      a.preload='auto'; SND[name]=a;
+    }
+    const a = SND[name];
+    a.currentTime=0; a.play().catch(()=>{});
+    // 禊系など長いファイルは自動で止める
+    setTimeout(()=>{ try{ a.pause(); a.currentTime=0; }catch(e){} }, MAX_SND_SEC*1000);
+  }catch(e){}
+}
+// タップ音：ボタン押下時に共通で鳴らす
+document.addEventListener('click', e=>{
+  if(e.target.matches('button, .ex-card, .srow, .std')){
+    playSound('sound_tap');
+  }
+});
 
 /* ===== TOAST ===== */
 let _tt;
