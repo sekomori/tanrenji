@@ -2,899 +2,835 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>鍛錬寺 Big6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>鍛錬寺 Big6 — 骨格プロトタイプ</title>
 <style>
   :root{
-    --bg:#0d0f14; --card:#181b22; --line:#252932; --txt:#eceef3; --sub:#8a93a8;
-    --accent:#c8882a; --good:#46c178; --danger:#c0473a;
-    --gold:#d4a843; --gold2:#f0c96a;
+    --sumi:#0c0e12;        /* 墨・地 */
+    --sumi2:#13161c;       /* 一段明るい地 */
+    --washi:#ECE6D8;       /* 和紙・文字 */
+    --sub:#8b8f99;         /* 補助文字 */
+    --kin:#C8A24C;         /* 金 */
+    --kin-bright:#E6C97C;  /* 明るい金 */
+    --shu:#B5462E;         /* 朱 */
+    --ai:#6E93A6;          /* 藍（フレンド） */
+    --line:rgba(200,162,76,.16);
+    --glass:rgba(236,230,216,.045);
+    --glass-2:rgba(236,230,216,.08);
+    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
   }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
-  html,body{ height:100%; background:var(--bg); color:var(--txt);
-    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; }
+  body{
+    font-family:var(--sans); color:var(--washi); background:#000;
+    display:flex; justify-content:center;
+  }
+  /* アプリ枠（スマホ幅。PCでは中央寄せ） */
+  #app{
+    position:relative; width:100%; max-width:460px; min-height:100vh;
+    background:var(--sumi); overflow:hidden; isolation:isolate;
+  }
+  /* 背景演出（円相・山・墨） */
+  #bg{ position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  #bg .blot{ position:absolute; border-radius:50%; filter:blur(40px); opacity:.5; }
+  #bg .b1{ width:280px;height:280px; top:-60px; left:-80px; background:radial-gradient(circle,#1b2330,transparent 70%); }
+  #bg .b2{ width:320px;height:320px; bottom:120px; right:-120px; background:radial-gradient(circle,#241d12,transparent 70%); }
+  #bg .vig{ position:absolute; inset:0; background:radial-gradient(120% 80% at 50% 30%, transparent 40%, rgba(0,0,0,.55) 100%); }
+  #bg svg{ position:absolute; }
+  .enso{ top:14%; left:50%; transform:translateX(-50%); width:360px; height:360px; opacity:.10; }
+  .mtn{ bottom:0; left:0; width:100%; opacity:.5; }
 
-  /* ===== LOGIN ===== */
-  #loginScreen{
-    min-height:100vh; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; padding:32px 24px;
-    background:linear-gradient(170deg,#0d0f14 60%,#1a1208 100%);
-  }
-  .login-logo{ font-size:48px; margin-bottom:8px; }
-  .login-title{ font-size:28px; font-weight:900; letter-spacing:.06em;
-    background:linear-gradient(135deg,var(--gold),var(--gold2));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
-  .login-sub{ color:var(--sub); font-size:13px; margin-bottom:48px; letter-spacing:.08em; }
-  .login-btn{
-    display:flex; align-items:center; gap:12px; background:#fff; color:#222;
-    border:none; border-radius:14px; padding:14px 28px; font-size:16px; font-weight:700;
-    cursor:pointer; box-shadow:0 4px 24px rgba(0,0,0,.4); transition:transform .1s;
-  }
-  .login-btn:active{ transform:scale(.97); }
-  .login-btn img{ width:22px; height:22px; }
-  .login-note{ color:var(--sub); font-size:11px; margin-top:24px; text-align:center; line-height:1.6; }
+  /* 画面本体 */
+  #main{ position:relative; z-index:1; padding:14px 14px 96px; min-height:100vh; }
+  .scr{ animation:fade .25s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
 
-  /* ===== APP ===== */
-  #app{ display:none; min-height:100vh; }
-  #view{
-    padding:14px 14px 72px;
-    min-height:100vh;
-    background-attachment:fixed;
-  }
-  /* 背景画像：画面タイプごとに切り替え */
-  #view.bg-top{
-    background-image:linear-gradient(rgba(13,15,20,.82),rgba(13,15,20,.92)), url('images/t1.png');
-    background-size:cover; background-position:center;
-  }
-  #view.bg-steps{
-    background-image:linear-gradient(rgba(13,15,20,.78),rgba(13,15,20,.90)), url('images/t2.png');
-    background-size:cover; background-position:center;
-  }
-  #view.bg-input{
-    background-image:linear-gradient(rgba(13,15,20,.80),rgba(13,15,20,.92)), url('images/t3.png');
-    background-size:cover; background-position:center;
-  }
+  /* ヘッダー */
+  .brand{ display:flex; align-items:center; justify-content:space-between; margin:6px 2px 14px; }
+  .brand .logo{ font-family:var(--serif); font-size:22px; letter-spacing:.14em; color:var(--washi); }
+  .brand .logo b{ color:var(--kin); font-weight:600; }
+  .brand .logo small{ font-family:var(--sans); font-size:11px; letter-spacing:.2em; color:var(--sub); margin-left:8px; }
+  .bell{ position:relative; width:40px; height:40px; border-radius:50%; border:1px solid var(--line);
+         display:flex; align-items:center; justify-content:center; background:var(--glass); cursor:pointer; }
+  .bell .dot{ position:absolute; top:7px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--shu); }
 
-  /* ===== COMMON ===== */
-  h1{ font-size:18px; font-weight:800; margin:0 0 10px; letter-spacing:.04em; }
-  h3{ font-size:12px; color:var(--sub); margin:18px 0 8px; text-transform:uppercase; letter-spacing:.06em; }
-  .sub-txt{ color:var(--sub); font-size:12px; }
+  /* 見出し（金の筆線つき） */
+  .h{ font-family:var(--serif); font-size:15px; letter-spacing:.12em; margin:18px 2px 10px; color:var(--washi);
+      display:inline-block; position:relative; }
+  .h::after{ content:""; display:block; height:2px; margin-top:5px; border-radius:2px;
+      background:linear-gradient(90deg,var(--kin),transparent); }
 
-  /* ===== STREAK BAR ===== */
-  .streak-bar{
-    display:flex; align-items:center; gap:10px;
-    background:linear-gradient(135deg,#1c1508,#201a0a);
-    border:1px solid #3a2e10; border-radius:14px; padding:12px 16px; margin-bottom:14px;
-  }
-  .streak-flame{ font-size:26px; line-height:1; }
-  .streak-info{ flex:1; }
-  .streak-days{ font-size:16px; font-weight:800; color:var(--gold); }
-  .streak-rest{ font-size:11px; color:var(--sub); margin-top:2px; }
-  .streak-rest.ok{ color:var(--good); }
-  .streak-rest.done{ color:var(--sub); }
+  /* 帯（ストリーク） */
+  .streak{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px;
+           background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(6px); margin-bottom:12px; }
+  .streak .fire{ font-size:26px; line-height:1; filter:drop-shadow(0 0 6px rgba(181,70,46,.5)); }
+  .streak .txt{ flex:1; }
+  .streak .d{ font-family:var(--serif); font-size:17px; color:var(--washi); }
+  .streak .r{ font-size:11px; color:var(--kin); margin-top:2px; }
+  .restbtn{ padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:transparent;
+            color:var(--washi); font-size:12px; font-family:var(--sans); cursor:pointer; white-space:nowrap; }
 
-  /* ===== BIG6 CARDS ===== */
-  .grid{ display:flex; flex-direction:column; gap:10px; }
-  .ex-card{
-    background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:14px 16px; cursor:pointer; transition:transform .06s, border-color .15s;
-    position:relative; overflow:hidden;
-  }
-  .ex-card:active{ transform:scale(.985); }
-  .ex-card::before{
-    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
-    background:var(--accent); border-radius:3px 0 0 3px; opacity:0;
-    transition:opacity .2s;
-  }
-  .ex-card.active-card::before{ opacity:1; }
-  .ex-card .ex-num{ font-size:10px; color:var(--sub); letter-spacing:.08em; margin-bottom:2px; }
-  .ex-card .ex-name{ font-size:17px; font-weight:800; }
-  .ex-card .ex-mus{ color:var(--sub); font-size:11px; margin-left:6px; font-weight:400; }
-  .ex-card .ex-step{ color:var(--accent); font-size:13px; margin-top:6px; }
-  .ex-card .ex-prog{
-    height:3px; background:var(--line); border-radius:2px; margin-top:10px;
-  }
-  .ex-card .ex-prog-fill{
-    height:100%; border-radius:2px;
-    background:linear-gradient(90deg,var(--accent),var(--gold));
-    transition:width .4s ease;
-  }
+  /* XPバー */
+  .xp{ padding:12px 16px; border-radius:14px; background:var(--glass); border:1px solid var(--line); margin-bottom:6px; }
+  .xp .row{ display:flex; justify-content:space-between; font-size:11px; color:var(--sub); margin-bottom:6px; }
+  .xp .row b{ color:var(--kin); font-family:var(--serif); font-size:13px; }
+  .bar{ height:7px; border-radius:6px; background:rgba(255,255,255,.07); overflow:hidden; }
+  .bar > i{ display:block; height:100%; background:linear-gradient(90deg,var(--kin),var(--kin-bright)); }
 
-  /* ===== STEP LIST ===== */
-  .stepwrap{ display:flex; flex-direction:column; gap:10px; padding:50vh 0; }
-  .srow{
-    display:flex; align-items:center; gap:12px; background:var(--card);
-    border:1px solid var(--line); border-radius:14px; padding:12px 14px;
-    cursor:pointer; transition:all .18s ease;
-  }
-  .srow .stxt{ flex:1; min-width:0; }
-  .srow .sn{ font-size:11px; color:var(--sub); letter-spacing:.06em; }
-  .srow .snm{ font-size:15px; font-weight:700; margin-top:2px; }
-  .srow .stgt{ font-size:12px; color:var(--accent); margin-top:3px; }
-  .srow .thumb{
-    width:64px; height:64px; flex:0 0 auto; border-radius:10px;
-    background:var(--bg) center/cover no-repeat; border:1px solid var(--line);
-    transition:all .18s ease; display:flex; align-items:center; justify-content:center;
-    color:var(--sub); font-size:11px;
-  }
-  .badge-cur{
-    background:var(--accent); color:#fff; font-size:10px; padding:1px 7px;
-    border-radius:10px; margin-left:6px;
-  }
-  .srow.lg{ border-color:var(--accent); }
-  .srow.lg .thumb{ width:108px; height:108px; }
-  .srow.lg .snm{ font-size:18px; }
-  .srow.md{ opacity:.9; }
-  .srow.md .thumb{ width:64px; height:64px; }
+  /* 種目カード（六大修行） */
+  .stack{ display:flex; flex-direction:column; gap:10px; }
+  .card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
+         background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(6px); cursor:pointer;
+         transition:transform .07s, border-color .2s; }
+  .card:active{ transform:scale(.99); }
+  .card .ic{ width:46px; height:46px; flex:0 0 auto; border-radius:12px; display:grid; place-items:center;
+             font-family:var(--serif); font-size:20px; color:var(--washi); background:rgba(255,255,255,.05);
+             border:1px solid var(--line); }
+  .card .body{ flex:1; min-width:0; }
+  .card .nm{ font-size:15px; font-weight:600; }
+  .card .st{ font-size:12px; color:var(--kin); margin-top:3px; }
+  .card .meta{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .card .prog{ width:42px; text-align:center; }
+  .card .prog b{ font-family:var(--serif); font-size:20px; color:var(--kin); }
+  .card .prog small{ display:block; font-size:9px; color:var(--sub); letter-spacing:.1em; }
+  /* 状態 */
+  .card.done .ic{ background:linear-gradient(135deg,rgba(200,162,76,.3),rgba(200,162,76,.08));
+                  border-color:var(--kin); color:var(--kin-bright); }
+  .card.done .prog b{ color:var(--kin-bright); }
+  .card.idle{ opacity:.6; }
+  .card.idle .st{ color:var(--sub); }
+
+  /* 戻りヘッダー */
+  .top{ display:flex; align-items:center; gap:10px; margin:4px 0 12px; }
+  .back{ width:40px; height:40px; flex:0 0 auto; border-radius:12px; border:1px solid var(--line);
+         background:var(--glass); color:var(--washi); display:grid; place-items:center; cursor:pointer; font-size:18px; }
+  .top .ttl{ font-family:var(--serif); font-size:17px; letter-spacing:.06em; }
+  .top .ttl small{ display:block; font-family:var(--sans); font-size:11px; color:var(--sub); letter-spacing:.1em; margin-top:1px; }
+
+  /* 10ステップ一覧 */
+  #steplist{ display:flex; flex-direction:column; gap:9px; padding-top:2px; }
+  .srow{ display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:14px;
+         background:var(--glass); border:1px solid var(--line); cursor:pointer; transition:all .18s ease; }
+  .srow .txt{ flex:1; min-width:0; }
+  .srow .n{ font-size:11px; color:var(--sub); letter-spacing:.08em; }
+  .srow .nm{ font-size:14px; font-weight:600; margin-top:2px; }
+  .srow .tg{ font-size:11px; color:var(--kin); margin-top:3px; }
+  .srow .th{ width:58px; height:58px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
+             background:rgba(255,255,255,.04); display:grid; place-items:center; font-size:10px; color:var(--sub);
+             transition:all .18s ease; }
+  .badge{ font-size:9px; background:var(--kin); color:#1a1407; padding:1px 7px; border-radius:9px; margin-left:6px; font-weight:700; }
+  .srow.lg{ border-color:var(--kin); }
+  .srow.lg .th{ width:92px; height:92px; }
+  .srow.lg .nm{ font-size:17px; }
+  .srow.md .th{ width:58px; height:58px; }
   .srow.sm{ opacity:.5; }
-  .srow.sm .thumb{ width:42px; height:42px; border-radius:8px; }
-  .srow.sm .snm{ font-size:13px; }
-  .srow.sm .stgt{ display:none; }
+  .srow.sm .th{ width:42px; height:42px; }
+  .srow.sm .tg{ display:none; }
 
-  /* ===== INPUT SCREEN ===== */
-  .top-nav{
-    display:flex; align-items:center; gap:10px; margin-bottom:10px;
-  }
-  .back-btn{
-    background:var(--card); border:1px solid var(--line); color:var(--txt);
-    border-radius:10px; padding:9px 14px; font-size:14px; cursor:pointer;
-    max-width:65%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .step-title{ text-align:center; font-size:18px; font-weight:800; margin:2px 0 4px; }
-  .step-hint{ text-align:center; color:var(--sub); font-size:11px; margin-bottom:12px; }
-  .ex-img{ width:100%; border-radius:14px; display:none; margin-bottom:12px; object-fit:cover; max-height:220px; }
-  .no-img{
-    display:none; text-align:center; color:var(--sub); font-size:12px;
-    border:1px dashed var(--line); border-radius:14px; padding:22px; margin-bottom:12px;
-  }
+  /* 記録画面 */
+  .memo-prev{ border:1px solid var(--line); border-radius:12px; background:var(--glass); padding:10px 13px; margin-bottom:10px; }
+  .memo-prev .lbl{ font-size:11px; color:var(--kin); cursor:pointer; display:flex; justify-content:space-between; }
+  .memo-prev .bd{ font-size:13px; color:var(--washi); margin-top:7px; line-height:1.5; }
+  .recgrid{ display:flex; gap:10px; align-items:flex-start; margin-bottom:12px; }
+  .recimg{ width:96px; height:96px; flex:0 0 auto; border-radius:12px; border:1px solid var(--line);
+           background:rgba(255,255,255,.04); display:grid; place-items:center; gap:2px; cursor:pointer; position:relative; }
+  .recimg .ph{ font-size:11px; color:var(--sub); }
+  .recimg .tap{ position:absolute; bottom:5px; right:6px; font-size:9px; color:var(--kin); }
+  .recmeta{ flex:1; min-width:0; }
+  .recmeta .nm{ font-family:var(--serif); font-size:16px; }
+  .recmeta .sn{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .stds{ display:flex; gap:7px; margin-top:9px; }
+  .std{ flex:1; text-align:center; padding:7px 3px; border-radius:9px; border:1px solid var(--line);
+        background:rgba(255,255,255,.03); cursor:pointer; transition:all .12s; }
+  .std .l{ font-size:9px; color:var(--sub); }
+  .std .v{ font-size:13px; font-weight:700; margin-top:2px; }
+  .std.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); }
+  .std.sel .l{ color:var(--kin); }
+  .inrow{ display:flex; gap:8px; align-items:flex-end; margin-bottom:9px; }
+  .inrow .f{ flex:1; }
+  .inrow .f label{ font-size:10px; color:var(--sub); display:block; margin-bottom:4px; }
+  .inrow input{ width:100%; background:var(--sumi2); border:1px solid var(--line); border-radius:9px;
+                color:var(--washi); padding:11px 10px; font-size:16px; font-family:var(--sans); }
+  .recbtn{ flex:1.1; background:linear-gradient(135deg,var(--kin),var(--kin-bright)); color:#1a1407;
+           border:none; border-radius:9px; padding:12px 6px; font-weight:700; font-size:14px; cursor:pointer; height:44px; }
+  .memrow{ display:flex; gap:8px; margin-bottom:6px; }
+  .memrow input{ flex:1; background:var(--sumi2); border:1px solid var(--line); border-radius:9px;
+                 color:var(--washi); padding:11px 10px; font-size:15px; }
+  .histbtn{ flex:0 0 auto; width:48px; border-radius:9px; border:1px solid var(--line); background:var(--glass);
+            color:var(--kin); font-size:18px; cursor:pointer; }
+  .divider{ height:1px; background:var(--line); margin:16px 0 6px; }
 
-  /* STANDARDS */
-  .stds{ display:flex; gap:8px; margin-bottom:14px; }
-  .std{
-    flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
-    padding:10px 6px; text-align:center; cursor:pointer; transition:all .12s;
-    -webkit-user-select:none; user-select:none;
-  }
-  .std:active{ transform:scale(.96); }
-  .std .sl{ font-size:10px; color:var(--sub); letter-spacing:.06em; }
-  .std .sv{ font-size:15px; font-weight:800; margin-top:3px; }
-  .std.sel{ background:rgba(200,136,42,.15); border-color:var(--accent); }
-  .std.sel .sl{ color:var(--accent); }
+  /* グラフ枠 */
+  .chartbox{ border:1px solid var(--line); border-radius:14px; background:var(--glass); padding:12px 10px 6px; }
+  .legend{ display:flex; gap:14px; justify-content:center; font-size:11px; color:var(--sub); margin-top:6px; }
+  .legend i{ display:inline-block; width:12px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+  .log{ padding:9px 2px; border-bottom:1px solid var(--line); }
+  .log .lr{ display:flex; justify-content:space-between; font-size:13px; }
+  .log .d{ color:var(--sub); }
+  .log .r{ font-weight:700; }
+  .itag{ font-size:9px; padding:1px 6px; border-radius:8px; margin-left:6px; color:#0c0c0c; font-weight:700; }
+  .log .ln{ font-size:12px; color:var(--sub); margin-top:4px; }
 
-  /* FORM */
-  .form-box{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
-  .form-row{ display:flex; gap:10px; margin-bottom:10px; }
-  .form-row label{ flex:1; font-size:12px; color:var(--sub); }
-  .form-row input{
-    width:100%; margin-top:5px; background:var(--bg); border:1px solid var(--line);
-    border-radius:9px; color:var(--txt); padding:11px; font-size:17px; outline:none;
-    transition:border-color .15s;
-  }
-  .form-row input:focus{ border-color:var(--accent); }
-  .form-row.note-row label{ display:block; }
-  .save-btn{
-    width:100%; background:linear-gradient(135deg,var(--accent),var(--gold));
-    border:none; color:#fff; font-size:16px; font-weight:800;
-    padding:14px; border-radius:11px; cursor:pointer; letter-spacing:.04em;
-    transition:opacity .15s;
-  }
-  .save-btn:disabled{ background:var(--line); color:var(--sub); cursor:default; }
+  /* クエスト */
+  .mission{ border:1px solid var(--line); border-radius:16px; background:var(--glass); padding:16px; margin-bottom:14px; }
+  .mission .t{ font-family:var(--serif); font-size:16px; }
+  .mission .lv{ display:flex; gap:8px; margin:12px 0; }
+  .lvbtn{ flex:1; text-align:center; padding:9px 4px; border-radius:10px; border:1px solid var(--line);
+          background:rgba(255,255,255,.03); font-size:12px; cursor:pointer; }
+  .lvbtn.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); color:var(--kin); }
+  .mission .pr{ font-size:11px; color:var(--sub); margin-bottom:6px; display:flex; justify-content:space-between; }
+  .relics{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .relic{ aspect-ratio:1; border-radius:12px; border:1px solid var(--line); background:var(--glass);
+          display:grid; place-items:center; text-align:center; gap:3px; font-size:10px; color:var(--sub); }
+  .relic .em{ font-size:24px; }
+  .relic.locked{ opacity:.32; }
+  .relic.got{ border-color:var(--kin); color:var(--washi); }
+  .relic.got .em{ filter:drop-shadow(0 0 5px rgba(200,162,76,.5)); }
 
-  /* LOGS */
-  .log{
-    padding:10px 2px; border-bottom:1px solid var(--line);
-    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
-  }
-  .log .lr{ display:flex; justify-content:space-between; font-size:14px; align-items:center; }
-  .log .ld{ color:var(--sub); }
-  .log .lv{ font-weight:800; }
-  .log .ln{ font-size:12px; color:var(--sub); margin-top:4px; line-height:1.5; }
-  .itag{
-    font-size:10px; padding:2px 7px; border-radius:8px; margin-left:6px;
-    color:#06210f; font-weight:700; vertical-align:middle;
-  }
+  /* メッセージ */
+  .msg{ display:flex; gap:11px; padding:13px; border-radius:13px; background:var(--glass);
+        border:1px solid var(--line); margin-bottom:9px; }
+  .msg .av{ width:38px; height:38px; flex:0 0 auto; border-radius:50%; background:rgba(255,255,255,.06);
+            border:1px solid var(--line); display:grid; place-items:center; font-family:var(--serif); }
+  .msg .c{ flex:1; }
+  .msg .who{ font-size:12px; color:var(--kin); }
+  .msg .bd{ font-size:14px; margin-top:3px; line-height:1.4; }
+  .msg .tm{ font-size:10px; color:var(--sub); margin-top:4px; }
 
-  /* CHART */
-  .chartbox{
-    background:var(--card); border:1px solid var(--line); border-radius:14px;
-    padding:10px 8px 4px; margin-top:6px;
-  }
-  .legend{
-    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
-    margin:6px 0 2px; font-size:11px; color:var(--sub);
-  }
-  .legend i{
-    display:inline-block; width:12px; height:3px; border-radius:2px;
-    margin-right:4px; vertical-align:middle;
-  }
+  /* プロフィール */
+  .prof-top{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+  .avatar{ width:72px; height:72px; flex:0 0 auto; border-radius:50%;
+           background:radial-gradient(circle at 35% 30%, #2a3340, #11141a); border:2px solid var(--kin);
+           display:grid; place-items:center; font-family:var(--serif); font-size:26px; color:var(--kin-bright); }
+  .prof-top .pn{ font-family:var(--serif); font-size:20px; }
+  .prof-top .pid{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .prof-top .gear{ margin-left:auto; width:40px; height:40px; border-radius:12px; border:1px solid var(--line);
+                   background:var(--glass); display:grid; place-items:center; cursor:pointer; font-size:18px; }
+  .stat3{ display:flex; gap:10px; margin-bottom:6px; }
+  .stat{ flex:1; text-align:center; padding:13px 6px; border-radius:13px; background:var(--glass); border:1px solid var(--line); }
+  .stat b{ display:block; font-family:var(--serif); font-size:21px; color:var(--kin); }
+  .stat small{ font-size:10px; color:var(--sub); letter-spacing:.08em; }
+  .rankcard{ text-align:center; padding:18px; border-radius:16px; background:var(--glass); border:1px solid var(--line);
+             position:relative; overflow:hidden; }
+  .rankcard .lab{ font-size:11px; color:var(--sub); letter-spacing:.2em; }
+  .rankcard .nm{ font-family:var(--serif); font-size:30px; color:var(--kin-bright); margin-top:4px; letter-spacing:.1em; }
+  .friend{ display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:13px;
+           background:var(--glass); border:1px solid var(--line); margin-bottom:8px; cursor:pointer; }
+  .friend .av{ width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.06);
+               border:1px solid var(--line); display:grid; place-items:center; font-family:var(--serif); }
+  .friend .nm{ font-size:14px; font-weight:600; }
+  .friend .sk{ font-size:11px; color:var(--kin); margin-top:2px; }
+  .friend .chev{ margin-left:auto; color:var(--sub); }
+  .addbtn{ width:100%; padding:13px; border-radius:13px; border:1px dashed var(--line); background:transparent;
+           color:var(--kin); font-size:13px; cursor:pointer; margin-top:2px; }
 
-  /* MODAL */
-  .ovl{
-    position:fixed; inset:0; background:rgba(0,0,0,.6);
-    display:flex; align-items:flex-end; justify-content:center; z-index:50;
-  }
-  .sheet{
-    background:var(--card); border:1px solid var(--line);
-    border-radius:20px 20px 0 0; width:100%; max-width:520px;
-    padding:20px 18px calc(24px + env(safe-area-inset-bottom));
-  }
-  .sheet-h{ font-weight:800; font-size:16px; margin-bottom:6px; }
-  .sheet label{ display:block; font-size:12px; color:var(--sub); margin:12px 0 0; }
-  .sheet input,.sheet select{
-    width:100%; margin-top:5px; background:var(--bg); border:1px solid var(--line);
-    border-radius:9px; color:var(--txt); padding:11px; font-size:16px;
-  }
-  .sheet .sheet-rows{ display:flex; gap:10px; }
-  .sheet .sheet-rows label{ flex:1; }
-  .sheet-btn{
-    width:100%; margin-top:11px; padding:13px; border-radius:11px;
-    border:none; font-weight:800; font-size:15px; cursor:pointer;
-    background:linear-gradient(135deg,var(--accent),var(--gold)); color:#fff;
-  }
-  .sheet-btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--txt); }
-  .sheet-btn.danger{ background:var(--danger); }
-  .sheet-btn:disabled{ opacity:.5; }
+  /* タブバー */
+  .tabbar{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
+           display:flex; justify-content:space-around; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+           background:rgba(10,12,16,.86); backdrop-filter:blur(12px); border-top:1px solid var(--line); z-index:20; }
+  .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 0; cursor:pointer;
+        color:var(--sub); }
+  .tab svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.6; }
+  .tab span{ font-size:10px; letter-spacing:.05em; }
+  .tab.on{ color:var(--kin); }
+  .tab.on::after{ content:""; width:5px; height:5px; border-radius:50%; background:var(--kin); margin-top:1px; }
 
-  /* TOAST */
-  .toast{
-    position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
-    background:var(--good); color:#06210f; padding:11px 20px; border-radius:22px;
-    font-size:14px; font-weight:800; opacity:0; transition:opacity .2s;
-    pointer-events:none; z-index:60; white-space:nowrap;
-  }
-  .toast.show{ opacity:1; }
+  /* シート/モーダル */
+  .ovl{ position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.6); display:flex; align-items:flex-end;
+        justify-content:center; animation:fade .2s; }
+  .ovl.center{ align-items:center; }
+  .sheet{ width:100%; max-width:460px; background:#15181f; border:1px solid var(--line);
+          border-radius:18px 18px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); animation:up .25s ease; }
+  .sheet.card-c{ border-radius:18px; margin:0 16px; }
+  @keyframes up{ from{ transform:translateY(30px); opacity:.5; } to{ transform:none; opacity:1; } }
+  .sheet h3{ font-family:var(--serif); font-size:17px; margin:0 0 4px; }
+  .sheet p.sub{ font-size:12px; color:var(--sub); margin:0 0 8px; }
+  .sheet label{ display:block; font-size:12px; color:var(--sub); margin:14px 0 5px; }
+  .sheet input[type=text], .sheet input[type=number]{ width:100%; background:var(--sumi2); border:1px solid var(--line);
+        border-radius:9px; color:var(--washi); padding:11px; font-size:16px; }
+  .sheet input[type=range]{ width:100%; accent-color:var(--kin); }
+  .seg{ display:flex; gap:8px; }
+  .seg button{ flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+               color:var(--washi); font-size:14px; cursor:pointer; }
+  .seg button.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); color:var(--kin); }
+  .btnprime{ width:100%; margin-top:16px; padding:13px; border:none; border-radius:11px;
+             background:linear-gradient(135deg,var(--kin),var(--kin-bright)); color:#1a1407; font-weight:700; font-size:15px; cursor:pointer; }
+  .btnghost{ width:100%; margin-top:9px; padding:12px; border:1px solid var(--line); border-radius:11px;
+             background:transparent; color:var(--washi); font-size:14px; cursor:pointer; }
+  .btndanger{ background:var(--shu); border-color:var(--shu); color:#fff; }
+  .phrase{ padding:11px 13px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+           font-size:14px; margin-bottom:8px; cursor:pointer; }
+  .phrase:active{ background:rgba(200,162,76,.14); }
+  .phrase-cat{ font-size:11px; color:var(--kin); letter-spacing:.1em; margin:12px 2px 6px; font-family:var(--serif); }
+  .imgpair{ display:flex; gap:10px; }
+  .imgpair .one{ flex:1; aspect-ratio:4/3; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.04);
+                 display:grid; place-items:center; gap:4px; color:var(--sub); font-size:12px; transition:border-color .2s; }
+  .imgpair .one.on{ border-color:var(--kin); color:var(--washi); }
+  .imgcap{ font-size:11px; color:var(--sub); text-align:center; margin-top:10px; }
+
+  /* チュートリアル */
+  #tut{ position:fixed; inset:0; z-index:80; background:linear-gradient(180deg,#0c0e12,#161210);
+        display:none; flex-direction:column; padding:30px 22px calc(24px + env(safe-area-inset-bottom)); }
+  #tut .skip{ position:absolute; top:18px; right:18px; color:var(--sub); font-size:13px; cursor:pointer; }
+  #tut .stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:18px; }
+  #tut .big{ font-size:60px; }
+  #tut .tt{ font-family:var(--serif); font-size:24px; letter-spacing:.08em; }
+  #tut .tx{ font-size:14px; color:var(--sub); line-height:1.7; max-width:300px; }
+  #tut .speech{ background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:14px 16px;
+                font-size:14px; line-height:1.6; max-width:300px; }
+  #tut .dots{ display:flex; gap:7px; justify-content:center; margin-bottom:16px; }
+  #tut .dots i{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); }
+  #tut .dots i.on{ background:var(--kin); width:18px; border-radius:4px; }
+  .tut-note{ font-size:11px; color:var(--sub); text-align:center; margin:14px 2px 0; }
+
+  .hint-strip{ font-size:11px; color:var(--sub); text-align:center; background:var(--glass); border:1px dashed var(--line);
+               border-radius:10px; padding:8px; margin-bottom:12px; }
+  .hint-strip b{ color:var(--kin); cursor:pointer; }
 </style>
 </head>
 <body>
-
-<!-- ===== LOGIN ===== -->
-<div id="loginScreen">
-  <div class="login-logo">⛩️</div>
-  <div class="login-title">鍛錬寺 Big6</div>
-  <div class="login-sub">TANREN-JI · 六大修行トラッカー</div>
-  <button class="login-btn" onclick="signIn()">
-    <img src="https://www.google.com/favicon.ico" alt="G">
-    Googleでログイン
-  </button>
-  <div class="login-note">ログインすることで、修行記録があなたの<br>Googleアカウントに安全に保存されます。</div>
-</div>
-
-<!-- ===== APP ===== -->
 <div id="app">
-  <div id="view"></div>
-  <div id="modal"></div>
-  <div id="toast" class="toast"></div>
+  <div id="bg">
+    <div class="blot b1"></div><div class="blot b2"></div>
+    <svg class="enso" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#C8A24C" stroke-width="2.4" stroke-dasharray="250 14" stroke-linecap="round" transform="rotate(-20 50 50)"/></svg>
+    <svg class="mtn" viewBox="0 0 460 160" preserveAspectRatio="none">
+      <path d="M0,160 L0,110 L70,70 L130,105 L200,55 L270,100 L340,60 L400,95 L460,72 L460,160 Z" fill="#0a0d11"/>
+      <path d="M0,160 L0,130 L90,95 L160,120 L240,85 L320,118 L400,92 L460,115 L460,160 Z" fill="#070a0d"/>
+    </svg>
+    <div class="vig"></div>
+  </div>
+
+  <div id="main"></div>
+
+  <div class="tabbar" id="tabbar"></div>
 </div>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- チュートリアル -->
+<div id="tut">
+  <div class="skip" onclick="closeTut()">スキップ</div>
+  <div class="stage" id="tutStage"></div>
+  <div class="dots" id="tutDots"></div>
+  <button class="btnprime" id="tutNext" onclick="tutNext()">次へ</button>
+</div>
 
 <script>
-/* ===== FIREBASE ===== */
-const firebaseConfig = {
-  apiKey: "AIzaSyC8B3sgMzABOS7cyIQ_ybYs8A4wp2rgabE",
-  authDomain: "tanrenji-f3290.firebaseapp.com",
-  projectId: "tanrenji-f3290",
-  storageBucket: "tanrenji-f3290.firebasestorage.app",
-  messagingSenderId: "253236776842",
-  appId: "1:253236776842:web:313e3a8107cb54693f8273"
+/* ============ モックデータ ============ */
+const RANKS=[
+  {min:6,name:'門前払い'},{min:12,name:'入門'},{min:18,name:'修行僧'},{min:24,name:'鍛錬者'},
+  {min:30,name:'求道者'},{min:36,name:'武練士'},{min:42,name:'道師'},{min:48,name:'達人'},
+  {min:54,name:'仙人'},{min:60,name:'覚者'}
+];
+function rankOf(sum){ let r=RANKS[0]; for(const x of RANKS){ if(sum>=x.min) r=x; } return r; }
+
+const EX=[
+  {key:'push', kanji:'押', name:'プッシュアップ', cur:5},
+  {key:'squat',kanji:'蹲', name:'スクワット',     cur:4},
+  {key:'pull', kanji:'引', name:'プルアップ',     cur:3},
+  {key:'leg',  kanji:'腹', name:'レッグレイズ',   cur:6},
+  {key:'bridge',kanji:'橋',name:'ブリッジ',       cur:2},
+  {key:'hand', kanji:'逆', name:'ハンドスタンド・プッシュアップ', cur:3},
+];
+const STEPNAMES={
+  push:['ウォール','インクライン','ニーリング','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
+  squat:['ショルダースタンド','ジャックナイフ','サポーテッド','ハーフ','フル','クローズ','アンイーブン','ハーフワンレッグ','アシストワンレッグ','ワンレッグ'],
+  pull:['バーティカル','ホリゾンタル','ジャックナイフ','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','アシストワンアーム','ワンアーム'],
+  leg:['ニータック','フラットニー','フラットベント','フラットフロッグ','フラットストレート','ハンギングニー','ハンギングベント','ハンギングフロッグ','パーシャル','ハンギングストレート'],
+  bridge:['ショート','ストレート','アングルド','ヘッド','ハーフ','フル','ウォール下り','ウォール上り','クロージング','スタンド'],
+  hand:['ウォール頭立','クロウ','ウォール倒立','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-let uid = null;
+const STD={ // ステップ別の初級/中級/上級（サンプル：全ステップ共通の代表値）
+  default:{b:'1×8', i:'2×12', p:'2×20'}
+};
+function stdOf(){ return STD.default; }
 
-function signIn(){
-  const p = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(p).catch(e => { alert('ログインできませんでした: '+e.message); });
+// 記録画面用のモック記録（押・STEP5）
+const MOCK_LOGS=[
+  {date:'05/02', sets:2, reps:10, intensity:'b', note:'肘が開いた'},
+  {date:'05/06', sets:2, reps:14, intensity:'i', note:''},
+  {date:'05/11', sets:2, reps:12, intensity:'i', note:'肩幅を意識'},
+  {date:'05/15', sets:2, reps:18, intensity:'i', note:''},
+  {date:'05/20', sets:1, reps:8,  intensity:'p', note:'フォーム重視'},
+  {date:'05/25', sets:2, reps:11, intensity:'p', note:''},
+];
+const SER=[{k:'b',l:'初級',c:'#6E93A6'},{k:'i',l:'中級',c:'#C8A24C'},{k:'p',l:'上級',c:'#7FB069'}];
+function serOf(k){ for(const s of SER){ if(s.k===k) return s; } return {k:'',l:'自由',c:'#8b8f99'}; }
+
+const FRIENDS=[
+  {name:'タカシ', kanji:'隆', vals:[6,5,4,7,3,4]},
+  {name:'翔',     kanji:'翔', vals:[3,3,2,4,2,2]},
+];
+const MESSAGES=[
+  {who:'タカシ', kanji:'隆', body:'俺の背中が見えるか？追いつきたきゃ本気出せよ', tm:'2時間前'},
+  {who:'翔',     kanji:'翔', body:'一緒に極めようぜ。一生バカでいいからな', tm:'昨日'},
+  {who:'タカシ', kanji:'隆', body:'マジで強くなったな…お前、化けたぞ', tm:'3日前'},
+];
+
+let SUM = EX.reduce((a,e)=>a+e.cur,0); // 23 → 修行僧
+
+/* ============ 状態・ナビ ============ */
+let state={ view:'home', exKey:null, step:null };
+const $main=document.getElementById('main');
+
+function nav(view, data){
+  state.view=view;
+  if(data){ Object.assign(state, data); }
+  history.pushState({...state}, '');
+  render();
 }
-
-auth.onAuthStateChanged(user => {
-  if(user){
-    uid = user.uid;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-  } else {
-    uid = null;
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-  }
+window.addEventListener('popstate', e=>{
+  if(e.state){ state=e.state; render(); }
+  else { state={view:'home'}; render(); }
 });
 
-/* ===== MASTER DATA ===== */
-const MASTER = [
-  { key:'pushup', name:'腕立て伏せ', muscle:'胸・腕', num:1, steps:[
-    {n:1,  name:'ウォール・プッシュアップ',            b:'1×10', i:'2×25', p:'3×50'},
-    {n:2,  name:'インクライン・プッシュアップ',        b:'1×10', i:'2×20', p:'3×40'},
-    {n:3,  name:'ニーリング・プッシュアップ',          b:'1×10', i:'2×15', p:'3×30'},
-    {n:4,  name:'ハーフ・プッシュアップ',              b:'1×8',  i:'2×12', p:'2×25'},
-    {n:5,  name:'フル・プッシュアップ',                b:'1×5',  i:'2×10', p:'2×20'},
-    {n:6,  name:'クローズ・プッシュアップ',            b:'1×5',  i:'2×10', p:'2×20'},
-    {n:7,  name:'アンイーブン・プッシュアップ',        b:'1×5',  i:'2×10', p:'2×20'},
-    {n:8,  name:'ハーフ・ワンアーム・プッシュアップ',  b:'1×5',  i:'2×10', p:'2×20'},
-    {n:9,  name:'レバー・プッシュアップ',              b:'1×5',  i:'2×10', p:'2×20'},
-    {n:10, name:'ワンアーム・プッシュアップ（達人）',  b:'1×5',  i:'2×10', p:'1×100'}
-  ]},
-  { key:'squat', name:'スクワット', muscle:'脚・尻', num:2, steps:[
-    {n:1,  name:'ショルダースタンド・スクワット',      b:'1×10', i:'2×25', p:'3×50'},
-    {n:2,  name:'ジャックナイフ・スクワット',          b:'1×10', i:'2×20', p:'3×40'},
-    {n:3,  name:'サポーテッド・スクワット',            b:'1×10', i:'2×15', p:'3×30'},
-    {n:4,  name:'ハーフ・スクワット',                  b:'1×8',  i:'2×35', p:'2×50'},
-    {n:5,  name:'フル・スクワット',                    b:'1×5',  i:'2×10', p:'2×30'},
-    {n:6,  name:'クローズ・スクワット',                b:'1×5',  i:'2×10', p:'2×20'},
-    {n:7,  name:'アンイーブン・スクワット',            b:'1×5',  i:'2×10', p:'2×20'},
-    {n:8,  name:'ハーフ・ワンレッグ・スクワット',      b:'1×5',  i:'2×10', p:'2×20'},
-    {n:9,  name:'アシスト・ワンレッグ・スクワット',    b:'1×5',  i:'2×10', p:'2×20'},
-    {n:10, name:'ワンレッグ・スクワット（達人）',      b:'1×5',  i:'2×10', p:'2×50'}
-  ]},
-  { key:'pullup', name:'懸垂', muscle:'背・腕', num:3, steps:[
-    {n:1,  name:'バーティカル・プル',                  b:'1×10', i:'2×20', p:'3×40'},
-    {n:2,  name:'ホリゾンタル・プル',                  b:'1×10', i:'2×20', p:'3×30'},
-    {n:3,  name:'ジャックナイフ・プル',                b:'1×10', i:'2×15', p:'3×20'},
-    {n:4,  name:'ハーフ・プルアップ',                  b:'1×8',  i:'2×11', p:'2×15'},
-    {n:5,  name:'フル・プルアップ',                    b:'1×5',  i:'2×8',  p:'2×10'},
-    {n:6,  name:'クローズ・プルアップ',                b:'1×5',  i:'2×8',  p:'2×10'},
-    {n:7,  name:'アンイーブン・プルアップ',            b:'1×5',  i:'2×7',  p:'2×9'},
-    {n:8,  name:'ハーフ・ワンアーム・プルアップ',      b:'1×4',  i:'2×6',  p:'2×8'},
-    {n:9,  name:'アシスト・ワンアーム・プルアップ',    b:'1×3',  i:'2×5',  p:'2×7'},
-    {n:10, name:'ワンアーム・プルアップ（達人）',      b:'1×1',  i:'2×3',  p:'2×6'}
-  ]},
-  { key:'legraise', name:'脚上げ', muscle:'腹', num:4, steps:[
-    {n:1,  name:'ニータック',                          b:'1×10', i:'2×25', p:'3×40'},
-    {n:2,  name:'フラット・ニーレイズ',                b:'1×10', i:'2×20', p:'3×35'},
-    {n:3,  name:'フラット・ベントレッグレイズ',        b:'1×10', i:'2×15', p:'3×30'},
-    {n:4,  name:'フラット・フロッグレイズ',            b:'1×8',  i:'2×15', p:'3×25'},
-    {n:5,  name:'フラット・ストレートレッグレイズ',    b:'1×5',  i:'2×10', p:'2×20'},
-    {n:6,  name:'ハンギング・ニーレイズ',              b:'1×5',  i:'2×10', p:'2×15'},
-    {n:7,  name:'ハンギング・ベントレッグレイズ',      b:'1×5',  i:'2×10', p:'2×15'},
-    {n:8,  name:'ハンギング・フロッグレイズ',          b:'1×5',  i:'2×10', p:'2×15'},
-    {n:9,  name:'パーシャル・ストレートレッグレイズ',  b:'1×5',  i:'2×10', p:'2×15'},
-    {n:10, name:'ハンギング・ストレートレッグレイズ（達人）', b:'1×5', i:'2×10', p:'2×30'}
-  ]},
-  { key:'bridge', name:'橋架け', muscle:'脊柱・背面', num:5, steps:[
-    {n:1,  name:'ショート・ブリッジ',                  b:'1×10', i:'2×25', p:'3×50'},
-    {n:2,  name:'ストレート・ブリッジ',                b:'1×10', i:'2×20', p:'3×40'},
-    {n:3,  name:'アングルド・ブリッジ',                b:'1×8',  i:'2×15', p:'3×30'},
-    {n:4,  name:'ヘッド・ブリッジ',                    b:'1×8',  i:'2×15', p:'2×25'},
-    {n:5,  name:'ハーフ・ブリッジ',                    b:'1×8',  i:'2×15', p:'2×20'},
-    {n:6,  name:'フル・ブリッジ',                      b:'1×6',  i:'2×10', p:'2×15'},
-    {n:7,  name:'ウォールウォーキング（下り）',         b:'1×3',  i:'2×6',  p:'2×10'},
-    {n:8,  name:'ウォールウォーキング（上り）',         b:'1×3',  i:'2×4',  p:'2×8'},
-    {n:9,  name:'クロージング・ブリッジ',              b:'1×3',  i:'2×4',  p:'2×6'},
-    {n:10, name:'スタンド・トゥ・スタンド（達人）',    b:'1×1',  i:'2×3',  p:'2×10'}
-  ]},
-  { key:'handstand', name:'逆立ち腕立て', muscle:'肩', num:6, steps:[
-    {n:1,  name:'ウォール・ヘッドスタンド（保持）',    b:'30秒', i:'1分',  p:'2分'},
-    {n:2,  name:'クロウ・スタンド（保持）',            b:'10秒', i:'30秒', p:'1分'},
-    {n:3,  name:'ウォール・ハンドスタンド（保持）',    b:'30秒', i:'1分',  p:'2分'},
-    {n:4,  name:'ハーフ・HSPU',                        b:'1×5',  i:'2×10', p:'2×20'},
-    {n:5,  name:'ハンドスタンド・プッシュアップ',      b:'1×5',  i:'2×10', p:'2×15'},
-    {n:6,  name:'クローズ・HSPU',                      b:'1×5',  i:'2×9',  p:'2×12'},
-    {n:7,  name:'アンイーブン・HSPU',                  b:'1×5',  i:'2×8',  p:'2×10'},
-    {n:8,  name:'ハーフ・ワンアーム・HSPU',            b:'1×4',  i:'2×6',  p:'2×8'},
-    {n:9,  name:'レバー・HSPU',                        b:'1×3',  i:'2×4',  p:'2×6'},
-    {n:10, name:'ワンアーム・HSPU（達人）',            b:'1×1',  i:'2×2',  p:'1×5'}
-  ]}
+const TABS=[
+  {id:'home', label:'ホーム', icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
+  {id:'quest',label:'クエスト', icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
+  {id:'message',label:'メッセージ', icon:'<path d="M4 5h16v11H9l-5 4z"/>'},
+  {id:'profile',label:'プロフィール', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
 ];
-
-const SER = [
-  {k:'b', label:'初級', color:'#5aa9e6'},
-  {k:'i', label:'中級', color:'#e0b13a'},
-  {k:'p', label:'上級', color:'#46c178'}
-];
-const FREE = {k:'', label:'自由', color:'#8a93a8'};
-function serOf(key){ return SER.find(s=>s.k===key) || FREE; }
-
-/* ===== STATE ===== */
-let STEPS = {};   // {exKey: currentStep}
-let _cur = {k:null, n:null};
-let _selStd = null;
-let _saving = false;
-let _records = [];
-let _rows = [], _ticking = false;
-let _streakData = {streak:0, trainedToday:false, restRemaining:3};
-
-function exOf(k){ return MASTER.find(e=>e.key===k); }
-function stepObj(k,n){ return exOf(k).steps[n-1]; }
-function esc(s){ return String(s==null?'':s)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  .replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function targetReps(p){
-  var a=String(p).split('×'); if(a.length<2) return null;
-  var v=parseInt(a[1],10); return isNaN(v)?null:v;
+function renderTabs(){
+  const cur = ['home','steps','record'].includes(state.view) ? 'home' : state.view;
+  document.getElementById('tabbar').innerHTML = TABS.map(t=>
+    `<div class="tab ${t.id===cur?'on':''}" onclick="nav('${t.id}')">
+       <svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.label}</span></div>`).join('');
 }
 
-/* ===== FIRESTORE HELPERS ===== */
-function userDoc(){ return db.collection('users').doc(uid); }
-function logsCol(){ return userDoc().collection('logs'); }
-
-async function loadProfile(){
-  const snap = await userDoc().get();
-  if(snap.exists){
-    const d = snap.data();
-    STEPS = d.currentSteps || {};
-    _streakData = d.streakData || {streak:0, trainedToday:false, restRemaining:3};
+function render(){
+  renderTabs();
+  let html='';
+  switch(state.view){
+    case 'home': html=viewHome(); break;
+    case 'steps': html=viewSteps(); break;
+    case 'record': html=viewRecord(); break;
+    case 'quest': html=viewQuest(); break;
+    case 'message': html=viewMessage(); break;
+    case 'profile': html=viewProfile(); break;
+    default: html=viewHome();
   }
-  MASTER.forEach(e=>{ if(!STEPS[e.key]) STEPS[e.key]=1; });
-}
-
-async function saveProfile(){
-  await userDoc().set({ currentSteps: STEPS }, { merge: true });
-}
-
-async function saveLog(p){
-  const ref = logsCol().doc();
-  await ref.set({
-    id: ref.id,
-    exKey: p.exKey, exName: p.exName,
-    step: p.step, stepName: p.stepName,
-    sets: p.sets, reps: p.reps,
-    note: p.note || '', intensity: p.intensity || '',
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    ts: Date.now()
-  });
-  STEPS[p.exKey] = p.step;
-  await saveProfile();
-  return await getStepData(p.exKey, p.step);
-}
-
-async function getStepData(exKey, step){
-  const snap = await logsCol()
-    .where('exKey','==',exKey)
-    .where('step','==',step)
-    .orderBy('ts','asc')
-    .get();
-  return snap.docs.map(d=>{
-    const v=d.data();
-    const dt = v.ts ? new Date(v.ts) : new Date();
-    const ds = (dt.getMonth()+1)+'/'+(dt.getDate());
-    return { id:d.id, date:ds, ymd:fmtYmd(dt),
-      sets:v.sets, reps:v.reps, note:v.note||'', intensity:v.intensity||'' };
-  });
-}
-
-function fmtYmd(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-
-async function deleteLog(id, exKey, step){
-  await logsCol().doc(id).delete();
-  return await getStepData(exKey, step);
-}
-
-async function updateLog(f){
-  const upd = {
-    sets: f.sets, reps: f.reps, note: f.note||'', intensity: f.intensity||''
-  };
-  if(f.ymd){
-    const pa = f.ymd.split('-');
-    const d = new Date(+pa[0],+pa[1]-1,+pa[2],12,0,0);
-    upd.ts = d.getTime();
-  }
-  await logsCol().doc(f.id).update(upd);
-  return await getStepData(f.exKey, f.step);
-}
-
-async function calcStreak(){
-  const snap = await logsCol().orderBy('ts','asc').get();
-  const trainedDates = new Set();
-  snap.docs.forEach(d=>{
-    const v=d.data();
-    if(v.ts){ const dt=new Date(v.ts); trainedDates.add(fmtYmd(dt)); }
-  });
-  const today = new Date();
-  const todayStr = fmtYmd(today);
-  const trainedToday = trainedDates.has(todayStr);
-
-  function isoWeek(dt){
-    const tmp=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()));
-    const dow=tmp.getUTCDay()||7;
-    tmp.setUTCDate(tmp.getUTCDate()+4-dow);
-    const y=tmp.getUTCFullYear();
-    const w=Math.ceil(((tmp-new Date(Date.UTC(y,0,1)))/86400000+1)/7);
-    return y+'W'+w;
-  }
-
-  // 週の最大休養日は3日（= 週最低4日）← ここを変数化しておく
-  const MAX_REST = 3;
-  let streak=0, restByWeek={};
-  const check=new Date(today);
-  if(!trainedToday) check.setDate(check.getDate()-1);
-  for(let i=0;i<730;i++){
-    const ds=fmtYmd(check), wk=isoWeek(check);
-    if(!restByWeek[wk]) restByWeek[wk]=0;
-    if(trainedDates.has(ds)){ streak++; }
-    else {
-      if(restByWeek[wk]<MAX_REST){ restByWeek[wk]++; streak++; }
-      else break;
-    }
-    check.setDate(check.getDate()-1);
-  }
-
-  const thisWk=isoWeek(today);
-  const restUsed=restByWeek[thisWk]||0;
-  const restRemaining=Math.max(0,MAX_REST-restUsed);
-  return {streak, trainedToday, restRemaining};
-}
-
-/* ===== INIT ===== */
-async function initApp(){
-  await loadProfile();
-  renderDash();
-  calcStreak().then(d=>{ _streakData=d; renderStreakBar(); });
-}
-
-/* ===== LEVEL 1: DASHBOARD ===== */
-function renderDash(){
-  window.onscroll=null; _rows=[];
-  document.getElementById('view').className='bg-top';
-  const sd=_streakData;
-  let h=`<h1>六大修行 <span class="sub-txt">鍛錬寺 Big6</span></h1>
-  <div class="streak-bar" id="streakBar">
-    <div class="streak-flame">🔥</div>
-    <div class="streak-info">
-      <div class="streak-days" id="streakDays">${sd.streak>0?(sd.trainedToday?'修行'+sd.streak+'日目':'修行'+sd.streak+'日目（今日まだ）'):'修行0日目（初日）'}</div>
-      <div class="streak-rest ${sd.restRemaining>0?'ok':'done'}" id="streakRest">${sd.restRemaining>0?'今週残り'+sd.restRemaining+'回休養OK':'今週休養済み'}</div>
-    </div>
-  </div>
-  <div class="grid">`;
-  MASTER.forEach(e=>{
-    const n=STEPS[e.key]||1, s=e.steps[n-1];
-    const pct=Math.round((n/10)*100);
-    h+=`<div class="ex-card" onclick="goSteps('${e.key}')">
-      <div class="ex-num">修行 ${e.num} · ${esc(e.muscle)}</div>
-      <div><span class="ex-name">${esc(e.name)}</span></div>
-      <div class="ex-step">STEP ${n} ／ ${esc(s.name)}</div>
-      <div class="ex-prog"><div class="ex-prog-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  });
-  h+='</div>';
-  document.getElementById('view').innerHTML=h;
+  $main.innerHTML=`<div class="scr">${html}</div>`;
   window.scrollTo(0,0);
+  if(state.view==='steps') setupStepFocus();
 }
 
-function renderStreakBar(){
-  const sd=_streakData;
-  const days=document.getElementById('streakDays');
-  const rest=document.getElementById('streakRest');
-  if(!days) return;
-  days.textContent=sd.streak>0?(sd.trainedToday?'修行'+sd.streak+'日目':'修行'+sd.streak+'日目（今日まだ）'):'修行0日目（初日）';
-  rest.textContent=sd.restRemaining>0?'今週残り'+sd.restRemaining+'回休養OK':'今週休養済み';
-  rest.className='streak-rest '+(sd.restRemaining>0?'ok':'done');
+/* ============ 画面 ============ */
+function viewHome(){
+  return `
+  <div class="brand">
+    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small></div>
+    <div class="bell" onclick="nav('message')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><div class="dot"></div></div>
+  </div>
+
+  <div class="hint-strip">これは骨格プレビューです・<b onclick="openTut()">チュートリアルを見る ▶</b></div>
+
+  <div class="streak">
+    <div class="fire">🔥</div>
+    <div class="txt"><div class="d">修行 12日目</div><div class="r">今週 残り2回 休養OK</div></div>
+    <button class="restbtn" onclick="restConfirm()">今日は休む</button>
+  </div>
+
+  <div class="xp">
+    <div class="row"><span>今日の修行 XP</span><b>30 / 50</b></div>
+    <div class="bar"><i style="width:60%"></i></div>
+  </div>
+
+  <div class="h">六大修行</div>
+  <div class="stack">
+    ${EX.map(e=>{
+      const cls = e.cur>=10 ? 'done' : (e.cur<=1 ? 'idle' : '');
+      const nm = STEPNAMES[e.key][e.cur-1];
+      return `<div class="card ${cls}" onclick="nav('steps',{exKey:'${e.key}'})">
+        <div class="ic">${e.kanji}</div>
+        <div class="body">
+          <div class="nm">${e.name}</div>
+          <div class="st">STEP ${e.cur} ／ ${nm}</div>
+          <div class="meta">${cls==='done'?'皆伝':cls==='idle'?'未着手':'修行中'}</div>
+        </div>
+        <div class="prog"><b>${e.cur}</b><small>/ 10</small></div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
-/* ===== HISTORY ===== */
-const _hist=[];
-function pushHist(state){ _hist.push(state); }
-function goBack(){
-  _hist.pop();
-  const prev=_hist[_hist.length-1];
-  if(!prev){ renderDash(); return; }
-  if(prev.v==='steps') openSteps(prev.k);
-  else if(prev.v==='input') openInput(prev.k,prev.n);
-  else renderDash();
-}
-
-function goSteps(k){ pushHist({v:'steps',k}); openSteps(k); }
-function goInput(k,n){ pushHist({v:'input',k,n}); openInput(k,n); }
-window.addEventListener('popstate',()=>{ goBack(); });
-
-/* ===== LEVEL 2: STEP LIST ===== */
-function openSteps(k){
-  window.onscroll=null; _rows=[];
-  document.getElementById('view').className='bg-steps';
-  const e=exOf(k), cur=STEPS[k]||1;
-  let h=`<div class="top-nav">
-    <button class="back-btn" onclick="goBack()">← トップ</button>
-    <div><div style="font-weight:800">${esc(e.name)}</div>
-    <div class="sub-txt">${esc(e.muscle)}</div></div></div>
-  <div class="stepwrap" id="stepwrap">`;
-  e.steps.forEach(s=>{
-    const isc=s.n===cur;
-    h+=`<div class="srow" data-iscur="${isc?1:0}" onclick="goInput('${k}',${s.n})">
-      <div class="stxt">
-        <div class="sn">STEP ${s.n}${isc?'<span class="badge-cur">現在</span>':''}</div>
-        <div class="snm">${esc(s.name)}</div>
-        <div class="stgt">上級基準 ${esc(s.p)}</div>
+function viewSteps(){
+  const e=EX.find(x=>x.key===state.exKey);
+  let rows='';
+  for(let i=1;i<=10;i++){
+    const nm=STEPNAMES[e.key][i-1]; const std=stdOf();
+    rows+=`<div class="srow" data-i="${i}" onclick="nav('record',{exKey:'${e.key}',step:${i}})">
+      <div class="txt">
+        <div class="n">STEP ${i}${i===e.cur?'<span class="badge">現在</span>':''}</div>
+        <div class="nm">${nm}</div>
+        <div class="tg">上級 ${std.p}</div>
       </div>
-      <div class="thumb" id="thumb_${s.n}"><span>${s.n}</span></div>
+      <div class="th">${state.exKey.slice(0,1)}-${i}a</div>
     </div>`;
-  });
-  h+='</div>';
-  document.getElementById('view').innerHTML=h;
-
-  // サムネ画像読み込み（画像ファイルが存在する場合のみ表示）
-  e.steps.forEach(s=>{
-    const img=new Image();
-    const src=`images/${e.num}-${s.n}.png`;
-    img.onload=()=>{
-      const t=document.getElementById('thumb_'+s.n);
-      if(t){ t.style.backgroundImage=`url(${src})`; t.innerHTML=''; }
-    };
-    img.src=src;
-  });
-
-  _rows=Array.from(document.querySelectorAll('.srow'));
-  window.onscroll=()=>{ if(!_ticking){ _ticking=true; requestAnimationFrame(()=>{ applyFocus(); _ticking=false; }); }};
-
-  // 現在ステップを中央へ
-  const ci=(STEPS[k]||1)-1, cel=_rows[ci];
-  if(cel){ const cr=cel.getBoundingClientRect();
-    window.scrollTo(0,Math.max(0,window.scrollY+cr.top+cr.height/2-window.innerHeight/2)); }
-  applyFocus();
+  }
+  return `
+  <div class="top">
+    <div class="back" onclick="history.back()">‹</div>
+    <div class="ttl">${e.name}<small>六大修行</small></div>
+  </div>
+  <div id="steplist">${rows}</div>`;
 }
 
-function applyFocus(){
-  if(!_rows.length) return;
-  const vc=window.innerHeight/2; let best=0,bd=1e9;
-  _rows.forEach((r,i)=>{ const c=r.getBoundingClientRect(),cy=c.top+c.height/2,d=Math.abs(cy-vc); if(d<bd){bd=d;best=i;} });
-  _rows.forEach((r,j)=>{
-    const dist=Math.abs(j-best);
-    r.className='srow '+(dist===0?'lg':dist===1?'md':'sm');
-  });
-}
-
-/* ===== LEVEL 3: INPUT SCREEN ===== */
-function openInput(k,n){
-  window.onscroll=null; _rows=[];
-  document.getElementById('view').className='bg-input';
-  _cur={k,n}; _selStd=null;
-  const e=exOf(k), s=stepObj(k,n);
-
-  let h=`<div class="top-nav">
-    <button class="back-btn" onclick="goBack()">← ${esc(e.name)}</button>
+function viewRecord(){
+  const e=EX.find(x=>x.key===state.exKey); const i=state.step;
+  const nm=STEPNAMES[e.key][i-1]; const std=stdOf();
+  return `
+  <div class="top">
+    <div class="back" onclick="history.back()">‹</div>
+    <div class="ttl">STEP ${i} ／ ${nm}<small>${e.name}</small></div>
   </div>
-  <div class="step-title">STEP ${n} ／ ${esc(s.name)}</div>
-  <div class="step-hint">強度をタップで自動入力（再タップでクリア・手直しOK）</div>
-  <img id="exImg" class="ex-img">
-  <div id="noImg" class="no-img">画像なし（${e.num}-${n}.png）</div>
-  <div class="stds">
-    <div class="std" onclick="fillStd(this,'b','${s.b}')"><div class="sl">初級</div><div class="sv">${esc(s.b)}</div></div>
-    <div class="std" onclick="fillStd(this,'i','${s.i}')"><div class="sl">中級</div><div class="sv">${esc(s.i)}</div></div>
-    <div class="std" onclick="fillStd(this,'p','${s.p}')"><div class="sl">上級</div><div class="sv">${esc(s.p)}</div></div>
+
+  <div class="memo-prev">
+    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回のメモ</span><span id="memoTog">▾</span></div>
+    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
-  <div class="form-box">
-    <div class="form-row">
-      <label>セット数<input id="inSets" type="number" inputmode="numeric" pattern="[0-9]*" value="1"></label>
-      <label>回数 / 秒<input id="inReps" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="例 20"></label>
+
+  <div class="recgrid">
+    <div class="recimg" onclick="imgPopup('${e.key}',${i})">
+      <div class="ph">${e.key.slice(0,1)}-${i}a</div>
+      <div class="tap">タップ</div>
     </div>
-    <div class="form-row note-row"><label>メモ（次回のヒントに）<input id="inNote" type="text" placeholder="フォーム・調子・気づき"></label></div>
-    <button class="save-btn" id="saveBtn" onclick="doSave()">記録する</button>
+    <div class="recmeta">
+      <div class="nm">${nm}</div>
+      <div class="sn">${e.name}・STEP ${i}</div>
+      <div class="stds">
+        <div class="std" onclick="selStd(this)"><div class="l">初級</div><div class="v">${std.b}</div></div>
+        <div class="std" onclick="selStd(this)"><div class="l">中級</div><div class="v">${std.i}</div></div>
+        <div class="std" onclick="selStd(this)"><div class="l">上級</div><div class="v">${std.p}</div></div>
+      </div>
+    </div>
   </div>
-  <h3>前回までの記録（長押しで編集・削除）</h3>
-  <div id="logList" class="sub-txt">読み込み中…</div>
-  <h3>推移グラフ</h3>
-  <div class="chartbox"><div id="chartArea"></div></div>`;
 
-  document.getElementById('view').innerHTML=h;
-  window.scrollTo(0,0);
+  <div class="inrow">
+    <div class="f"><label>セット数</label><input type="number" inputmode="numeric" value="2"></div>
+    <div class="f"><label>回数 / 秒</label><input type="number" inputmode="numeric" placeholder="20"></div>
+    <button class="recbtn" onclick="toast('記録しました')">記録する</button>
+  </div>
+  <div class="memrow">
+    <input type="text" placeholder="メモ（次回のヒントに）">
+    <button class="histbtn" onclick="memoHistory()">📋</button>
+  </div>
 
-  // 画像読み込み
-  const img=document.getElementById('exImg'), noImg=document.getElementById('noImg');
-  const src=`images/${e.num}-${n}.png`;
-  img.onload=()=>{ img.style.display='block'; };
-  img.onerror=()=>{ noImg.style.display='block'; };
-  img.src=src;
+  <div class="divider"></div>
+  <div class="h">推移グラフ</div>
+  <div class="chartbox">${lineChart(MOCK_LOGS, std)}</div>
 
-  getStepData(k,n).then(renderStepData);
-}
-
-function fillStd(el,key,val){
-  const all=el.parentNode.querySelectorAll('.std');
-  const already=el.classList.contains('sel');
-  all.forEach(a=>a.classList.remove('sel'));
-  if(already){ _selStd=null; document.getElementById('inSets').value=''; document.getElementById('inReps').value=''; return; }
-  el.classList.add('sel'); _selStd=key;
-  let sets=1,reps=0;
-  const sp=String(val).split('×');
-  if(sp.length>=2){ sets=parseInt(sp[0],10)||1; reps=parseInt(sp[1],10)||0; }
-  else {
-    const mm=String(val).match(/(\d+)分/), ss=String(val).match(/(\d+)秒/);
-    if(mm) reps=(parseInt(mm[1],10)||0)*60;
-    else if(ss) reps=parseInt(ss[1],10)||0;
-  }
-  document.getElementById('inSets').value=sets;
-  document.getElementById('inReps').value=reps;
-}
-
-function renderStepData(data){
-  _records=data||[];
-  const listEl=document.getElementById('logList'), chartEl=document.getElementById('chartArea');
-  if(!listEl) return;
-  if(!data||!data.length){
-    listEl.innerHTML='<div class="sub-txt">まだ記録がありません</div>';
-    chartEl.innerHTML='<div class="sub-txt" style="padding:18px;text-align:center">記録がたまるとグラフが出ます</div>';
-    return;
-  }
-  const rev=data.slice().reverse(); let h='';
-  rev.slice(0,10).forEach(g=>{
+  <div class="h">これまでの記録</div>
+  <div>${MOCK_LOGS.slice().reverse().map(g=>{
     const so=serOf(g.intensity);
-    h+=`<div class="log" data-id="${g.id}">
-      <div class="lr">
-        <span class="ld">${esc(g.date)}<span class="itag" style="background:${so.color}">${so.label}</span></span>
-        <span class="lv">${esc(g.sets)}×${esc(g.reps)}</span>
-      </div>${g.note?'<div class="ln">📝 '+esc(g.note)+'</div>':''}
-    </div>`;
-  });
-  listEl.innerHTML=h;
-  bindLongPress();
-  const st=stepObj(_cur.k,_cur.n);
-  chartEl.innerHTML=lineChart(data,{b:targetReps(st.b),i:targetReps(st.i),p:targetReps(st.p)});
+    return `<div class="log"><div class="lr"><span class="d">${g.date}
+      <span class="itag" style="background:${so.c}">${so.l}</span></span>
+      <span class="r">${g.sets}×${g.reps}</span></div>
+      ${g.note?`<div class="ln">📝 ${g.note}</div>`:''}</div>`;
+  }).join('')}</div>`;
 }
 
-async function doSave(){
-  if(_saving) return;
-  const k=_cur.k, n=_cur.n;
-  const sets=parseInt(document.getElementById('inSets').value,10)||0;
-  const reps=parseInt(document.getElementById('inReps').value,10)||0;
-  if(reps<=0){ toast('回数（秒）を入れてね'); return; }
-  const btn=document.getElementById('saveBtn');
-  _saving=true; if(btn){btn.disabled=true;btn.textContent='記録中…';}
-  try{
-    const prevBest = _records.length ? Math.max(..._records.map(r=>Number(r.reps)||0)) : 0;
-    const s=stepObj(k,n);
-    const data=await saveLog({exKey:k,exName:exOf(k).name,step:n,stepName:s.name,
-      sets:Math.max(1,sets),reps,note:document.getElementById('inNote').value,intensity:_selStd||''});
-    renderStepData(data);
-    document.getElementById('inReps').value='';
-    document.getElementById('inNote').value='';
-    if(reps > prevBest && prevBest > 0){ playSound('sound_newrecord'); }
-    else { playSound('sound_record'); }
-    toast('記録しました');
-    calcStreak().then(d=>{_streakData=d;});
-  }catch(e){ toast('保存に失敗しました'); }
-  finally{ _saving=false; if(btn){btn.disabled=false;btn.textContent='記録する';} }
-}
-
-/* ===== LONG PRESS ===== */
-function bindLongPress(){
-  document.querySelectorAll('#logList .log').forEach(el=>{
-    let timer=null;
-    const start=()=>{ timer=setTimeout(()=>openRecordMenu(el.dataset.id),500); };
-    const cancel=()=>{ if(timer){clearTimeout(timer);timer=null;} };
-    el.addEventListener('touchstart',start,{passive:true});
-    el.addEventListener('touchend',cancel);
-    el.addEventListener('touchmove',cancel,{passive:true});
-    el.addEventListener('touchcancel',cancel);
-    el.addEventListener('mousedown',start);
-    el.addEventListener('mouseup',cancel);
-    el.addEventListener('mouseleave',cancel);
-    el.addEventListener('contextmenu',e=>e.preventDefault());
-  });
-}
-
-function findRec(id){ return _records.find(r=>r.id===id); }
-function showModal(html){ document.getElementById('modal').innerHTML='<div class="ovl" onclick="ovlClose(event)">'+html+'</div>'; }
-function closeModal(){ document.getElementById('modal').innerHTML=''; }
-function ovlClose(e){ if(e.target.classList.contains('ovl')) closeModal(); }
-
-function openRecordMenu(id){
-  const r=findRec(id); if(!r) return;
-  const so=serOf(r.intensity);
-  showModal(`<div class="sheet">
-    <div class="sheet-h">記録の操作</div>
-    <div class="sub-txt">${esc(r.date)} · ${esc(r.sets)}×${esc(r.reps)} · ${so.label}</div>
-    <button class="sheet-btn" onclick="editRecord('${id}')">編集</button>
-    <button class="sheet-btn danger" onclick="confirmDelete('${id}')">削除</button>
-    <button class="sheet-btn ghost" onclick="closeModal()">キャンセル</button>
-  </div>`);
-}
-
-function confirmDelete(id){
-  showModal(`<div class="sheet">
-    <div class="sheet-h">削除しますか？</div>
-    <div class="sub-txt">この記録を完全に削除します。元に戻せません。</div>
-    <button class="sheet-btn danger" id="dBtn" onclick="doDelete('${id}')">削除する</button>
-    <button class="sheet-btn ghost" onclick="closeModal()">やめる</button>
-  </div>`);
-}
-
-async function doDelete(id){
-  const b=document.getElementById('dBtn'); if(b){b.disabled=true;b.textContent='削除中…';}
-  try{
-    const data=await deleteLog(id,_cur.k,_cur.n);
-    closeModal(); renderStepData(data); toast('削除しました');
-  }catch(e){ if(b){b.disabled=false;b.textContent='削除する';} toast('削除に失敗しました'); }
-}
-
-function editRecord(id){
-  const r=findRec(id); if(!r) return;
-  const opts=SER.map(s=>`<option value="${s.k}"${s.k===r.intensity?' selected':''}>${s.label}</option>`).join('');
-  const freeOpt=`<option value=""${ !r.intensity?' selected':''}>自由</option>`;
-  showModal(`<div class="sheet">
-    <div class="sheet-h">記録を編集</div>
-    <label>日付<input id="eDate" type="date" value="${esc(r.ymd)}"></label>
-    <div class="sheet-rows">
-      <label>セット数<input id="eSets" type="number" inputmode="numeric" value="${esc(r.sets)}"></label>
-      <label>回数 / 秒<input id="eReps" type="number" inputmode="numeric" value="${esc(r.reps)}"></label>
+function viewQuest(){
+  const got=['1巻','7日','全種','100','皆伝','30日'];
+  const relics=[
+    {em:'📜',l:'初伝の巻',got:true},{em:'📜',l:'継続の巻',got:true},{em:'🏵️',l:'鍛錬の印',got:true},
+    {em:'📜',l:'百錬の巻',got:false},{em:'🏵️',l:'求道の印',got:false},{em:'🏵️',l:'達人の印',got:false},
+    {em:'📜',l:'極致の巻',got:false},{em:'🏵️',l:'覚者の印',got:false}
+  ];
+  return `
+  <div class="brand"><div class="logo"><b>クエスト</b></div></div>
+  <div class="mission">
+    <div class="t">今月の修行 — 6月</div>
+    <div class="lv">
+      <div class="lvbtn" onclick="selLv(this)">入門</div>
+      <div class="lvbtn sel" onclick="selLv(this)">修行</div>
+      <div class="lvbtn" onclick="selLv(this)">極意</div>
     </div>
-    <label>強度<select id="eInt">${freeOpt}${opts}</select></label>
-    <label>メモ<input id="eNote" type="text" value="${esc(r.note)}"></label>
-    <button class="sheet-btn" id="eBtn" onclick="submitEdit('${id}')">保存</button>
-    <button class="sheet-btn ghost" onclick="closeModal()">キャンセル</button>
-  </div>`);
+    <div class="pr"><span>月12回トレーニング</span><span>8 / 12</span></div>
+    <div class="bar"><i style="width:66%"></i></div>
+    <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「📜 巻物」を獲得（奇数月＝巻物・偶数月＝印）</p>
+  </div>
+
+  <div class="h">獲得した巻物・印</div>
+  <div class="relics">
+    ${relics.map(r=>`<div class="relic ${r.got?'got':'locked'}"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
+  </div>`;
 }
 
-async function submitEdit(id){
-  const reps=parseInt(document.getElementById('eReps').value,10)||0;
-  if(reps<=0){ toast('回数（秒）を入れてね'); return; }
-  const b=document.getElementById('eBtn'); if(b){b.disabled=true;b.textContent='保存中…';}
-  try{
-    const data=await updateLog({
-      id, exKey:_cur.k, step:_cur.n,
-      ymd:document.getElementById('eDate').value,
-      sets:parseInt(document.getElementById('eSets').value,10)||1,
-      reps, intensity:document.getElementById('eInt').value,
-      note:document.getElementById('eNote').value
-    });
-    closeModal(); renderStepData(data); toast('更新しました');
-  }catch(e){ if(b){b.disabled=false;b.textContent='保存';} toast('更新に失敗しました'); }
+function viewMessage(){
+  return `
+  <div class="brand"><div class="logo"><b>メッセージ</b></div></div>
+  <p style="font-size:12px;color:var(--sub);margin:0 2px 12px">仲間からの言葉（最新30件）</p>
+  ${MESSAGES.map(m=>`<div class="msg">
+     <div class="av">${m.kanji}</div>
+     <div class="c"><div class="who">${m.who}</div><div class="bd">${m.body}</div><div class="tm">${m.tm}</div></div>
+   </div>`).join('')}`;
 }
 
-/* ===== LINE CHART ===== */
-function lineChart(records, targets){
-  const W=320,H=152,pl=30,pr=14,pt=14,pb=28;
-  const n=records.length;
-  const tv=[]; if(targets){ Object.values(targets).forEach(v=>{if(v)tv.push(v);}); }
-  const allVals=records.map(r=>Number(r.reps)||0);
-  let maxV=Math.max(...allVals,...tv); if(maxV<=0) maxV=1;
-  const X=i=>n===1?(pl+(W-pl-pr)/2):pl+(W-pl-pr)*i/(n-1);
-  const Y=v=>pt+(H-pt-pb)*(1-v/maxV);
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
-  s+=`<line x1="${pl}" y1="${Y(0)}" x2="${W-pr}" y2="${Y(0)}" stroke="#252932"/>`;
-  s+=`<text x="${pl-4}" y="${pt+4}" fill="#8a93a8" font-size="9" text-anchor="end">${maxV}</text>`;
-  s+=`<text x="${pl-4}" y="${Y(0)}" fill="#8a93a8" font-size="9" text-anchor="end">0</text>`;
-  const present={};
-  function drawSeries(key,color,tgt){
-    const pts=records.map((r,i)=>(r.intensity||'')==key?{x:X(i),y:Y(Number(r.reps)||0)}:null).filter(Boolean);
-    if(!pts.length) return; present[key]=true;
-    if(tgt){ const ty=Y(tgt).toFixed(1);
-      s+=`<line x1="${pl}" y1="${ty}" x2="${W-pr}" y2="${ty}" stroke="${color}" stroke-dasharray="3 4" stroke-width="1" opacity="0.4"/>`; }
-    if(pts.length>1) s+=`<polyline points="${pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
-    s+=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${color}"/>`).join('');
+function viewProfile(){
+  const r=rankOf(SUM);
+  return `
+  <div class="prof-top">
+    <div class="avatar">士</div>
+    <div><div class="pn">ノリ</div><div class="pid">@nori_tanren</div></div>
+    <div class="gear" onclick="openSettings()">⚙</div>
+  </div>
+
+  <div class="rankcard">
+    <div class="lab">階　級</div>
+    <div class="nm">${r.name}</div>
+  </div>
+
+  <div class="stat3" style="margin-top:12px">
+    <div class="stat"><b>12</b><small>修行日数</small></div>
+    <div class="stat"><b>${SUM}</b><small>合計STEP</small></div>
+    <div class="stat"><b>1,240</b><small>累計XP</small></div>
+  </div>
+
+  <div class="h">六大修行レーダー</div>
+  <div class="chartbox" style="display:grid;place-items:center;padding:14px">
+    ${radar([EX.map(e=>e.cur)], ['#C8A24C'])}
+  </div>
+
+  <div class="h">フレンド</div>
+  ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="friendCompare(${idx})">
+     <div class="av">${f.kanji}</div>
+     <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${[18,7][idx]}日目</div></div>
+     <div class="chev">›</div>
+   </div>`).join('')}
+  <button class="addbtn" onclick="addFriend()">＋ フレンドを追加（ID検索 / QR）</button>`;
+}
+
+/* ============ レーダー（六角形） ============ */
+function radar(setsArr, colors){
+  const W=240,H=220,cx=120,cy=112,R=82,MAX=10;
+  const labels=EX.map(e=>e.kanji);
+  const N=6;
+  const ang=i=> (-90 + i*60) * Math.PI/180;
+  const pt=(i,rad)=>[cx+rad*Math.cos(ang(i)), cy+rad*Math.sin(ang(i))];
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="230">`;
+  // リング
+  for(let g=1;g<=5;g++){
+    const rr=R*g/5;
+    let p='';
+    for(let i=0;i<N;i++){ const [x,y]=pt(i,rr); p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }
+    s+=`<path d="${p}Z" fill="none" stroke="rgba(200,162,76,.14)" stroke-width="1"/>`;
   }
-  SER.forEach(se=>drawSeries(se.k,se.color,targets?targets[se.k]:null));
-  drawSeries('',FREE.color,null);
-  if(n){ s+=`<text x="${X(0)}" y="${H-6}" fill="#8a93a8" font-size="9" text-anchor="start">${esc(records[0].date)}</text>`; }
-  if(n>1){ s+=`<text x="${X(n-1)}" y="${H-6}" fill="#8a93a8" font-size="9" text-anchor="end">${esc(records[n-1].date)}</text>`; }
-  s+='</svg>';
-  const leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.color}"></i>${se.label}</span>`).join('')+(present['']?`<span><i style="background:${FREE.color}"></i>${FREE.label}</span>`:'')+  '</div>';
+  // 軸＋ラベル
+  for(let i=0;i<N;i++){
+    const [x,y]=pt(i,R); s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;
+    const [lx,ly]=pt(i,R+15);
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="14" text-anchor="middle" font-family="serif">${labels[i]}</text>`;
+  }
+  // データ
+  setsArr.forEach((vals,si)=>{
+    const col=colors[si]; let p='';
+    for(let i=0;i<N;i++){ const [x,y]=pt(i, R*Math.max(0.04,vals[i]/MAX)); p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }
+    s+=`<path d="${p}Z" fill="${col}" fill-opacity="0.22" stroke="${col}" stroke-width="2"/>`;
+    for(let i=0;i<N;i++){ const [x,y]=pt(i, R*Math.max(0.04,vals[i]/MAX)); s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${col}"/>`; }
+  });
+  s+=`</svg>`;
+  return s;
+}
+
+/* ============ 折れ線（強度色分け） ============ */
+function lineChart(records, std){
+  const targets={b:parseInt((std.b.split('×')[1]||'')), i:parseInt((std.i.split('×')[1]||'')), p:parseInt((std.p.split('×')[1]||''))};
+  const W=320,H=150,pl=28,pr=12,pt=12,pb=26, n=records.length;
+  const vals=records.map(r=>+r.reps||0);
+  let maxV=Math.max(...vals, targets.b||0, targets.i||0, targets.p||0, 1);
+  const X=i=> n===1? (pl+(W-pl-pr)/2) : pl+(W-pl-pr)*i/(n-1);
+  const Y=v=> pt+(H-pt-pb)*(1-v/maxV);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
+  s+=`<line x1="${pl}" y1="${Y(0)}" x2="${W-pr}" y2="${Y(0)}" stroke="rgba(200,162,76,.18)"/>`;
+  s+=`<text x="${pl-4}" y="${pt+4}" fill="#8b8f99" font-size="9" text-anchor="end">${maxV}</text>`;
+  s+=`<text x="${pl-4}" y="${Y(0)}" fill="#8b8f99" font-size="9" text-anchor="end">0</text>`;
+  const present={};
+  SER.forEach(se=>{
+    const pts=[]; records.forEach((r,i)=>{ if((r.intensity||'')===se.k) pts.push([X(i),Y(+r.reps||0)]); });
+    if(!pts.length) return; present[se.k]=true;
+    if(targets[se.k]){ const ty=Y(targets[se.k]); s+=`<line x1="${pl}" y1="${ty}" x2="${W-pr}" y2="${ty}" stroke="${se.c}" stroke-dasharray="3 4" opacity=".4"/>`; }
+    if(pts.length>1) s+=`<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${se.c}" stroke-width="2"/>`;
+    s+=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${se.c}"/>`).join('');
+  });
+  s+=`<text x="${X(0)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="start">${records[0].date}</text>`;
+  s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="end">${records[n-1].date}</text>`;
+  s+=`</svg>`;
+  let leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')+'</div>';
   return s+leg;
 }
 
-/* ===== SOUND MANAGER ===== */
-const SND = {};
-const MAX_SND_SEC = 14; // 長い音声ファイルも最大14秒で止める
-function playSound(name){
-  try{
-    if(!SND[name]){
-      const a = new Audio(`sounds/${name}.mp3`);
-      a.preload='auto'; SND[name]=a;
-    }
-    const a = SND[name];
-    a.currentTime=0; a.play().catch(()=>{});
-    // 禊系など長いファイルは自動で止める
-    setTimeout(()=>{ try{ a.pause(); a.currentTime=0; }catch(e){} }, MAX_SND_SEC*1000);
-  }catch(e){}
-}
-// タップ音：ボタン押下時に共通で鳴らす
-document.addEventListener('click', e=>{
-  if(e.target.matches('button, .ex-card, .srow, .std')){
-    playSound('sound_tap');
+/* ============ インタラクション ============ */
+function setupStepFocus(){
+  const list=document.getElementById('steplist'); if(!list) return;
+  const rows=[...list.querySelectorAll('.srow')];
+  function apply(){
+    const topY=14; let best=0,bd=1e9;
+    rows.forEach((r,i)=>{ const rc=r.getBoundingClientRect(); const d=Math.abs(rc.top-topY-90); if(d<bd){bd=d;best=i;} });
+    rows.forEach((r,i)=>{ const dist=Math.max(0,i-best); r.className='srow '+(i<best?'sm':dist===0?'lg':dist===1?'md':'sm'); });
   }
-});
-
-/* ===== TOAST ===== */
-let _tt;
-function toast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1800);
+  let tick=false;
+  window.onscroll=()=>{ if(!tick){ tick=true; requestAnimationFrame(()=>{apply();tick=false;}); } };
+  apply();
 }
+
+function selStd(el){
+  const all=el.parentNode.querySelectorAll('.std');
+  const on=el.classList.contains('sel');
+  all.forEach(x=>x.classList.remove('sel'));
+  if(!on) el.classList.add('sel');
+}
+function selLv(el){ el.parentNode.querySelectorAll('.lvbtn').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); }
+function toggleMemo(el){
+  const b=document.getElementById('memoBody'), t=document.getElementById('memoTog');
+  if(b.style.display==='none'){ b.style.display='block'; t.textContent='▾'; } else { b.style.display='none'; t.textContent='▸'; }
+}
+
+/* ---- モーダル基盤 ---- */
+function modal(html, center){
+  closeModal();
+  const d=document.createElement('div'); d.className='ovl'+(center?' center':''); d.id='modal';
+  d.innerHTML=html; d.onclick=e=>{ if(e.target===d) closeModal(); };
+  document.body.appendChild(d);
+}
+function closeModal(){ const m=document.getElementById('modal'); if(m) m.remove(); }
+
+function restConfirm(){
+  modal(`<div class="sheet">
+    <h3>今日は休養日にしますか？</h3>
+    <p class="sub">今週の休養 残り回数が 1回 減ります（残り2回 → 1回）。</p>
+    <button class="btnprime" onclick="closeModal();toast('休養日にしました')">休む</button>
+    <button class="btnghost" onclick="closeModal()">やめる</button>
+    <p class="tut-note">※あとで記録すると休養日は自動で取り消されます</p>
+  </div>`);
+}
+
+let imgState='a';
+function imgPopup(key,i){
+  imgState='a';
+  modal(`<div class="sheet">
+    <h3>${STEPNAMES[key][i-1]}</h3>
+    <p class="sub">① 開始ポジション　→　② 動作の終点（タップで切替・自動再生）</p>
+    <div class="imgpair" id="imgpair">
+      <div class="one on" id="imgA"><div style="font-size:24px">①</div>${key.slice(0,1)}-${i}a</div>
+      <div class="one" id="imgB"><div style="font-size:24px">②</div>${key.slice(0,1)}-${i}b</div>
+    </div>
+    <div class="imgcap" id="imgcap">自動再生中… タップで止める</div>
+    <button class="btnghost" onclick="stopFlip();closeModal()">閉じる</button>
+  </div>`);
+  startFlip();
+}
+let flipTimer=null;
+function startFlip(){ stopFlip(); flipTimer=setInterval(()=>{
+  imgState = imgState==='a'?'b':'a';
+  const A=document.getElementById('imgA'),B=document.getElementById('imgB');
+  if(!A){ stopFlip(); return; }
+  A.classList.toggle('on', imgState==='a'); B.classList.toggle('on', imgState==='b');
+},900);
+  const pair=document.getElementById('imgpair');
+  if(pair) pair.onclick=()=>{ stopFlip(); const c=document.getElementById('imgcap'); if(c)c.textContent='停止中・もう一度開くと再生'; };
+}
+function stopFlip(){ if(flipTimer){ clearInterval(flipTimer); flipTimer=null; } }
+
+function memoHistory(){
+  const items=MOCK_LOGS.filter(l=>l.note).slice().reverse();
+  modal(`<div class="sheet">
+    <h3>メモ履歴</h3>
+    <p class="sub">このステップに残した過去のメモ</p>
+    ${items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln">📝 ${m.note}</div></div>`).join('')}
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function openSettings(){
+  modal(`<div class="sheet">
+    <h3>設定</h3>
+    <label>アバター</label>
+    <div class="seg"><button class="sel" onclick="segPick(this)">男性</button><button onclick="segPick(this)">女性</button></div>
+    <label>週の目標日数：<span id="goalv">4</span> 日</label>
+    <input type="range" min="2" max="7" value="4" oninput="document.getElementById('goalv').textContent=this.value">
+    <label>1日の目標XP：<span id="xpv">50</span></label>
+    <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
+    <label>ユーザー名</label><input type="text" value="ノリ">
+    <button class="btnprime" onclick="closeModal();toast('保存しました')">保存する</button>
+    <button class="btnghost" onclick="closeModal();openTut()">チュートリアルを見る</button>
+  </div>`);
+}
+function segPick(el){ el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); }
+
+const PHRASES={
+  '励まし':['今日も道場開けろ。逃げんなよ、ガチで','お前ならできるってばよ！','一緒に極めようぜ。一生バカでいいからな','その努力、尊いわ。ちゃんと見てるぞ'],
+  '挑発':['まだ寝てるのか？弱いままでいるつもりかよ','その程度か…？情けねぇな','俺の背中が見えるか？追いつきたきゃ本気出せよ','今日もサボりか…草。情けねぇ'],
+  '称賛':['マジで強くなったな…お前、化けたぞ','完璧だ。お前、今めっちゃ輝いてるぞ','その記録、歴史に刻まれろ'],
+  '仲間':['お前と一緒なら、頂なんて余裕で取れるぜ','お前の修行が俺の燃料だ','この道は一人じゃ味気ない。お前と一緒に極めたいんだよ'],
+};
+function sendPhrase(name){
+  let body='';
+  for(const cat in PHRASES){
+    body+=`<div class="phrase-cat">${cat}</div>`;
+    body+=PHRASES[cat].map(p=>`<div class="phrase" onclick="closeModal();toast('${name}に送りました')">${p}</div>`).join('');
+  }
+  modal(`<div class="sheet"><h3>${name} に送る</h3><p class="sub">定型文をタップで送信</p>${body}<button class="btnghost" onclick="closeModal()">閉じる</button></div>`);
+}
+
+function friendCompare(idx){
+  const f=FRIENDS[idx];
+  modal(`<div class="sheet">
+    <h3>レーダー比較</h3>
+    <p class="sub"><span style="color:#C8A24C">■</span> 自分　<span style="color:#6E93A6">■</span> ${f.name}</p>
+    <div style="display:grid;place-items:center;padding:6px 0">
+      ${radar([EX.map(e=>e.cur), f.vals], ['#C8A24C','#6E93A6'])}
+    </div>
+    <button class="btnprime" onclick="closeModal();sendPhrase('${f.name}')">${f.name} に言葉を送る</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function addFriend(){
+  modal(`<div class="sheet">
+    <h3>フレンドを追加</h3>
+    <label>IDで検索</label><input type="text" placeholder="@相手のID">
+    <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
+    <button class="btnghost" onclick="closeModal();toast('QRをスキャンします（仮）')">📷 QRコードで追加</button>
+    <p class="tut-note">自分のQRを見せて相手にスキャンしてもらうこともできます</p>
+  </div>`);
+}
+
+/* ---- トースト ---- */
+let tt;
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1'; clearTimeout(tt); tt=setTimeout(()=>t.style.opacity='0',1500);
+}
+
+/* ============ チュートリアル ============ */
+const TUT=[
+  {big:'🏯', tt:'鍛錬寺へようこそ', speech:'よく来た、新入り。<br>ここはお前を鍛え直す寺。<br>器具はいらん。己の体だけで道を極めよ。', who:true},
+  {big:'🥋', tt:'六大修行', tx:'押す・蹲む・引く・脚・橋・逆立ち。<br>6つの修行をそれぞれ10段階で極めていく。'},
+  {big:'🎴', tt:'アバターを選ぶ', tx:'男 / 女 を選ぶと、仲間へ送る言葉が変わる。', seg:true},
+  {big:'📅', tt:'週の目標を決める', tx:'週に何日 道場へ来るか。<br>2〜7日から、無理のない数を。', slider:true},
+  {big:'📜', tt:'今月の修行レベル', tx:'入門・修行・極意から選ぶ。<br>続ければ必ず巻物か印がもらえる。'},
+  {big:'🔥', tt:'準備はできた', tx:'さあ、最初の一歩を刻もう。'},
+];
+let tutI=0;
+function openTut(){ tutI=0; document.getElementById('tut').style.display='flex'; renderTut(); }
+function closeTut(){ stopFlip(); document.getElementById('tut').style.display='none'; }
+function renderTut(){
+  const t=TUT[tutI];
+  let extra='';
+  if(t.who) extra=`<div class="speech">${t.speech}</div>`;
+  if(t.seg) extra=`<div class="seg" style="max-width:280px"><button class="sel" onclick="segPick(this)">男性</button><button onclick="segPick(this)">女性</button></div>`;
+  if(t.slider) extra=`<div style="width:280px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:18px">週 <span id="tg">4</span> 日</div></div>`;
+  document.getElementById('tutStage').innerHTML=`<div class="big">${t.big}</div><div class="tt">${t.tt}</div>${t.tx?`<div class="tx">${t.tx}</div>`:''}${extra}`;
+  document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
+  document.getElementById('tutNext').textContent = tutI===TUT.length-1 ? 'はじめる' : '次へ';
+}
+function tutNext(){ if(tutI<TUT.length-1){ tutI++; renderTut(); } else { closeTut(); nav('home'); } }
+
+/* ============ 起動 ============ */
+history.replaceState({view:'home'},'');
+render();
 </script>
 </body>
 </html>
