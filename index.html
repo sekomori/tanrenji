@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>鍛錬寺 Big6</title>
+<style>
+  :root{
+    --bg:#0d0f14; --card:#181b22; --line:#252932; --txt:#eceef3; --sub:#8a93a8;
+    --accent:#c8882a; --good:#46c178; --danger:#c0473a;
+    --gold:#d4a843; --gold2:#f0c96a;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
+  html,body{ height:100%; background:var(--bg); color:var(--txt);
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
+
+  /* ===== LOGIN ===== */
+  #loginScreen{
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:32px 24px;
+    background:linear-gradient(170deg,#0d0f14 60%,#1a1208 100%);
+  }
+  .login-logo{ font-size:48px; margin-bottom:8px; }
+  .login-title{ font-size:28px; font-weight:900; letter-spacing:.06em;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
+  .login-sub{ color:var(--sub); font-size:13px; margin-bottom:48px; letter-spacing:.08em; }
+  .login-btn{
+    display:flex; align-items:center; gap:12px; background:#fff; color:#222;
+    border:none; border-radius:14px; padding:14px 28px; font-size:16px; font-weight:700;
+    cursor:pointer; box-shadow:0 4px 24px rgba(0,0,0,.4); transition:transform .1s;
+  }
+  .login-btn:active{ transform:scale(.97); }
+  .login-btn img{ width:22px; height:22px; }
+  .login-note{ color:var(--sub); font-size:11px; margin-top:24px; text-align:center; line-height:1.6; }
+
+  /* ===== APP ===== */
+  #app{ display:none; min-height:100vh; }
+  #view{ padding:14px 14px 72px; }
+
+  /* ===== COMMON ===== */
+  h1{ font-size:18px; font-weight:800; margin:0 0 10px; letter-spacing:.04em; }
+  h3{ font-size:12px; color:var(--sub); margin:18px 0 8px; text-transform:uppercase; letter-spacing:.06em; }
+  .sub-txt{ color:var(--sub); font-size:12px; }
+
+  /* ===== STREAK BAR ===== */
+  .streak-bar{
+    display:flex; align-items:center; gap:10px;
+    background:linear-gradient(135deg,#1c1508,#201a0a);
+    border:1px solid #3a2e10; border-radius:14px; padding:12px 16px; margin-bottom:14px;
+  }
+  .streak-flame{ font-size:26px; line-height:1; }
+  .streak-info{ flex:1; }
+  .streak-days{ font-size:16px; font-weight:800; color:var(--gold); }
+  .streak-rest{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .streak-rest.ok{ color:var(--good); }
+  .streak-rest.done{ color:var(--sub); }
+
+  /* ===== BIG6 CARDS ===== */
+  .grid{ display:flex; flex-direction:column; gap:10px; }
+  .ex-card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:14px 16px; cursor:pointer; transition:transform .06s, border-color .15s;
+    position:relative; overflow:hidden;
+  }
+  .ex-card:active{ transform:scale(.985); }
+  .ex-card::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--accent); border-radius:3px 0 0 3px; opacity:0;
+    transition:opacity .2s;
+  }
+  .ex-card.active-card::before{ opacity:1; }
+  .ex-card .ex-num{ font-size:10px; color:var(--sub); letter-spacing:.08em; margin-bottom:2px; }
+  .ex-card .ex-name{ font-size:17px; font-weight:800; }
+  .ex-card .ex-mus{ color:var(--sub); font-size:11px; margin-left:6px; font-weight:400; }
+  .ex-card .ex-step{ color:var(--accent); font-size:13px; margin-top:6px; }
+  .ex-card .ex-prog{
+    height:3px; background:var(--line); border-radius:2px; margin-top:10px;
+  }
+  .ex-card .ex-prog-fill{
+    height:100%; border-radius:2px;
+    background:linear-gradient(90deg,var(--accent),var(--gold));
+    transition:width .4s ease;
+  }
+
+  /* ===== STEP LIST ===== */
+  .stepwrap{ display:flex; flex-direction:column; gap:10px; padding:50vh 0; }
+  .srow{
+    display:flex; align-items:center; gap:12px; background:var(--card);
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px;
+    cursor:pointer; transition:all .18s ease;
+  }
+  .srow .stxt{ flex:1; min-width:0; }
+  .srow .sn{ font-size:11px; color:var(--sub); letter-spacing:.06em; }
+  .srow .snm{ font-size:15px; font-weight:700; margin-top:2px; }
+  .srow .stgt{ font-size:12px; color:var(--accent); margin-top:3px; }
+  .srow .thumb{
+    width:64px; height:64px; flex:0 0 auto; border-radius:10px;
+    background:var(--bg) center/cover no-repeat; border:1px solid var(--line);
+    transition:all .18s ease; display:flex; align-items:center; justify-content:center;
+    color:var(--sub); font-size:11px;
+  }
+  .badge-cur{
+    background:var(--accent); color:#fff; font-size:10px; padding:1px 7px;
+    border-radius:10px; margin-left:6px;
+  }
+  .srow.lg{ border-color:var(--accent); }
+  .srow.lg .thumb{ width:108px; height:108px; }
+  .srow.lg .snm{ font-size:18px; }
+  .srow.md{ opacity:.9; }
+  .srow.md .thumb{ width:64px; height:64px; }
+  .srow.sm{ opacity:.5; }
+  .srow.sm .thumb{ width:42px; height:42px; border-radius:8px; }
+  .srow.sm .snm{ font-size:13px; }
+  .srow.sm .stgt{ display:none; }
+
+  /* ===== INPUT SCREEN ===== */
+  .top-nav{
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  }
+  .back-btn{
+    background:var(--card); border:1px solid var(--line); color:var(--txt);
+    border-radius:10px; padding:9px 14px; font-size:14px; cursor:pointer;
+    max-width:65%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .step-title{ text-align:center; font-size:18px; font-weight:800; margin:2px 0 4px; }
+  .step-hint{ text-align:center; color:var(--sub); font-size:11px; margin-bottom:12px; }
+  .ex-img{ width:100%; border-radius:14px; display:none; margin-bottom:12px; object-fit:cover; max-height:220px; }
+  .no-img{
+    display:none; text-align:center; color:var(--sub); font-size:12px;
+    border:1px dashed var(--line); border-radius:14px; padding:22px; margin-bottom:12px;
+  }
+
+  /* STANDARDS */
+  .stds{ display:flex; gap:8px; margin-bottom:14px; }
+  .std{
+    flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:10px 6px; text-align:center; cursor:pointer; transition:all .12s;
+    -webkit-user-select:none; user-select:none;
+  }
+  .std:active{ transform:scale(.96); }
+  .std .sl{ font-size:10px; color:var(--sub); letter-spacing:.06em; }
+  .std .sv{ font-size:15px; font-weight:800; margin-top:3px; }
+  .std.sel{ background:rgba(200,136,42,.15); border-color:var(--accent); }
+  .std.sel .sl{ color:var(--accent); }
+
+  /* FORM */
+  .form-box{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .form-row{ display:flex; gap:10px; margin-bottom:10px; }
+  .form-row label{ flex:1; font-size:12px; color:var(--sub); }
+  .form-row input{
+    width:100%; margin-top:5px; background:var(--bg); border:1px solid var(--line);
+    border-radius:9px; color:var(--txt); padding:11px; font-size:17px; outline:none;
+    transition:border-color .15s;
+  }
+  .form-row input:focus{ border-color:var(--accent); }
+  .form-row.note-row label{ display:block; }
+  .save-btn{
+    width:100%; background:linear-gradient(135deg,var(--accent),var(--gold));
+    border:none; color:#fff; font-size:16px; font-weight:800;
+    padding:14px; border-radius:11px; cursor:pointer; letter-spacing:.04em;
+    transition:opacity .15s;
+  }
+  .save-btn:disabled{ background:var(--line); color:var(--sub); cursor:default; }
+
+  /* LOGS */
+  .log{
+    padding:10px 2px; border-bottom:1px solid var(--line);
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+  }
+  .log .lr{ display:flex; justify-content:space-between; font-size:14px; align-items:center; }
+  .log .ld{ color:var(--sub); }
+  .log .lv{ font-weight:800; }
+  .log .ln{ font-size:12px; color:var(--sub); margin-top:4px; line-height:1.5; }
+  .itag{
+    font-size:10px; padding:2px 7px; border-radius:8px; margin-left:6px;
+    color:#06210f; font-weight:700; vertical-align:middle;
+  }
+
+  /* CHART */
+  .chartbox{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px 8px 4px; margin-top:6px;
+  }
+  .legend{
+    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    margin:6px 0 2px; font-size:11px; color:var(--sub);
+  }
+  .legend i{
+    display:inline-block; width:12px; height:3px; border-radius:2px;
+    margin-right:4px; vertical-align:middle;
+  }
+
+  /* MODAL */
+  .ovl{
+    position:fixed; inset:0; background:rgba(0,0,0,.6);
+    display:flex; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .sheet{
+    background:var(--card); border:1px solid var(--line);
+    border-radius:20px 20px 0 0; width:100%; max-width:520px;
+    padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+  }
+  .sheet-h{ font-weight:800; font-size:16px; margin-bottom:6px; }
+  .sheet label{ display:block; font-size:12px; color:var(--sub); margin:12px 0 0; }
+  .sheet input,.sheet select{
+    width:100%; margin-top:5px; background:var(--bg); border:1px solid var(--line);
+    border-radius:9px; color:var(--txt); padding:11px; font-size:16px;
+  }
+  .sheet .sheet-rows{ display:flex; gap:10px; }
+  .sheet .sheet-rows label{ flex:1; }
+  .sheet-btn{
+    width:100%; margin-top:11px; padding:13px; border-radius:11px;
+    border:none; font-weight:800; font-size:15px; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--gold)); color:#fff;
+  }
+  .sheet-btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--txt); }
+  .sheet-btn.danger{ background:var(--danger); }
+  .sheet-btn:disabled{ opacity:.5; }
+
+  /* TOAST */
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
+    background:var(--good); color:#06210f; padding:11px 20px; border-radius:22px;
+    font-size:14px; font-weight:800; opacity:0; transition:opacity .2s;
+    pointer-events:none; z-index:60; white-space:nowrap;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-logo">⛩️</div>
+  <div class="login-title">鍛錬寺 Big6</div>
+  <div class="login-sub">TANREN-JI · 六大修行トラッカー</div>
+  <button class="login-btn" onclick="signIn()">
+    <img src="https://www.google.com/favicon.ico" alt="G">
+    Googleでログイン
+  </button>
+  <div class="login-note">ログインすることで、修行記録があなたの<br>Googleアカウントに安全に保存されます。</div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div id="view"></div>
+  <div id="modal"></div>
+  <div id="toast" class="toast"></div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ===== FIREBASE ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyC8B3sgMzABOS7cyIQ_ybYs8A4wp2rgabE",
+  authDomain: "tanrenji-f3290.firebaseapp.com",
+  projectId: "tanrenji-f3290",
+  storageBucket: "tanrenji-f3290.firebasestorage.app",
+  messagingSenderId: "253236776842",
+  appId: "1:253236776842:web:313e3a8107cb54693f8273"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let uid = null;
+
+function signIn(){
+  const p = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(p).catch(e => { alert('ログインできませんでした: '+e.message); });
+}
+
+auth.onAuthStateChanged(user => {
+  if(user){
+    uid = user.uid;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    uid = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+/* ===== MASTER DATA ===== */
+const MASTER = [
+  { key:'pushup', name:'腕立て伏せ', muscle:'胸・腕', num:1, steps:[
+    {n:1,  name:'ウォール・プッシュアップ',            b:'1×10', i:'2×25', p:'3×50'},
+    {n:2,  name:'インクライン・プッシュアップ',        b:'1×10', i:'2×20', p:'3×40'},
+    {n:3,  name:'ニーリング・プッシュアップ',          b:'1×10', i:'2×15', p:'3×30'},
+    {n:4,  name:'ハーフ・プッシュアップ',              b:'1×8',  i:'2×12', p:'2×25'},
+    {n:5,  name:'フル・プッシュアップ',                b:'1×5',  i:'2×10', p:'2×20'},
+    {n:6,  name:'クローズ・プッシュアップ',            b:'1×5',  i:'2×10', p:'2×20'},
+    {n:7,  name:'アンイーブン・プッシュアップ',        b:'1×5',  i:'2×10', p:'2×20'},
+    {n:8,  name:'ハーフ・ワンアーム・プッシュアップ',  b:'1×5',  i:'2×10', p:'2×20'},
+    {n:9,  name:'レバー・プッシュアップ',              b:'1×5',  i:'2×10', p:'2×20'},
+    {n:10, name:'ワンアーム・プッシュアップ（達人）',  b:'1×5',  i:'2×10', p:'1×100'}
+  ]},
+  { key:'squat', name:'スクワット', muscle:'脚・尻', num:2, steps:[
+    {n:1,  name:'ショルダースタンド・スクワット',      b:'1×10', i:'2×25', p:'3×50'},
+    {n:2,  name:'ジャックナイフ・スクワット',          b:'1×10', i:'2×20', p:'3×40'},
+    {n:3,  name:'サポーテッド・スクワット',            b:'1×10', i:'2×15', p:'3×30'},
+    {n:4,  name:'ハーフ・スクワット',                  b:'1×8',  i:'2×35', p:'2×50'},
+    {n:5,  name:'フル・スクワット',                    b:'1×5',  i:'2×10', p:'2×30'},
+    {n:6,  name:'クローズ・スクワット',                b:'1×5',  i:'2×10', p:'2×20'},
+    {n:7,  name:'アンイーブン・スクワット',            b:'1×5',  i:'2×10', p:'2×20'},
+    {n:8,  name:'ハーフ・ワンレッグ・スクワット',      b:'1×5',  i:'2×10', p:'2×20'},
+    {n:9,  name:'アシスト・ワンレッグ・スクワット',    b:'1×5',  i:'2×10', p:'2×20'},
+    {n:10, name:'ワンレッグ・スクワット（達人）',      b:'1×5',  i:'2×10', p:'2×50'}
+  ]},
+  { key:'pullup', name:'懸垂', muscle:'背・腕', num:3, steps:[
+    {n:1,  name:'バーティカル・プル',                  b:'1×10', i:'2×20', p:'3×40'},
+    {n:2,  name:'ホリゾンタル・プル',                  b:'1×10', i:'2×20', p:'3×30'},
+    {n:3,  name:'ジャックナイフ・プル',                b:'1×10', i:'2×15', p:'3×20'},
+    {n:4,  name:'ハーフ・プルアップ',                  b:'1×8',  i:'2×11', p:'2×15'},
+    {n:5,  name:'フル・プルアップ',                    b:'1×5',  i:'2×8',  p:'2×10'},
+    {n:6,  name:'クローズ・プルアップ',                b:'1×5',  i:'2×8',  p:'2×10'},
+    {n:7,  name:'アンイーブン・プルアップ',            b:'1×5',  i:'2×7',  p:'2×9'},
+    {n:8,  name:'ハーフ・ワンアーム・プルアップ',      b:'1×4',  i:'2×6',  p:'2×8'},
+    {n:9,  name:'アシスト・ワンアーム・プルアップ',    b:'1×3',  i:'2×5',  p:'2×7'},
+    {n:10, name:'ワンアーム・プルアップ（達人）',      b:'1×1',  i:'2×3',  p:'2×6'}
+  ]},
+  { key:'legraise', name:'脚上げ', muscle:'腹', num:4, steps:[
+    {n:1,  name:'ニータック',                          b:'1×10', i:'2×25', p:'3×40'},
+    {n:2,  name:'フラット・ニーレイズ',                b:'1×10', i:'2×20', p:'3×35'},
+    {n:3,  name:'フラット・ベントレッグレイズ',        b:'1×10', i:'2×15', p:'3×30'},
+    {n:4,  name:'フラット・フロッグレイズ',            b:'1×8',  i:'2×15', p:'3×25'},
+    {n:5,  name:'フラット・ストレートレッグレイズ',    b:'1×5',  i:'2×10', p:'2×20'},
+    {n:6,  name:'ハンギング・ニーレイズ',              b:'1×5',  i:'2×10', p:'2×15'},
+    {n:7,  name:'ハンギング・ベントレッグレイズ',      b:'1×5',  i:'2×10', p:'2×15'},
+    {n:8,  name:'ハンギング・フロッグレイズ',          b:'1×5',  i:'2×10', p:'2×15'},
+    {n:9,  name:'パーシャル・ストレートレッグレイズ',  b:'1×5',  i:'2×10', p:'2×15'},
+    {n:10, name:'ハンギング・ストレートレッグレイズ（達人）', b:'1×5', i:'2×10', p:'2×30'}
+  ]},
+  { key:'bridge', name:'橋架け', muscle:'脊柱・背面', num:5, steps:[
+    {n:1,  name:'ショート・ブリッジ',                  b:'1×10', i:'2×25', p:'3×50'},
+    {n:2,  name:'ストレート・ブリッジ',                b:'1×10', i:'2×20', p:'3×40'},
+    {n:3,  name:'アングルド・ブリッジ',                b:'1×8',  i:'2×15', p:'3×30'},
+    {n:4,  name:'ヘッド・ブリッジ',                    b:'1×8',  i:'2×15', p:'2×25'},
+    {n:5,  name:'ハーフ・ブリッジ',                    b:'1×8',  i:'2×15', p:'2×20'},
+    {n:6,  name:'フル・ブリッジ',                      b:'1×6',  i:'2×10', p:'2×15'},
+    {n:7,  name:'ウォールウォーキング（下り）',         b:'1×3',  i:'2×6',  p:'2×10'},
+    {n:8,  name:'ウォールウォーキング（上り）',         b:'1×3',  i:'2×4',  p:'2×8'},
+    {n:9,  name:'クロージング・ブリッジ',              b:'1×3',  i:'2×4',  p:'2×6'},
+    {n:10, name:'スタンド・トゥ・スタンド（達人）',    b:'1×1',  i:'2×3',  p:'2×10'}
+  ]},
+  { key:'handstand', name:'逆立ち腕立て', muscle:'肩', num:6, steps:[
+    {n:1,  name:'ウォール・ヘッドスタンド（保持）',    b:'30秒', i:'1分',  p:'2分'},
+    {n:2,  name:'クロウ・スタンド（保持）',            b:'10秒', i:'30秒', p:'1分'},
+    {n:3,  name:'ウォール・ハンドスタンド（保持）',    b:'30秒', i:'1分',  p:'2分'},
+    {n:4,  name:'ハーフ・HSPU',                        b:'1×5',  i:'2×10', p:'2×20'},
+    {n:5,  name:'ハンドスタンド・プッシュアップ',      b:'1×5',  i:'2×10', p:'2×15'},
+    {n:6,  name:'クローズ・HSPU',                      b:'1×5',  i:'2×9',  p:'2×12'},
+    {n:7,  name:'アンイーブン・HSPU',                  b:'1×5',  i:'2×8',  p:'2×10'},
+    {n:8,  name:'ハーフ・ワンアーム・HSPU',            b:'1×4',  i:'2×6',  p:'2×8'},
+    {n:9,  name:'レバー・HSPU',                        b:'1×3',  i:'2×4',  p:'2×6'},
+    {n:10, name:'ワンアーム・HSPU（達人）',            b:'1×1',  i:'2×2',  p:'1×5'}
+  ]}
+];
+
+const SER = [
+  {k:'b', label:'初級', color:'#5aa9e6'},
+  {k:'i', label:'中級', color:'#e0b13a'},
+  {k:'p', label:'上級', color:'#46c178'}
+];
+const FREE = {k:'', label:'自由', color:'#8a93a8'};
+function serOf(key){ return SER.find(s=>s.k===key) || FREE; }
+
+/* ===== STATE ===== */
+let STEPS = {};   // {exKey: currentStep}
+let _cur = {k:null, n:null};
+let _selStd = null;
+let _saving = false;
+let _records = [];
+let _rows = [], _ticking = false;
+let _streakData = {streak:0, trainedToday:false, restRemaining:3};
+
+function exOf(k){ return MASTER.find(e=>e.key===k); }
+function stepObj(k,n){ return exOf(k).steps[n-1]; }
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function targetReps(p){
+  var a=String(p).split('×'); if(a.length<2) return null;
+  var v=parseInt(a[1],10); return isNaN(v)?null:v;
+}
+
+/* ===== FIRESTORE HELPERS ===== */
+function userDoc(){ return db.collection('users').doc(uid); }
+function logsCol(){ return userDoc().collection('logs'); }
+
+async function loadProfile(){
+  const snap = await userDoc().get();
+  if(snap.exists){
+    const d = snap.data();
+    STEPS = d.currentSteps || {};
+    _streakData = d.streakData || {streak:0, trainedToday:false, restRemaining:3};
+  }
+  MASTER.forEach(e=>{ if(!STEPS[e.key]) STEPS[e.key]=1; });
+}
+
+async function saveProfile(){
+  await userDoc().set({ currentSteps: STEPS }, { merge: true });
+}
+
+async function saveLog(p){
+  const ref = logsCol().doc();
+  await ref.set({
+    id: ref.id,
+    exKey: p.exKey, exName: p.exName,
+    step: p.step, stepName: p.stepName,
+    sets: p.sets, reps: p.reps,
+    note: p.note || '', intensity: p.intensity || '',
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    ts: Date.now()
+  });
+  STEPS[p.exKey] = p.step;
+  await saveProfile();
+  return await getStepData(p.exKey, p.step);
+}
+
+async function getStepData(exKey, step){
+  const snap = await logsCol()
+    .where('exKey','==',exKey)
+    .where('step','==',step)
+    .orderBy('ts','asc')
+    .get();
+  return snap.docs.map(d=>{
+    const v=d.data();
+    const dt = v.ts ? new Date(v.ts) : new Date();
+    const ds = (dt.getMonth()+1)+'/'+(dt.getDate());
+    return { id:d.id, date:ds, ymd:fmtYmd(dt),
+      sets:v.sets, reps:v.reps, note:v.note||'', intensity:v.intensity||'' };
+  });
+}
+
+function fmtYmd(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function deleteLog(id, exKey, step){
+  await logsCol().doc(id).delete();
+  return await getStepData(exKey, step);
+}
+
+async function updateLog(f){
+  const upd = {
+    sets: f.sets, reps: f.reps, note: f.note||'', intensity: f.intensity||''
+  };
+  if(f.ymd){
+    const pa = f.ymd.split('-');
+    const d = new Date(+pa[0],+pa[1]-1,+pa[2],12,0,0);
+    upd.ts = d.getTime();
+  }
+  await logsCol().doc(f.id).update(upd);
+  return await getStepData(f.exKey, f.step);
+}
+
+async function calcStreak(){
+  const snap = await logsCol().orderBy('ts','asc').get();
+  const trainedDates = new Set();
+  snap.docs.forEach(d=>{
+    const v=d.data();
+    if(v.ts){ const dt=new Date(v.ts); trainedDates.add(fmtYmd(dt)); }
+  });
+  const today = new Date();
+  const todayStr = fmtYmd(today);
+  const trainedToday = trainedDates.has(todayStr);
+
+  function isoWeek(dt){
+    const tmp=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()));
+    const dow=tmp.getUTCDay()||7;
+    tmp.setUTCDate(tmp.getUTCDate()+4-dow);
+    const y=tmp.getUTCFullYear();
+    const w=Math.ceil(((tmp-new Date(Date.UTC(y,0,1)))/86400000+1)/7);
+    return y+'W'+w;
+  }
+
+  // 週の最大休養日は3日（= 週最低4日）← ここを変数化しておく
+  const MAX_REST = 3;
+  let streak=0, restByWeek={};
+  const check=new Date(today);
+  if(!trainedToday) check.setDate(check.getDate()-1);
+  for(let i=0;i<730;i++){
+    const ds=fmtYmd(check), wk=isoWeek(check);
+    if(!restByWeek[wk]) restByWeek[wk]=0;
+    if(trainedDates.has(ds)){ streak++; }
+    else {
+      if(restByWeek[wk]<MAX_REST){ restByWeek[wk]++; streak++; }
+      else break;
+    }
+    check.setDate(check.getDate()-1);
+  }
+
+  const thisWk=isoWeek(today);
+  const restUsed=restByWeek[thisWk]||0;
+  const restRemaining=Math.max(0,MAX_REST-restUsed);
+  return {streak, trainedToday, restRemaining};
+}
+
+/* ===== INIT ===== */
+async function initApp(){
+  await loadProfile();
+  renderDash();
+  calcStreak().then(d=>{ _streakData=d; renderStreakBar(); });
+}
+
+/* ===== LEVEL 1: DASHBOARD ===== */
+function renderDash(){
+  window.onscroll=null; _rows=[];
+  const sd=_streakData;
+  let h=`<h1>六大修行 <span class="sub-txt">鍛錬寺 Big6</span></h1>
+  <div class="streak-bar" id="streakBar">
+    <div class="streak-flame">🔥</div>
+    <div class="streak-info">
+      <div class="streak-days" id="streakDays">${sd.streak>0?(sd.trainedToday?'修行'+sd.streak+'日目':'修行'+sd.streak+'日目（今日まだ）'):'修行0日目（初日）'}</div>
+      <div class="streak-rest ${sd.restRemaining>0?'ok':'done'}" id="streakRest">${sd.restRemaining>0?'今週残り'+sd.restRemaining+'回休養OK':'今週休養済み'}</div>
+    </div>
+  </div>
+  <div class="grid">`;
+  MASTER.forEach(e=>{
+    const n=STEPS[e.key]||1, s=e.steps[n-1];
+    const pct=Math.round((n/10)*100);
+    h+=`<div class="ex-card" onclick="goSteps('${e.key}')">
+      <div class="ex-num">修行 ${e.num} · ${esc(e.muscle)}</div>
+      <div><span class="ex-name">${esc(e.name)}</span></div>
+      <div class="ex-step">STEP ${n} ／ ${esc(s.name)}</div>
+      <div class="ex-prog"><div class="ex-prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  h+='</div>';
+  document.getElementById('view').innerHTML=h;
+  window.scrollTo(0,0);
+}
+
+function renderStreakBar(){
+  const sd=_streakData;
+  const days=document.getElementById('streakDays');
+  const rest=document.getElementById('streakRest');
+  if(!days) return;
+  days.textContent=sd.streak>0?(sd.trainedToday?'修行'+sd.streak+'日目':'修行'+sd.streak+'日目（今日まだ）'):'修行0日目（初日）';
+  rest.textContent=sd.restRemaining>0?'今週残り'+sd.restRemaining+'回休養OK':'今週休養済み';
+  rest.className='streak-rest '+(sd.restRemaining>0?'ok':'done');
+}
+
+/* ===== HISTORY ===== */
+const _hist=[];
+function pushHist(state){ _hist.push(state); }
+function goBack(){
+  _hist.pop();
+  const prev=_hist[_hist.length-1];
+  if(!prev){ renderDash(); return; }
+  if(prev.v==='steps') openSteps(prev.k);
+  else if(prev.v==='input') openInput(prev.k,prev.n);
+  else renderDash();
+}
+
+function goSteps(k){ pushHist({v:'steps',k}); openSteps(k); }
+function goInput(k,n){ pushHist({v:'input',k,n}); openInput(k,n); }
+window.addEventListener('popstate',()=>{ goBack(); });
+
+/* ===== LEVEL 2: STEP LIST ===== */
+function openSteps(k){
+  window.onscroll=null; _rows=[];
+  const e=exOf(k), cur=STEPS[k]||1;
+  let h=`<div class="top-nav">
+    <button class="back-btn" onclick="goBack()">← トップ</button>
+    <div><div style="font-weight:800">${esc(e.name)}</div>
+    <div class="sub-txt">${esc(e.muscle)}</div></div></div>
+  <div class="stepwrap" id="stepwrap">`;
+  e.steps.forEach(s=>{
+    const isc=s.n===cur;
+    h+=`<div class="srow" data-iscur="${isc?1:0}" onclick="goInput('${k}',${s.n})">
+      <div class="stxt">
+        <div class="sn">STEP ${s.n}${isc?'<span class="badge-cur">現在</span>':''}</div>
+        <div class="snm">${esc(s.name)}</div>
+        <div class="stgt">上級基準 ${esc(s.p)}</div>
+      </div>
+      <div class="thumb" id="thumb_${s.n}"><span>${s.n}</span></div>
+    </div>`;
+  });
+  h+='</div>';
+  document.getElementById('view').innerHTML=h;
+
+  // サムネ画像読み込み（画像ファイルが存在する場合のみ表示）
+  e.steps.forEach(s=>{
+    const img=new Image();
+    const src=`images/${e.num}-${s.n}.jpg`;
+    img.onload=()=>{
+      const t=document.getElementById('thumb_'+s.n);
+      if(t){ t.style.backgroundImage=`url(${src})`; t.innerHTML=''; }
+    };
+    img.src=src;
+  });
+
+  _rows=Array.from(document.querySelectorAll('.srow'));
+  window.onscroll=()=>{ if(!_ticking){ _ticking=true; requestAnimationFrame(()=>{ applyFocus(); _ticking=false; }); }};
+
+  // 現在ステップを中央へ
+  const ci=(STEPS[k]||1)-1, cel=_rows[ci];
+  if(cel){ const cr=cel.getBoundingClientRect();
+    window.scrollTo(0,Math.max(0,window.scrollY+cr.top+cr.height/2-window.innerHeight/2)); }
+  applyFocus();
+}
+
+function applyFocus(){
+  if(!_rows.length) return;
+  const vc=window.innerHeight/2; let best=0,bd=1e9;
+  _rows.forEach((r,i)=>{ const c=r.getBoundingClientRect(),cy=c.top+c.height/2,d=Math.abs(cy-vc); if(d<bd){bd=d;best=i;} });
+  _rows.forEach((r,j)=>{
+    const dist=Math.abs(j-best);
+    r.className='srow '+(dist===0?'lg':dist===1?'md':'sm');
+  });
+}
+
+/* ===== LEVEL 3: INPUT SCREEN ===== */
+function openInput(k,n){
+  window.onscroll=null; _rows=[];
+  _cur={k,n}; _selStd=null;
+  const e=exOf(k), s=stepObj(k,n);
+
+  let h=`<div class="top-nav">
+    <button class="back-btn" onclick="goBack()">← ${esc(e.name)}</button>
+  </div>
+  <div class="step-title">STEP ${n} ／ ${esc(s.name)}</div>
+  <div class="step-hint">強度をタップで自動入力（再タップでクリア・手直しOK）</div>
+  <img id="exImg" class="ex-img">
+  <div id="noImg" class="no-img">画像なし（${e.num}-${n}.jpg）</div>
+  <div class="stds">
+    <div class="std" onclick="fillStd(this,'b','${s.b}')"><div class="sl">初級</div><div class="sv">${esc(s.b)}</div></div>
+    <div class="std" onclick="fillStd(this,'i','${s.i}')"><div class="sl">中級</div><div class="sv">${esc(s.i)}</div></div>
+    <div class="std" onclick="fillStd(this,'p','${s.p}')"><div class="sl">上級</div><div class="sv">${esc(s.p)}</div></div>
+  </div>
+  <div class="form-box">
+    <div class="form-row">
+      <label>セット数<input id="inSets" type="number" inputmode="numeric" pattern="[0-9]*" value="1"></label>
+      <label>回数 / 秒<input id="inReps" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="例 20"></label>
+    </div>
+    <div class="form-row note-row"><label>メモ（次回のヒントに）<input id="inNote" type="text" placeholder="フォーム・調子・気づき"></label></div>
+    <button class="save-btn" id="saveBtn" onclick="doSave()">記録する</button>
+  </div>
+  <h3>前回までの記録（長押しで編集・削除）</h3>
+  <div id="logList" class="sub-txt">読み込み中…</div>
+  <h3>推移グラフ</h3>
+  <div class="chartbox"><div id="chartArea"></div></div>`;
+
+  document.getElementById('view').innerHTML=h;
+  window.scrollTo(0,0);
+
+  // 画像読み込み
+  const img=document.getElementById('exImg'), noImg=document.getElementById('noImg');
+  const src=`images/${e.num}-${n}.jpg`;
+  img.onload=()=>{ img.style.display='block'; };
+  img.onerror=()=>{ noImg.style.display='block'; };
+  img.src=src;
+
+  getStepData(k,n).then(renderStepData);
+}
+
+function fillStd(el,key,val){
+  const all=el.parentNode.querySelectorAll('.std');
+  const already=el.classList.contains('sel');
+  all.forEach(a=>a.classList.remove('sel'));
+  if(already){ _selStd=null; document.getElementById('inSets').value=''; document.getElementById('inReps').value=''; return; }
+  el.classList.add('sel'); _selStd=key;
+  let sets=1,reps=0;
+  const sp=String(val).split('×');
+  if(sp.length>=2){ sets=parseInt(sp[0],10)||1; reps=parseInt(sp[1],10)||0; }
+  else {
+    const mm=String(val).match(/(\d+)分/), ss=String(val).match(/(\d+)秒/);
+    if(mm) reps=(parseInt(mm[1],10)||0)*60;
+    else if(ss) reps=parseInt(ss[1],10)||0;
+  }
+  document.getElementById('inSets').value=sets;
+  document.getElementById('inReps').value=reps;
+}
+
+function renderStepData(data){
+  _records=data||[];
+  const listEl=document.getElementById('logList'), chartEl=document.getElementById('chartArea');
+  if(!listEl) return;
+  if(!data||!data.length){
+    listEl.innerHTML='<div class="sub-txt">まだ記録がありません</div>';
+    chartEl.innerHTML='<div class="sub-txt" style="padding:18px;text-align:center">記録がたまるとグラフが出ます</div>';
+    return;
+  }
+  const rev=data.slice().reverse(); let h='';
+  rev.slice(0,10).forEach(g=>{
+    const so=serOf(g.intensity);
+    h+=`<div class="log" data-id="${g.id}">
+      <div class="lr">
+        <span class="ld">${esc(g.date)}<span class="itag" style="background:${so.color}">${so.label}</span></span>
+        <span class="lv">${esc(g.sets)}×${esc(g.reps)}</span>
+      </div>${g.note?'<div class="ln">📝 '+esc(g.note)+'</div>':''}
+    </div>`;
+  });
+  listEl.innerHTML=h;
+  bindLongPress();
+  const st=stepObj(_cur.k,_cur.n);
+  chartEl.innerHTML=lineChart(data,{b:targetReps(st.b),i:targetReps(st.i),p:targetReps(st.p)});
+}
+
+async function doSave(){
+  if(_saving) return;
+  const k=_cur.k, n=_cur.n;
+  const sets=parseInt(document.getElementById('inSets').value,10)||0;
+  const reps=parseInt(document.getElementById('inReps').value,10)||0;
+  if(reps<=0){ toast('回数（秒）を入れてね'); return; }
+  const btn=document.getElementById('saveBtn');
+  _saving=true; if(btn){btn.disabled=true;btn.textContent='記録中…';}
+  try{
+    const s=stepObj(k,n);
+    const data=await saveLog({exKey:k,exName:exOf(k).name,step:n,stepName:s.name,
+      sets:Math.max(1,sets),reps,note:document.getElementById('inNote').value,intensity:_selStd||''});
+    renderStepData(data);
+    document.getElementById('inReps').value='';
+    document.getElementById('inNote').value='';
+    toast('記録しました');
+    calcStreak().then(d=>{_streakData=d;});
+  }catch(e){ toast('保存に失敗しました'); }
+  finally{ _saving=false; if(btn){btn.disabled=false;btn.textContent='記録する';} }
+}
+
+/* ===== LONG PRESS ===== */
+function bindLongPress(){
+  document.querySelectorAll('#logList .log').forEach(el=>{
+    let timer=null;
+    const start=()=>{ timer=setTimeout(()=>openRecordMenu(el.dataset.id),500); };
+    const cancel=()=>{ if(timer){clearTimeout(timer);timer=null;} };
+    el.addEventListener('touchstart',start,{passive:true});
+    el.addEventListener('touchend',cancel);
+    el.addEventListener('touchmove',cancel,{passive:true});
+    el.addEventListener('touchcancel',cancel);
+    el.addEventListener('mousedown',start);
+    el.addEventListener('mouseup',cancel);
+    el.addEventListener('mouseleave',cancel);
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+  });
+}
+
+function findRec(id){ return _records.find(r=>r.id===id); }
+function showModal(html){ document.getElementById('modal').innerHTML='<div class="ovl" onclick="ovlClose(event)">'+html+'</div>'; }
+function closeModal(){ document.getElementById('modal').innerHTML=''; }
+function ovlClose(e){ if(e.target.classList.contains('ovl')) closeModal(); }
+
+function openRecordMenu(id){
+  const r=findRec(id); if(!r) return;
+  const so=serOf(r.intensity);
+  showModal(`<div class="sheet">
+    <div class="sheet-h">記録の操作</div>
+    <div class="sub-txt">${esc(r.date)} · ${esc(r.sets)}×${esc(r.reps)} · ${so.label}</div>
+    <button class="sheet-btn" onclick="editRecord('${id}')">編集</button>
+    <button class="sheet-btn danger" onclick="confirmDelete('${id}')">削除</button>
+    <button class="sheet-btn ghost" onclick="closeModal()">キャンセル</button>
+  </div>`);
+}
+
+function confirmDelete(id){
+  showModal(`<div class="sheet">
+    <div class="sheet-h">削除しますか？</div>
+    <div class="sub-txt">この記録を完全に削除します。元に戻せません。</div>
+    <button class="sheet-btn danger" id="dBtn" onclick="doDelete('${id}')">削除する</button>
+    <button class="sheet-btn ghost" onclick="closeModal()">やめる</button>
+  </div>`);
+}
+
+async function doDelete(id){
+  const b=document.getElementById('dBtn'); if(b){b.disabled=true;b.textContent='削除中…';}
+  try{
+    const data=await deleteLog(id,_cur.k,_cur.n);
+    closeModal(); renderStepData(data); toast('削除しました');
+  }catch(e){ if(b){b.disabled=false;b.textContent='削除する';} toast('削除に失敗しました'); }
+}
+
+function editRecord(id){
+  const r=findRec(id); if(!r) return;
+  const opts=SER.map(s=>`<option value="${s.k}"${s.k===r.intensity?' selected':''}>${s.label}</option>`).join('');
+  const freeOpt=`<option value=""${ !r.intensity?' selected':''}>自由</option>`;
+  showModal(`<div class="sheet">
+    <div class="sheet-h">記録を編集</div>
+    <label>日付<input id="eDate" type="date" value="${esc(r.ymd)}"></label>
+    <div class="sheet-rows">
+      <label>セット数<input id="eSets" type="number" inputmode="numeric" value="${esc(r.sets)}"></label>
+      <label>回数 / 秒<input id="eReps" type="number" inputmode="numeric" value="${esc(r.reps)}"></label>
+    </div>
+    <label>強度<select id="eInt">${freeOpt}${opts}</select></label>
+    <label>メモ<input id="eNote" type="text" value="${esc(r.note)}"></label>
+    <button class="sheet-btn" id="eBtn" onclick="submitEdit('${id}')">保存</button>
+    <button class="sheet-btn ghost" onclick="closeModal()">キャンセル</button>
+  </div>`);
+}
+
+async function submitEdit(id){
+  const reps=parseInt(document.getElementById('eReps').value,10)||0;
+  if(reps<=0){ toast('回数（秒）を入れてね'); return; }
+  const b=document.getElementById('eBtn'); if(b){b.disabled=true;b.textContent='保存中…';}
+  try{
+    const data=await updateLog({
+      id, exKey:_cur.k, step:_cur.n,
+      ymd:document.getElementById('eDate').value,
+      sets:parseInt(document.getElementById('eSets').value,10)||1,
+      reps, intensity:document.getElementById('eInt').value,
+      note:document.getElementById('eNote').value
+    });
+    closeModal(); renderStepData(data); toast('更新しました');
+  }catch(e){ if(b){b.disabled=false;b.textContent='保存';} toast('更新に失敗しました'); }
+}
+
+/* ===== LINE CHART ===== */
+function lineChart(records, targets){
+  const W=320,H=152,pl=30,pr=14,pt=14,pb=28;
+  const n=records.length;
+  const tv=[]; if(targets){ Object.values(targets).forEach(v=>{if(v)tv.push(v);}); }
+  const allVals=records.map(r=>Number(r.reps)||0);
+  let maxV=Math.max(...allVals,...tv); if(maxV<=0) maxV=1;
+  const X=i=>n===1?(pl+(W-pl-pr)/2):pl+(W-pl-pr)*i/(n-1);
+  const Y=v=>pt+(H-pt-pb)*(1-v/maxV);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
+  s+=`<line x1="${pl}" y1="${Y(0)}" x2="${W-pr}" y2="${Y(0)}" stroke="#252932"/>`;
+  s+=`<text x="${pl-4}" y="${pt+4}" fill="#8a93a8" font-size="9" text-anchor="end">${maxV}</text>`;
+  s+=`<text x="${pl-4}" y="${Y(0)}" fill="#8a93a8" font-size="9" text-anchor="end">0</text>`;
+  const present={};
+  function drawSeries(key,color,tgt){
+    const pts=records.map((r,i)=>(r.intensity||'')==key?{x:X(i),y:Y(Number(r.reps)||0)}:null).filter(Boolean);
+    if(!pts.length) return; present[key]=true;
+    if(tgt){ const ty=Y(tgt).toFixed(1);
+      s+=`<line x1="${pl}" y1="${ty}" x2="${W-pr}" y2="${ty}" stroke="${color}" stroke-dasharray="3 4" stroke-width="1" opacity="0.4"/>`; }
+    if(pts.length>1) s+=`<polyline points="${pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
+    s+=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${color}"/>`).join('');
+  }
+  SER.forEach(se=>drawSeries(se.k,se.color,targets?targets[se.k]:null));
+  drawSeries('',FREE.color,null);
+  if(n){ s+=`<text x="${X(0)}" y="${H-6}" fill="#8a93a8" font-size="9" text-anchor="start">${esc(records[0].date)}</text>`; }
+  if(n>1){ s+=`<text x="${X(n-1)}" y="${H-6}" fill="#8a93a8" font-size="9" text-anchor="end">${esc(records[n-1].date)}</text>`; }
+  s+='</svg>';
+  const leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.color}"></i>${se.label}</span>`).join('')+(present['']?`<span><i style="background:${FREE.color}"></i>${FREE.label}</span>`:'')+  '</div>';
+  return s+leg;
+}
+
+/* ===== TOAST ===== */
+let _tt;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1800);
+}
+</script>
+</body>
+</html>
