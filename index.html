@@ -42,7 +42,7 @@
   .mtn{ bottom:0; left:0; width:100%; opacity:.5; }
 
   /* 画面本体 */
-  #main{ position:relative; z-index:1; padding:14px 14px 124px; min-height:100vh; }
+  #main{ position:relative; z-index:1; padding:14px 14px 150px; min-height:100vh; }
   .scr{ animation:fade .25s ease; }
   @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
 
@@ -92,6 +92,7 @@
   .card .st{ font-size:12px; color:var(--kin); margin-top:3px; }
   .card .meta{ font-size:11px; color:var(--sub); margin-top:2px; }
   .card .prog{ width:42px; text-align:center; }
+  .card .chev{ color:var(--sub); font-size:20px; margin-left:6px; }
   .card .prog b{ font-family:var(--serif); font-size:20px; color:var(--kin); }
   .card .prog small{ display:block; font-size:9px; color:var(--sub); letter-spacing:.1em; }
   /* 状態 */
@@ -383,7 +384,6 @@ window.addEventListener('popstate', e=>{
 const TABS=[
   {id:'home', label:'ホーム', icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
   {id:'quest',label:'クエスト', icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
-  {id:'message',label:'メッセージ', icon:'<path d="M4 5h16v11H9l-5 4z"/>'},
   {id:'profile',label:'プロフィール', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
 ];
 function renderTabs(){
@@ -437,13 +437,11 @@ function viewHome(){
       const cls = e.cur>=10 ? 'done' : (e.cur<=1 ? 'idle' : '');
       const nm = STEPNAMES[e.key][e.cur-1];
       return `<div class="card ${cls}" onclick="nav('steps',{exKey:'${e.key}'})">
-        <div class="ic">${e.kanji}</div>
         <div class="body">
           <div class="nm">${e.name}</div>
           <div class="st">STEP ${e.cur} ／ ${nm}</div>
-          <div class="meta">${cls==='done'?'皆伝':cls==='idle'?'未着手':'修行中'}</div>
         </div>
-        <div class="prog"><b>${e.cur}</b><small>/ 10</small></div>
+        <div class="chev">›</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -453,12 +451,11 @@ function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
   let rows='';
   for(let i=1;i<=10;i++){
-    const nm=STEPNAMES[e.key][i-1]; const std=stdOf();
+    const nm=STEPNAMES[e.key][i-1];
     rows+=`<div class="srow" data-i="${i}" onclick="nav('record',{exKey:'${e.key}',step:${i}})">
       <div class="txt">
         <div class="n">STEP ${i}${i===e.cur?'<span class="badge">現在</span>':''}</div>
         <div class="nm">${nm}</div>
-        <div class="tg">上級 ${std.p}</div>
       </div>
       <div class="th">${state.exKey.slice(0,1)}-${i}a</div>
     </div>`;
@@ -525,31 +522,50 @@ function viewRecord(){
   }).join('')}</div>`;
 }
 
+const QLV=[
+  {name:'入門', cond:'月に4回 修行する', goal:4},
+  {name:'修行', cond:'月に12回 修行する', goal:12},
+  {name:'極意', cond:'月に20回 修行する', goal:20},
+];
+let questLv=1, questDone=8;
+const RELICS=[
+  {em:'📜',l:'初伝の巻',got:true,  cond:'はじめて記録した'},
+  {em:'📜',l:'継続の巻',got:true,  cond:'7日連続で修行した'},
+  {em:'🏵️',l:'鍛錬の印',got:true,  cond:'同じステップを10回記録した'},
+  {em:'📜',l:'百錬の巻',got:false, cond:'通算100回 修行する'},
+  {em:'🏵️',l:'求道の印',got:false, cond:'階級「求道者」に到達する'},
+  {em:'🏵️',l:'達人の印',got:false, cond:'階級「達人」に到達する'},
+  {em:'📜',l:'極致の巻',got:false, cond:'30日連続で修行する'},
+  {em:'🏵️',l:'覚者の印',got:false, cond:'六大修行をすべてSTEP10にする'},
+];
 function viewQuest(){
-  const got=['1巻','7日','全種','100','皆伝','30日'];
-  const relics=[
-    {em:'📜',l:'初伝の巻',got:true},{em:'📜',l:'継続の巻',got:true},{em:'🏵️',l:'鍛錬の印',got:true},
-    {em:'📜',l:'百錬の巻',got:false},{em:'🏵️',l:'求道の印',got:false},{em:'🏵️',l:'達人の印',got:false},
-    {em:'📜',l:'極致の巻',got:false},{em:'🏵️',l:'覚者の印',got:false}
-  ];
   return `
   <div class="brand"><div class="logo"><b>クエスト</b></div></div>
-  <div class="mission">
-    <div class="t">今月の修行 — 6月</div>
-    <div class="lv">
-      <div class="lvbtn" onclick="selLv(this)">入門</div>
-      <div class="lvbtn sel" onclick="selLv(this)">修行</div>
-      <div class="lvbtn" onclick="selLv(this)">極意</div>
-    </div>
-    <div class="pr"><span>月12回トレーニング</span><span>8 / 12</span></div>
-    <div class="bar"><i style="width:66%"></i></div>
-    <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「📜 巻物」を獲得（奇数月＝巻物・偶数月＝印）</p>
-  </div>
-
+  <div class="mission" id="missionCard">${missionInner()}</div>
   <div class="h">獲得した巻物・印</div>
   <div class="relics">
-    ${relics.map(r=>`<div class="relic ${r.got?'got':'locked'}"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
+    ${RELICS.map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="relicInfo(${i})"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
   </div>`;
+}
+function missionInner(){
+  const lv=QLV[questLv]; const pct=Math.min(100, Math.round(questDone/lv.goal*100));
+  return `<div class="t">今月の修行 — 6月</div>
+    <div class="lv">${QLV.map((l,i)=>`<div class="lvbtn ${i===questLv?'sel':''}" onclick="questSelLv(${i})">${l.name}</div>`).join('')}</div>
+    <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「📜 巻物」を獲得（奇数月＝巻物・偶数月＝印）・途中で下げてもOK</p>`;
+}
+function questSelLv(i){ questLv=i; const c=document.getElementById('missionCard'); if(c) c.innerHTML=missionInner(); }
+function relicInfo(i){
+  const r=RELICS[i];
+  modal(`<div class="sheet card-c">
+    <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:'🔒'}</div>
+    <h3 style="text-align:center">${r.l}</h3>
+    <p class="sub" style="text-align:center">取得条件</p>
+    <p style="text-align:center;font-size:15px;margin:0 0 4px">${r.cond}</p>
+    <p style="text-align:center;font-size:12px;color:${r.got?'#7FB069':'#8b8f99'};margin-top:8px">${r.got?'✓ 獲得済み':'未獲得'}</p>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`, true);
 }
 
 function viewMessage(){
@@ -571,14 +587,14 @@ function viewProfile(){
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
 
-  <div class="rankcard">
+  <div class="rankcard" onclick="rankList()">
     <div class="lab">階　級</div>
     <div class="nm">${r.name}</div>
+    <div style="font-size:11px;color:var(--sub);margin-top:6px">タップで一覧 ›</div>
   </div>
 
   <div class="stat3" style="margin-top:12px">
     <div class="stat"><b>12</b><small>修行日数</small></div>
-    <div class="stat"><b>${SUM}</b><small>合計STEP</small></div>
     <div class="stat"><b>1,240</b><small>累計XP</small></div>
   </div>
 
@@ -711,29 +727,22 @@ function restConfirm(){
 
 let imgState='a';
 function imgPopup(key,i){
+  stopFlip();
+  const d=document.createElement('div'); d.id='imgfull';
+  d.style.cssText='position:fixed;inset:0;z-index:85;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;animation:fade .2s';
+  d.innerHTML=`<div id="ifimg" style="width:88%;max-width:430px;aspect-ratio:4/3;border:1px solid rgba(200,162,76,.3);border-radius:16px;display:grid;place-items:center;background:#0d0f13;color:#ECE6D8;font-size:54px;font-family:var(--serif)"></div>
+    <div id="ifcap" style="color:#C8A24C;font-size:14px;font-family:var(--serif)"></div>
+    <div style="color:#8b8f99;font-size:12px">タップで戻る</div>`;
+  d.onclick=()=>{ stopFlip(); d.remove(); };
+  document.body.appendChild(d);
+  const img=d.querySelector('#ifimg'), cap=d.querySelector('#ifcap');
   imgState='a';
-  modal(`<div class="sheet">
-    <h3>${STEPNAMES[key][i-1]}</h3>
-    <p class="sub">① 開始ポジション　→　② 動作の終点（タップで切替・自動再生）</p>
-    <div class="imgpair" id="imgpair">
-      <div class="one on" id="imgA"><div style="font-size:24px">①</div>${key.slice(0,1)}-${i}a</div>
-      <div class="one" id="imgB"><div style="font-size:24px">②</div>${key.slice(0,1)}-${i}b</div>
-    </div>
-    <div class="imgcap" id="imgcap">自動再生中… タップで止める</div>
-    <button class="btnghost" onclick="stopFlip();closeModal()">閉じる</button>
-  </div>`);
-  startFlip();
+  function show(){ img.textContent = imgState==='a'?'①':'②';
+    cap.textContent = (imgState==='a'?'開始ポジション':'動作の終点')+'　'+key.slice(0,1)+'-'+i+imgState; }
+  show();
+  flipTimer=setInterval(()=>{ imgState=imgState==='a'?'b':'a'; show(); }, 900);
 }
 let flipTimer=null;
-function startFlip(){ stopFlip(); flipTimer=setInterval(()=>{
-  imgState = imgState==='a'?'b':'a';
-  const A=document.getElementById('imgA'),B=document.getElementById('imgB');
-  if(!A){ stopFlip(); return; }
-  A.classList.toggle('on', imgState==='a'); B.classList.toggle('on', imgState==='b');
-},900);
-  const pair=document.getElementById('imgpair');
-  if(pair) pair.onclick=()=>{ stopFlip(); const c=document.getElementById('imgcap'); if(c)c.textContent='停止中・もう一度開くと再生'; };
-}
 function stopFlip(){ if(flipTimer){ clearInterval(flipTimer); flipTimer=null; } }
 
 function memoHistory(){
@@ -775,6 +784,27 @@ function sendPhrase(name){
     body+=PHRASES[cat].map(p=>`<div class="phrase" onclick="closeModal();toast('${name}に送りました')">${p}</div>`).join('');
   }
   modal(`<div class="sheet"><h3>${name} に送る</h3><p class="sub">定型文をタップで送信</p>${body}<button class="btnghost" onclick="closeModal()">閉じる</button></div>`);
+}
+
+function rankList(){
+  const cur=rankOf(SUM);
+  const rows=RANKS.map((r,i)=>{
+    const next=RANKS[i+1]; const range = next ? `${r.min}〜${next.min-1}` : `${r.min}`;
+    const isCur = r.name===cur.name;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;
+       border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(200,162,76,.14)':'rgba(255,255,255,.02)'}">
+       <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin-bright)':'var(--sub)'};font-size:15px">${i+1}</div>
+       <div style="flex:1;font-family:var(--serif);font-size:16px;color:${isCur?'var(--kin-bright)':'var(--washi)'}">${r.name}</div>
+       <div style="font-size:11px;color:var(--sub)">合計 ${range}</div>
+       ${isCur?'<div style="font-size:10px;color:var(--kin);font-weight:700">現在地</div>':''}
+     </div>`;
+  }).join('');
+  modal(`<div class="sheet">
+    <h3>階級一覧</h3>
+    <p class="sub">六大修行の合計ステップ（最大60）で昇級。現在：${cur.name}</p>
+    <div style="max-height:60vh;overflow:auto;margin-top:6px">${rows}</div>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
 }
 
 function friendCompare(idx){
