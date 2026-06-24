@@ -110,18 +110,18 @@
   .top .ttl small{ display:block; font-family:var(--sans); font-size:11px; color:var(--sub); letter-spacing:.1em; margin-top:1px; }
 
   /* 10ステップ一覧 */
-  #steplist{ display:flex; flex-direction:column; gap:9px; padding-top:2px; padding-bottom:180px; }
-  .srow{ display:flex; align-items:center; gap:12px; padding:13px; border-radius:14px;
-         background:var(--glass); border:1px solid var(--line); cursor:pointer; transition:border-color .18s, background .18s; min-height:72px; }
+  #steplist{ display:flex; flex-direction:column; gap:10px; padding-bottom:200px; }
+  .srow{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px;
+         background:var(--glass); border:1px solid var(--line); cursor:pointer; }
+  .srow:first-child{ border-color:var(--kin); background:var(--glass-2); }
   .srow .txt{ flex:1; min-width:0; }
   .srow .n{ font-size:11px; color:var(--sub); letter-spacing:.08em; }
   .srow .nm{ font-size:14px; font-weight:600; margin-top:2px; }
-  .srow .th{ width:56px; height:56px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
+  .srow .th{ width:54px; height:54px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
              background:rgba(255,255,255,.04); display:grid; place-items:center; font-size:10px; color:var(--sub); }
+  .srow:first-child .th{ width:82px; height:82px; }
+  .srow:first-child .nm{ font-size:17px; }
   .badge{ font-size:9px; background:var(--kin); color:#1a1407; padding:1px 7px; border-radius:9px; margin-left:6px; font-weight:700; }
-  .srow.lg{ border-color:var(--kin); background:var(--glass-2); }
-  .srow.lg .th{ width:80px; height:80px; }
-  .srow.lg .nm{ font-size:17px; }
 
   /* 記録画面 */
   .memo-prev{ border:1px solid var(--line); border-radius:12px; background:var(--glass); padding:10px 13px; margin-bottom:10px; }
@@ -404,7 +404,7 @@ function render(){
   }
   $main.innerHTML=`<div class="scr">${html}</div>`;
   window.scrollTo(0,0);
-  if(state.view==='steps') setupStepFocus();
+  if(state.view==='steps') window.onscroll=null;
 }
 
 /* ============ 画面 ============ */
@@ -669,21 +669,6 @@ function lineChart(records, std){
 }
 
 /* ============ インタラクション ============ */
-function setupStepFocus(){
-  const list=document.getElementById('steplist'); if(!list) return;
-  const rows=[...list.querySelectorAll('.srow')];
-  function apply(){
-    const focalY=64; let best=0, bestTop=-1e9, found=false;
-    rows.forEach((r,i)=>{ const t=r.getBoundingClientRect().top;
-      if(t<=focalY+34){ if(t>bestTop){ bestTop=t; best=i; found=true; } } });
-    if(!found) best=0;
-    rows.forEach((r,i)=> r.className='srow'+(i===best?' lg':''));
-  }
-  let tick=false;
-  window.onscroll=()=>{ if(!tick){ tick=true; requestAnimationFrame(()=>{apply();tick=false;}); } };
-  apply();
-}
-
 function selStd(el){
   const all=el.parentNode.querySelectorAll('.std');
   const on=el.classList.contains('sel');
