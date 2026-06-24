@@ -430,7 +430,7 @@ const TABS=[
 function renderTabs(){
   const cur=['home','steps','record'].includes(state.view)?'home':state.view;
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
-    `<div class="tab ${t.id===cur?'on':''}" onclick="nav('${t.id}')">
+    `<div class="tab ${t.id===cur?'on':''}" onclick="playSound('sound_tap');nav('${t.id}')">
        <svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.label}</span></div>`).join('');
 }
 
@@ -447,7 +447,7 @@ function render(){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.2.7 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.2.8 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -548,8 +548,8 @@ function viewQuest(){
   <div class="brand"><div class="logo"><b>クエスト</b></div></div>
   <div class="mission">
     <div class="t">今月の修行 — 6月</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px">
-      <span style="font-size:12px;color:var(--sub)">難易度変更は設定から</span>
+    <div style="display:flex;justify-content:flex-end;align-items:center;margin:10px 0 4px">
+      <span style="font-size:12px;color:var(--sub)">難易度変更は設定から ›</span>
     </div>
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
@@ -616,7 +616,7 @@ function viewProfile(){
     <div class="stat"><b>340</b><small>今月XP</small></div>
     <div class="stat"><b>1,240</b><small>累計XP</small></div>
   </div>
-  <div class="h">六大修行レーダー</div>
+  <div class="h">鍛錬の形</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
@@ -625,15 +625,25 @@ function viewProfile(){
 }
 
 /* ══ レーダー ══ */
+const RADAR_LABELS=['Push','Squat','Pull','Leg','Bridge','Hand'];
 function radar(setsArr,colors){
-  const W=240,H=220,cx=120,cy=112,R=82,MAX=10,N=6;
-  const labels=EX.map(e=>e.name.slice(0,2));
+  const W=340,H=300,cx=170,cy=150,R=88,MAX=10,N=6;
   const ang=i=>(-90+i*60)*Math.PI/180;
   const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="230">`;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">`;
   for(let g=1;g<=5;g++){const rr=R*g/5;let p='';for(let i=0;i<N;i++){const[x,y]=pt(i,rr);p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}s+=`<path d="${p}Z" fill="none" stroke="rgba(200,162,76,.14)" stroke-width="1"/>`;}
-  for(let i=0;i<N;i++){const[x,y]=pt(i,R);s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;const[lx,ly]=pt(i,R+15);s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="11" text-anchor="middle">${labels[i]}</text>`;}
-  setsArr.forEach((vals,si)=>{const col=colors[si];let p='';for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}s+=`<path d="${p}Z" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="2"/>`;for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${col}"/>"`;}});
+  for(let i=0;i<N;i++){
+    const[x,y]=pt(i,R);
+    s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;
+    const[lx,ly]=pt(i,R+28);
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="13" text-anchor="middle" font-family="sans-serif">${RADAR_LABELS[i]}</text>`;
+  }
+  setsArr.forEach((vals,si)=>{
+    const col=colors[si];let p='';
+    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}
+    s+=`<path d="${p}Z" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="2"/>`;
+    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}"/>`;}
+  });
   return s+'</svg>';
 }
 
@@ -772,23 +782,22 @@ function friendCompare(idx){
        <button onclick="sendReact('💙','${f.name}')">💙 励まし</button>`
     : `<button onclick="sendReact('👊','${f.name}')">👊 喝</button>`;
   modal(`<div class="sheet">
-    <h3>${f.name} と比較</h3>
-    <p class="sub"><span style="color:#C8A24C">■</span> 自分　<span style="color:#6E93A6">■</span> ${f.name}</p>
     <div style="display:grid;place-items:center;padding:6px 0">${radar([me.vals,f.vals],['#C8A24C','#6E93A6'])}</div>
-    <div class="cmp">
-      <div class="side"><div class="val">${me.streak}日</div><div class="lbl">🔥 ストリーク</div></div>
-      <div class="vs">vs</div>
-      <div class="side"><div class="val">${f.streak}日</div><div class="lbl">🔥 ストリーク</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;padding:0 4px">
+      <span style="font-size:15px;font-weight:700;color:var(--kin)">ノリ <span style="font-size:12px">●</span></span>
+      <span style="font-size:12px;color:var(--sub)">vs</span>
+      <span style="font-size:15px;font-weight:700;color:#6E93A6"><span style="font-size:12px">●</span> ${f.name}</span>
     </div>
-    <div class="cmp">
-      <div class="side"><div class="val">${me.monthXP}</div><div class="lbl">今月XP</div></div>
-      <div class="vs">vs</div>
-      <div class="side"><div class="val">${f.monthXP}</div><div class="lbl">今月XP</div></div>
-    </div>
-    <div class="cmp">
-      <div class="side"><div class="val">${me.totalXP}</div><div class="lbl">累計XP</div></div>
-      <div class="vs">vs</div>
-      <div class="side"><div class="val">${f.totalXP}</div><div class="lbl">累計XP</div></div>
+    <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
+      ${[['🔥 ストリーク', me.streak+'日', f.streak+'日'],
+         ['今月XP', me.monthXP, f.monthXP],
+         ['累計XP', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
+        ].map(([label,mv,fv])=>`
+        <div style="display:flex;padding:12px 14px;border-bottom:1px solid var(--line)">
+          <div style="flex:1.2;font-size:12px;color:var(--sub)">${label}</div>
+          <div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:var(--kin)">${mv}</div>
+          <div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:#6E93A6">${fv}</div>
+        </div>`).join('')}
     </div>
     <p style="font-size:12px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
     <div class="react-btns">${reactBtns}</div>
@@ -972,24 +981,33 @@ function saveSettings(){closeModal();toast('保存しました');}
 
 /* ══ チュートリアル ══ */
 const TUT=[
-  {big:'🏯',tt:'鍛錬寺へようこそ',speech:'よく来た、新入り。<br>ここはお前を鍛え直す寺。<br>器具はいらん。己の体だけで道を極めよ。',who:true},
-  {big:'🥋',tt:'六大修行',tx:'押す・蹲む・引く・脚・橋・逆立ち。<br>6つの修行をそれぞれ10段階で極めていく。'},
-  {big:'👤',tt:'ユーザー名を決める',tx:'2回目まで自由に変更できます。3回目以降は1年間ロックされます。',uname:true},
-  {big:'📅',tt:'週の目標を決める',tx:'週に何日 道場へ来るか。<br>2〜7日から、無理のない数を。',slider:true},
-  {big:'📜',tt:'今月の修行レベル',tx:'入門（月4回）・修行（月15回）・極意（月28回）から選ぶ。<br>続ければ必ず印がもらえる。'},
-  {big:'🔥',tt:'準備はできた',tx:'さあ、最初の一歩を刻もう。<br>アバターはプロフィールから作れます。'},
+  {big:'🏯', tt:'鍛錬寺へようこそ',
+   speech:'よく来た。ここは鍛錬寺。<br>器具はいらん、己の体だけで道を極める場所だ。<br>覚悟があるなら、門を開けてやろう。'},
+  {big:'🥋', tt:'BIG 6 — 六大修行',
+   speech:'修行は6種目、それぞれ10段階ある。<br>プッシュアップから始まり、<br>ワンアームプッシュアップを極めるまでの道のりだ。'},
+  {big:'👤', tt:'まず名前を決めろ',
+   speech:'お前の修行名を決めろ。<br>2回目まで変えられる。<br>3度目以降は1年間変更できん。慎重に。', uname:true},
+  {big:'📅', tt:'週の目標を決めろ',
+   speech:'週に何日 道場へ来るか。<br>2日でも構わん。続けることが全てだ。', slider:true},
+  {big:'📜', tt:'今月の課題',
+   speech:'毎月ミッションが課される。<br>入門（月4日）・修行（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。'},
+  {big:'🔥', tt:'始める時が来た',
+   speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
 ];
 let tutI=0;
 function openTut(){tutI=0;document.getElementById('tut').style.display='flex';renderTut();}
 function closeTut(){document.getElementById('tut').style.display='none';}
 function renderTut(){
   const t=TUT[tutI]; let extra='';
-  if(t.who) extra=`<div class="speech">${t.speech}</div>`;
-  if(t.uname) extra=`<div style="width:280px"><input type="text" placeholder="ユーザー名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:10px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"><p style="font-size:12px;color:#8b8f99;margin:8px 0 0">2回目まで自由・3回目以降は1年間ロック</p></div>`;
-  if(t.slider) extra=`<div style="width:280px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:18px">週 <span id="tg">4</span> 日</div></div>`;
-  document.getElementById('tutStage').innerHTML=`<div class="big">${t.big}</div><div class="tt">${t.tt}</div>${t.tx?`<div class="tx">${t.tx}</div>`:''}${extra}`;
+  if(t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" placeholder="修行名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"></div>`;
+  if(t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px">週 <span id="tg">4</span> 日</div></div>`;
+  document.getElementById('tutStage').innerHTML=`
+    <div class="big">${t.big}</div>
+    <div class="tt">${t.tt}</div>
+    <div class="speech" style="margin-top:12px">${t.speech}</div>
+    ${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
-  document.getElementById('tutNext').textContent=tutI===TUT.length-1?'はじめる':'次へ';
+  document.getElementById('tutNext').textContent=tutI===TUT.length-1?'道場へ入る':'次へ';
 }
 function tutNext(){if(tutI<TUT.length-1){tutI++;renderTut();}else{closeTut();nav('home');}}
 
