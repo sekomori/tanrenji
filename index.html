@@ -505,12 +505,12 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.3.0 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.3.1 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
     <div class="fire">🔥</div>
-    <div class="txt"><div class="d">修行 12日目</div><div class="r">今週 残り2回 休養OK</div></div>
+    <div class="txt"><div class="d">🔥 連続修行 12日</div><div class="r">今週 残り2回 休養OK</div></div>
     <button class="restbtn" onclick="restConfirm()">今日は休む</button>
   </div>
   <div class="xp">
@@ -671,7 +671,7 @@ function viewProfile(){
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
   <div class="stat3">
-    <div class="stat"><b>12</b><small>修行日数</small></div>
+    <div class="stat"><b>47</b><small>全期間修行日数</small></div>
     <div class="stat"><b>340</b><small>今月XP</small></div>
     <div class="stat"><b>1,240</b><small>累計XP</small></div>
   </div>
@@ -679,7 +679,7 @@ function viewProfile(){
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
-  <div class="h">直近1週間</div>
+  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行カレンダー <span style="font-size:12px;color:var(--sub)">（タップで月表示）</span></div>
   <div class="cal" id="calBox">${buildWeekCal()}</div>`;
 }
 
@@ -706,28 +706,94 @@ function radar(setsArr,colors){
   return s+'</svg>';
 }
 
-/* ══ 折れ線グラフ ══ */
+function showMonthCal(){
+  const y=2026, m=6;
+  const DAYS=['日','月','火','水','木','金','土'];
+  const first=new Date(y,m-1,1).getDay();
+  const last=new Date(y,m,0).getDate();
+  const today=new Date(); const isThisMonth=(today.getFullYear()===y && today.getMonth()+1===m);
+  let grid=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px">`;
+  DAYS.forEach(d=>grid+=`<div style="text-align:center;font-size:12px;color:var(--sub);padding-bottom:4px">${d}</div>`);
+  for(let i=0;i<first;i++) grid+=`<div></div>`;
+  for(let d=1;d<=last;d++){
+    const key=`${y}-${m}-${d}`;
+    const st=CAL_DATA[key]||'none';
+    const isToday=isThisMonth&&d===today.getDate();
+    const bg=st==='done'?'rgba(181,70,46,.7)':st==='rest'?'rgba(255,182,193,.25)':'rgba(110,147,166,.2)';
+    const tc=st==='done'?'#fff':st==='rest'?'#ffb6c1':'#6E93A6';
+    grid+=`<div style="aspect-ratio:1;border-radius:6px;background:${bg};display:grid;place-items:center;font-size:13px;color:${tc};${isToday?'outline:2px solid var(--kin)':''}">${d}</div>`;
+  }
+  grid+=`</div>`;
+  modal(`<div class="sheet">
+    <h3>${y}年 ${m}月</h3>
+    ${grid}
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;font-size:12px;color:var(--sub)">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>修行済み</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>休養日</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>未修行</span>
+    </div>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+/* ══ 折れ線グラフ（総負荷スコア） ══ */
+const STEP_COEFF=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.5,1.8,2.2,3.0];
+function loadScore(step,sets,reps){ return (STEP_COEFF[step]||1.0)*(sets*reps); }
+
 function lineChart(records){
-  const W=320,H=150,pl=28,pr=12,pt=12,pb=26,n=records.length;
-  const vals=records.map(r=>+r.reps||0);
-  let maxV=Math.max(...vals,1);
+  const step=state.step||1;
+  const W=320,H=160,pl=36,pr=12,pt=14,pb=28,n=records.length;
+  if(!n) return '<div style="text-align:center;color:var(--sub);padding:18px;font-size:12px">記録がたまるとグラフが出ます</div>';
+
+  const scores=records.map(r=>+(loadScore(step,r.sets,r.reps)).toFixed(1));
+  let maxV=Math.max(...scores,1);
   const X=i=>n===1?(pl+(W-pl-pr)/2):pl+(W-pl-pr)*i/(n-1);
   const Y=v=>pt+(H-pt-pb)*(1-v/maxV);
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
+
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet" id="loadChart">`;
+  // 背景ゾーン（現在のステップをハイライト）
+  s+=`<rect x="${pl}" y="${pt}" width="${W-pl-pr}" height="${H-pt-pb}" fill="rgba(200,162,76,.04)" rx="4"/>`;
+  // 軸
   s+=`<line x1="${pl}" y1="${Y(0)}" x2="${W-pr}" y2="${Y(0)}" stroke="rgba(200,162,76,.18)"/>`;
-  s+=`<text x="${pl-4}" y="${pt+4}" fill="#8b8f99" font-size="9" text-anchor="end">${maxV}</text>`;
-  const present={};
-  SER.forEach(se=>{
-    const pts=[]; records.forEach((r,i)=>{ if((r.intensity||'')===se.k) pts.push([X(i),Y(+r.reps||0)]); });
-    if(!pts.length) return; present[se.k]=true;
-    if(pts.length>1) s+=`<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${se.c}" stroke-width="2"/>`;
-    s+=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${se.c}"/>`).join('');
+  s+=`<text x="${pl-4}" y="${pt+4}" fill="#8b8f99" font-size="10" text-anchor="end">${maxV}</text>`;
+  s+=`<text x="${pl-4}" y="${Y(0)}" fill="#8b8f99" font-size="10" text-anchor="end">0</text>`;
+
+  // 折れ線
+  if(n>1){
+    const pts=scores.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    s+=`<polyline points="${pts}" fill="none" stroke="var(--kin)" stroke-width="2"/>`;
+  }
+  // ドット（強度ごとに色）
+  scores.forEach((v,i)=>{
+    const so=serOf(records[i].intensity);
+    s+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="5" fill="${so.c}" stroke="var(--sumi)" stroke-width="1.5" onclick="showLoadTip(${i},${v},${step},${records[i].sets},${records[i].reps},'${records[i].intensity}','${records[i].date}')" style="cursor:pointer"/>`;
   });
-  if(n){s+=`<text x="${X(0)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="start">${records[0].date}</text>`;}
-  if(n>1){s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="end">${records[n-1].date}</text>`;}
-  s+='</svg>';
-  const leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')+'</div>';
+
+  // 日付ラベル
+  s+=`<text x="${X(0)}" y="${H-8}" fill="#8b8f99" font-size="10" text-anchor="start">${records[0].date}</text>`;
+  if(n>1) s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="10" text-anchor="end">${records[n-1].date}</text>`;
+  s+=`</svg>`;
+
+  const leg=`<div class="legend">
+    ${SER.filter(se=>records.some(r=>r.intensity===se.k)).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')}
+    <span style="color:var(--sub)">Y軸：総負荷スコア</span>
+  </div>`;
   return s+leg;
+}
+
+function showLoadTip(i,score,step,sets,reps,intensity,date){
+  const coeff=STEP_COEFF[step]||1.0;
+  const so=serOf(intensity);
+  const isPR=score===Math.max(...MOCK_LOGS.map(r=>loadScore(step,r.sets,r.reps)));
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <div style="font-size:12px;color:var(--sub)">${date}</div>
+    <div style="font-size:32px;font-weight:700;color:var(--kin);margin:8px 0">${score}</div>
+    <div style="font-size:13px;color:var(--washi)">総負荷スコア</div>
+    <div style="font-size:12px;color:var(--sub);margin-top:8px">強度係数 ${coeff} × ${sets}セット × ${reps}回</div>
+    <div style="margin-top:8px"><span class="itag" style="background:${so.c}">${so.l}</span></div>
+    ${isPR?'<div style="color:#7FB069;font-size:13px;margin-top:8px">★ 過去最高スコア！</div>':''}
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
 }
 
 /* ══ インタラクション ══ */
@@ -914,31 +980,40 @@ const AVATAR_PARTS={
   nose:  {label:'鼻',   options:['👃','🐽','⚗️','🔘','▪️','◾','⬛','🔲']},
   mouth: {label:'口',   options:['👄','😁','😶','😬','🤐','😏','😮','😤']},
   skin:  {label:'肌色', options:['🟫','🟧','🟨','⬜','🟪','🔵','🟢','🔴']},
-  body:  {label:'胴体', options:['👘','🥋','👕','🧥','👚','🥼','🎽','🩱']},
 };
-let avatarSel={hair:0,eye:0,nose:0,mouth:0,skin:0,body:0};
+let avatarSel={hair:0,eye:0,nose:0,mouth:0,skin:0};
 let avatarTab='hair';
 
 function openAvatarSelect(){
-  modal(`<div class="sheet" style="padding:0;border-radius:18px 18px 0 0;overflow:hidden">
-    <div id="avPreview" style="background:var(--sumi2);padding:24px;text-align:center;border-bottom:1px solid var(--line)">
-      <div style="font-size:80px;line-height:1">${getAvatarEmoji()}</div>
-      <div style="font-size:12px;color:var(--sub);margin-top:8px">タップして選択</div>
+  avatarTab='hair';
+  const d=document.createElement('div');
+  d.id='avatarEditor';
+  d.style.cssText='position:fixed;inset:0;z-index:85;background:var(--sumi);display:flex;flex-direction:column;animation:fade .2s';
+  d.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
+      <div style="font-family:var(--serif);font-size:18px;color:var(--washi)">アバターを作る</div>
+      <button onclick="closeAvatarEditor()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer">✕</button>
     </div>
-    <div style="display:flex;border-bottom:1px solid var(--line);overflow-x:auto" id="avTabs">
-      ${Object.keys(AVATAR_PARTS).map(k=>`<div onclick="switchAvTab('${k}')" id="avTab_${k}" style="flex:0 0 auto;padding:10px 14px;font-size:12px;cursor:pointer;color:${k===avatarTab?'var(--kin)':'var(--sub)'};border-bottom:2px solid ${k===avatarTab?'var(--kin)':'transparent'}">${AVATAR_PARTS[k].label}</div>`).join('')}
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--sumi2);gap:8px">
+      <div style="font-size:100px;line-height:1;user-select:none" id="avEmoji">${getAvatarEmoji()}</div>
+      <div style="font-size:12px;color:var(--sub)">パーツを選んでカスタマイズ</div>
     </div>
-    <div id="avGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;max-height:200px;overflow-y:auto">
-      ${renderAvGrid()}
-    </div>
-    <div style="padding:0 14px 14px;display:flex;gap:8px">
-      <button class="btnprime" style="margin:0" onclick="saveAvatar()">保存する</button>
-      <button class="btnghost" style="margin:0" onclick="closeModal()">閉じる</button>
-    </div>
-  </div>`);
+    <div style="flex:0 0 auto;border-top:1px solid var(--line);background:var(--sumi)">
+      <div style="display:flex;overflow-x:auto;border-bottom:1px solid var(--line)" id="avTabs">
+        ${Object.keys(AVATAR_PARTS).map(k=>`<div onclick="switchAvTab('${k}')" id="avTab_${k}" style="flex:0 0 auto;padding:12px 16px;font-size:13px;cursor:pointer;white-space:nowrap;color:${k===avatarTab?'var(--kin)':'var(--sub)'};border-bottom:2px solid ${k===avatarTab?'var(--kin)':'transparent'}">${AVATAR_PARTS[k].label}</div>`).join('')}
+      </div>
+      <div id="avGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;max-height:180px;overflow-y:auto">
+        ${renderAvGrid()}
+      </div>
+      <div style="padding:0 14px calc(14px + env(safe-area-inset-bottom))">
+        <button class="btnprime" style="margin:0" onclick="saveAvatar()">保存する</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
 }
+function closeAvatarEditor(){ const d=document.getElementById('avatarEditor'); if(d) d.remove(); }
 function getAvatarEmoji(){
-  return AVATAR_PARTS.body.options[avatarSel.body]+AVATAR_PARTS.hair.options[avatarSel.hair];
+  return AVATAR_PARTS.hair.options[avatarSel.hair]+AVATAR_PARTS.eye.options[avatarSel.eye];
 }
 function renderAvGrid(){
   const part=AVATAR_PARTS[avatarTab];
@@ -956,14 +1031,14 @@ function switchAvTab(tab){
 }
 function selectAvPart(i){
   avatarSel[avatarTab]=i;
-  const prev=document.getElementById('avPreview');
-  if(prev) prev.querySelector('div').textContent=getAvatarEmoji();
+  const em=document.getElementById('avEmoji');
+  if(em) em.textContent=getAvatarEmoji();
   const grid=document.getElementById('avGrid');
   if(grid) grid.innerHTML=renderAvGrid();
 }
 function saveAvatar(){
   currentAvatar=getAvatarEmoji();
-  closeModal(); render(); toast('アバターを保存しました');
+  closeAvatarEditor(); render(); toast('アバターを保存しました');
 }
 
 function rankList(){
@@ -1019,12 +1094,6 @@ function openSettings(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0">設定</h3>
       <span style="font-size:13px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">チュートリアル ›</span>
-    </div>
-    <label>今月の修行目標</label>
-    <div class="seg" id="lvSeg">
-      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})">
-        ${l.name}：月${l.goal}日
-      </button>`).join('')}
     </div>
     <label>週の目標日数：<span id="goalv">4</span> 日</label>
     <input type="range" min="2" max="7" value="4" oninput="document.getElementById('goalv').textContent=this.value">
