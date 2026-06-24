@@ -341,9 +341,9 @@ const SCROLLS=[
 ];
 
 const QLV=[
-  {name:'入門',cond:'月に4回 修行する',goal:4},
-  {name:'修行',cond:'月に15回 修行する',goal:15},
-  {name:'極意',cond:'月に28回 修行する',goal:28},
+  {name:'入門', cond:'月に4回 修行する',  goal:4},
+  {name:'中堅', cond:'月に15回 修行する', goal:15},
+  {name:'極意', cond:'月に28回 修行する', goal:28},
 ];
 let questLv=1, questDone=8;
 
@@ -359,8 +359,31 @@ function setBg(cls){
 /* ══ バイブレーション ══ */
 function vib(pattern){ try{ navigator.vibrate(pattern); }catch(e){} }
 
-/* ══ カレンダー ══ */
-let calYear=2026, calMonth=6; // 今月
+/* ══ カレンダー（直近1週間） ══ */
+function buildWeekCal(){
+  const DAY_JP=['日','月','火','水','木','金','土'];
+  const today=new Date();
+  let h=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">`;
+  for(let i=6;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-i);
+    const key=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const st=CAL_DATA[key]||'none';
+    const isToday=i===0;
+    const color=st==='done'?'rgba(181,70,46,.7)':st==='rest'?'rgba(255,182,193,.25)':'rgba(110,147,166,.2)';
+    const textColor=st==='done'?'#fff':st==='rest'?'#ffb6c1':'#6E93A6';
+    h+=`<div style="text-align:center">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:4px">${DAY_JP[d.getDay()]}</div>
+      <div style="aspect-ratio:1;border-radius:8px;background:${color};display:flex;align-items:center;justify-content:center;font-size:13px;color:${textColor};${isToday?'outline:2px solid var(--kin)':''}">${d.getDate()}</div>
+    </div>`;
+  }
+  h+=`</div>
+  <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:12px;color:var(--sub)">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>修行済み</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>休養日</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>未修行</span>
+  </div>`;
+  return h;
+}
 
 // モックデータ：日付 → 'done'|'rest'|'none'
 const CAL_DATA={
@@ -371,36 +394,6 @@ const CAL_DATA={
   '2026-6-17':'rest','2026-6-18':'done','2026-6-19':'done','2026-6-20':'none',
   '2026-6-21':'done','2026-6-22':'done','2026-6-23':'done','2026-6-24':'done',
 };
-
-function buildCal(y, m){
-  const DAYS=['日','月','火','水','木','金','土'];
-  const first=new Date(y,m-1,1).getDay();
-  const last=new Date(y,m,0).getDate();
-  const today=new Date(); const isThisMonth=(today.getFullYear()===y && today.getMonth()+1===m);
-  let h=`<div class="cal-nav">
-    <button onclick="calPrev()">‹</button>
-    <div class="month">${y}年 ${m}月</div>
-    <button onclick="calNext()">›</button>
-  </div>
-  <div class="cal-grid">`;
-  DAYS.forEach(d=>h+=`<div class="cal-day-label">${d}</div>`);
-  for(let i=0;i<first;i++) h+=`<div class="cal-day empty"></div>`;
-  for(let d=1;d<=last;d++){
-    const key=`${y}-${m}-${d}`;
-    const st=CAL_DATA[key]||'none';
-    const isToday=isThisMonth&&d===today.getDate();
-    h+=`<div class="cal-day ${st}${isToday?' today':''}">${d}</div>`;
-  }
-  h+=`</div>
-  <div class="cal-legend">
-    <span><i style="background:rgba(181,70,46,.7)"></i>トレーニング済み</span>
-    <span><i style="background:rgba(255,182,193,.4)"></i>休養日</span>
-    <span><i style="background:rgba(110,147,166,.4)"></i>未トレーニング</span>
-  </div>`;
-  return h;
-}
-function calPrev(){ calMonth--; if(calMonth<1){calMonth=12;calYear--;} const b=document.getElementById('calBox'); if(b) b.innerHTML=buildCal(calYear,calMonth); }
-function calNext(){ calMonth++; if(calMonth>12){calMonth=1;calYear++;} const b=document.getElementById('calBox'); if(b) b.innerHTML=buildCal(calYear,calMonth); }
 
 /* ══ ナビ ══ */
 let state={view:'home',exKey:null,step:null};
@@ -435,13 +428,84 @@ function render(){
   const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,friends:viewFriends,profile:viewProfile};
   $main.innerHTML=`<div class="scr">${(map[state.view]||viewHome)()}</div>`;
   window.scrollTo(0,0);
+  if(state.view==='record') bindLogLongPress();
+}
+
+function bindLogLongPress(){
+  const logs=document.querySelectorAll('#logList .log');
+  logs.forEach(el=>{
+    let timer=null;
+    const start=()=>{ timer=setTimeout(()=>{ vib(30); logMenu(Number(el.dataset.idx)); },500); };
+    const cancel=()=>{ if(timer){clearTimeout(timer);timer=null;} };
+    el.addEventListener('touchstart',start,{passive:true});
+    el.addEventListener('touchend',cancel);
+    el.addEventListener('touchmove',cancel,{passive:true});
+    el.addEventListener('mousedown',start);
+    el.addEventListener('mouseup',cancel);
+    el.addEventListener('mouseleave',cancel);
+  });
+}
+
+function logMenu(idx){
+  const g=MOCK_LOGS[idx]; const so=serOf(g.intensity);
+  modal(`<div class="sheet">
+    <h3>記録の操作</h3>
+    <p class="sub">${g.date}・${g.sets}×${g.reps}・${so.l}</p>
+    <button class="btnprime" onclick="closeModal();editLog(${idx})">編集</button>
+    <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog(${idx})">削除</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function editLog(idx){
+  const g=MOCK_LOGS[idx];
+  const opts=[{v:'',l:'未選択'},{v:'b',l:'初級'},{v:'i',l:'中級'},{v:'p',l:'上級'}];
+  modal(`<div class="sheet">
+    <h3>記録を編集</h3>
+    <label>日付</label><input type="date" id="eDate" value="${g.date.replace('/','-').replace('/','-')}">
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <div style="flex:1"><label>セット数</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets}"></div>
+      <div style="flex:1"><label>回数 / 秒</label><input type="number" id="eReps" inputmode="numeric" value="${g.reps}"></div>
+    </div>
+    <label>強度</label>
+    <div class="seg">${opts.map(o=>`<button class="${g.intensity===o.v?'sel':''}" onclick="this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">${o.l}</button>`).join('')}</div>
+    <label>メモ</label><input type="text" id="eMemo" value="${g.note||''}">
+    <button class="btnprime" onclick="saveEditLog(${idx})">保存する</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function saveEditLog(idx){
+  const sets=parseInt(document.getElementById('eSets').value)||1;
+  const reps=parseInt(document.getElementById('eReps').value)||0;
+  const note=document.getElementById('eMemo').value;
+  const selBtn=document.querySelector('#modal .seg button.sel');
+  if(reps<=0){ toast('回数を入力してください'); return; }
+  MOCK_LOGS[idx].sets=sets; MOCK_LOGS[idx].reps=reps; MOCK_LOGS[idx].note=note;
+  if(selBtn){ const l=selBtn.textContent.trim(); MOCK_LOGS[idx].intensity=l==='初級'?'b':l==='中級'?'i':l==='上級'?'p':''; }
+  closeModal(); nav('record',{exKey:state.exKey,step:state.step}); toast('更新しました');
+}
+
+function confirmDeleteLog(idx){
+  const g=MOCK_LOGS[idx];
+  modal(`<div class="sheet">
+    <h3>削除しますか？</h3>
+    <p class="sub">${g.date}・${g.sets}×${g.reps} を削除します。元に戻せません。</p>
+    <button class="btnprime btndanger" onclick="doDeleteLog(${idx})" style="background:var(--shu);border-color:var(--shu)">削除する</button>
+    <button class="btnghost" onclick="closeModal()">やめる</button>
+  </div>`);
+}
+
+function doDeleteLog(idx){
+  MOCK_LOGS.splice(idx,1);
+  closeModal(); nav('record',{exKey:state.exKey,step:state.step}); toast('削除しました');
 }
 
 /* ══ ホーム ══ */
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.2.9 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.3.0 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -522,10 +586,11 @@ function viewRecord(){
   <div class="divider"></div>
   <div class="h">推移グラフ</div>
   <div class="chartbox">${lineChart(MOCK_LOGS)}</div>
-  <div class="h">これまでの記録</div>
-  <div>${MOCK_LOGS.slice().reverse().map(g=>{
+  <div class="h">これまでの記録 <span style="font-size:12px;color:var(--sub);font-family:var(--sans)">（長押しで編集・削除）</span></div>
+  <div id="logList">${MOCK_LOGS.slice().reverse().map((g,idx)=>{
     const so=serOf(g.intensity);
-    return `<div class="log" onclick="toggleLog(this)">
+    const realIdx=MOCK_LOGS.length-1-idx;
+    return `<div class="log" data-idx="${realIdx}" onclick="toggleLog(this)" oncontextmenu="return false">
       <div class="lr">
         <span class="d">${g.date}<span class="itag" style="background:${so.c}">${so.l}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
         <span class="r">${g.sets}×${g.reps}</span>
@@ -541,15 +606,15 @@ function viewQuest(){
   return `
   <div class="brand"><div class="logo"><b>クエスト</b></div></div>
   <div class="mission">
-    <div class="t">今月の修行目標 — 6月</div>
-    <div style="display:flex;justify-content:flex-end;align-items:center;margin:10px 0 4px">
-      <span style="font-size:12px;color:var(--sub)">難易度変更は設定から ›</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="t" style="margin:0">今月の修行目標 — 6月</div>
+      <span style="font-size:12px;color:var(--sub);cursor:pointer" onclick="openSettings()">目標変更は設定から ›</span>
     </div>
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0">目標達成で「🏵️ 印」を獲得</p>
   </div>
-  <div class="h">印（月次ミッション）</div>
+  <div class="h">印</div>
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
     ${STAMPS.map(s=>`<div style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};min-width:72px">
       <div style="font-size:26px">🏵️</div>
@@ -614,8 +679,8 @@ function viewProfile(){
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
-  <div class="h">修行カレンダー</div>
-  <div class="cal" id="calBox">${buildCal(calYear, calMonth)}</div>`;
+  <div class="h">直近1週間</div>
+  <div class="cal" id="calBox">${buildWeekCal()}</div>`;
 }
 
 /* ══ レーダー ══ */
