@@ -356,14 +356,8 @@ function setBg(cls){
   el.className='bgimg '+cls;
 }
 
-/* ══ サウンド ══ */
-const SND={};
-function playSound(name){
-  try{
-    if(!SND[name]) SND[name]=new Audio('sound/'+name+'.mp3');
-    SND[name].currentTime=0; SND[name].play().catch(()=>{});
-  }catch(e){}
-}
+/* ══ バイブレーション ══ */
+function vib(pattern){ try{ navigator.vibrate(pattern); }catch(e){} }
 
 /* ══ カレンダー ══ */
 let calYear=2026, calMonth=6; // 今月
@@ -430,7 +424,7 @@ const TABS=[
 function renderTabs(){
   const cur=['home','steps','record'].includes(state.view)?'home':state.view;
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
-    `<div class="tab ${t.id===cur?'on':''}" onclick="playSound('sound_tap');nav('${t.id}')">
+    `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);nav('${t.id}')">
        <svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.label}</span></div>`).join('');
 }
 
@@ -447,7 +441,7 @@ function render(){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.2.8 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.2.9 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -547,13 +541,13 @@ function viewQuest(){
   return `
   <div class="brand"><div class="logo"><b>クエスト</b></div></div>
   <div class="mission">
-    <div class="t">今月の修行 — 6月</div>
+    <div class="t">今月の修行目標 — 6月</div>
     <div style="display:flex;justify-content:flex-end;align-items:center;margin:10px 0 4px">
       <span style="font-size:12px;color:var(--sub)">難易度変更は設定から ›</span>
     </div>
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
-    <p style="font-size:12px;color:var(--sub);margin:10px 0 0">達成で「🏵️ 印」を獲得</p>
+    <p style="font-size:12px;color:var(--sub);margin:10px 0 0">目標達成で「🏵️ 印」を獲得</p>
   </div>
   <div class="h">印（月次ミッション）</div>
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
@@ -625,7 +619,7 @@ function viewProfile(){
 }
 
 /* ══ レーダー ══ */
-const RADAR_LABELS=['Push','Squat','Pull','Leg','Bridge','Hand'];
+const RADAR_LABELS=['プッシュ','スクワット','プルアップ','レッグ','ブリッジ','ハンド'];
 function radar(setsArr,colors){
   const W=340,H=300,cx=170,cy=150,R=88,MAX=10,N=6;
   const ang=i=>(-90+i*60)*Math.PI/180;
@@ -672,7 +666,7 @@ function lineChart(records){
 }
 
 /* ══ インタラクション ══ */
-function tapFlash(el,fn){ playSound('sound_tap'); el.classList.add('flash'); setTimeout(()=>{el.classList.remove('flash');fn();},320); }
+function tapFlash(el,fn){ vib(10); el.classList.add('flash'); setTimeout(()=>{el.classList.remove('flash');fn();},320); }
 function tapStep(el,key,i){ tapFlash(el,()=>nav('record',{exKey:key,step:i})); }
 function toggleLog(el){ el.classList.toggle('open'); }
 function toggleMemo(el){
@@ -693,7 +687,7 @@ function doRecord(step){
   const intensity=document.querySelector('.std.sel')?.querySelector('.l')?.textContent;
   const ikey = intensity==='上級'?'p':intensity==='中級'?'i':'b';
   const xp=calcXP(step, ikey);
-  playSound('sound_record');
+  vib(30);
   showXP(xp);
 }
 
@@ -793,10 +787,10 @@ function friendCompare(idx){
          ['今月XP', me.monthXP, f.monthXP],
          ['累計XP', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
         ].map(([label,mv,fv])=>`
-        <div style="display:flex;padding:12px 14px;border-bottom:1px solid var(--line)">
-          <div style="flex:1.2;font-size:12px;color:var(--sub)">${label}</div>
-          <div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:var(--kin)">${mv}</div>
-          <div style="flex:1;text-align:right;font-size:14px;font-weight:700;color:#6E93A6">${fv}</div>
+        <div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;border-bottom:1px solid var(--line)">
+          <div style="padding:12px 8px;text-align:center;font-size:14px;font-weight:700;color:var(--kin)">${mv}</div>
+          <div style="padding:12px 8px;text-align:center;font-size:12px;color:var(--sub);display:flex;align-items:center;justify-content:center">${label}</div>
+          <div style="padding:12px 8px;text-align:center;font-size:14px;font-weight:700;color:#6E93A6">${fv}</div>
         </div>`).join('')}
     </div>
     <p style="font-size:12px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
@@ -956,15 +950,15 @@ function imgPopup(key,i){
 function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
 function openSettings(){
-  modal(`<div class="sheet">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+  modal(`<div class="sheet" style="border-radius:18px 18px 0 0;max-height:100vh;height:90vh">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0">設定</h3>
       <span style="font-size:13px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">チュートリアル ›</span>
     </div>
-    <label>今月のミッション難易度</label>
+    <label>今月の修行目標</label>
     <div class="seg" id="lvSeg">
-      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})" style="flex-direction:column;gap:2px;line-height:1.3">
-        <span>${l.name}</span><span style="font-size:12px;opacity:.7">月${l.goal}日</span>
+      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})">
+        ${l.name}：月${l.goal}日
       </button>`).join('')}
     </div>
     <label>週の目標日数：<span id="goalv">4</span> 日</label>
@@ -984,13 +978,13 @@ const TUT=[
   {big:'🏯', tt:'鍛錬寺へようこそ',
    speech:'よく来た。ここは鍛錬寺。<br>器具はいらん、己の体だけで道を極める場所だ。<br>覚悟があるなら、門を開けてやろう。'},
   {big:'🥋', tt:'BIG 6 — 六大修行',
-   speech:'修行は6種目、それぞれ10段階ある。<br>プッシュアップから始まり、<br>ワンアームプッシュアップを極めるまでの道のりだ。'},
+   speech:'修行は6種目。それぞれ10段階ある。<br>プッシュアップに始まり、<br>ワンアームを極めるまでの道のりだ。'},
   {big:'👤', tt:'まず名前を決めろ',
    speech:'お前の修行名を決めろ。<br>2回目まで変えられる。<br>3度目以降は1年間変更できん。慎重に。', uname:true},
   {big:'📅', tt:'週の目標を決めろ',
    speech:'週に何日 道場へ来るか。<br>2日でも構わん。続けることが全てだ。', slider:true},
-  {big:'📜', tt:'今月の課題',
-   speech:'毎月ミッションが課される。<br>入門（月4日）・修行（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。'},
+  {big:'📜', tt:'今月の修行目標',
+   speech:'毎月、修行目標が課される。<br>入門（月4日）・修行（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。'},
   {big:'🔥', tt:'始める時が来た',
    speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
 ];
