@@ -125,6 +125,11 @@
   .badge{ font-size:9px; background:var(--kin); color:#1a1407; padding:1px 7px; border-radius:9px; margin-left:6px; font-weight:700; }
   @keyframes flash{ 0%{background:rgba(200,162,76,.0);} 40%{background:rgba(200,162,76,.32);} 100%{background:rgba(200,162,76,.0);} }
   .srow.flash{ animation:flash .35s ease; }
+  .card.flash{ animation:flash .35s ease; }
+  .relic.flash{ animation:flash .35s ease; }
+  .friend.flash{ animation:flash .35s ease; }
+  .rankcard.flash{ animation:flash .35s ease; }
+  .lvbtn.flash{ animation:flash .35s ease; }
 
   /* 記録画面 */
   .memo-prev{ border:1px solid var(--line); border-radius:12px; background:var(--glass); padding:10px 13px; margin-bottom:10px; }
@@ -414,7 +419,7 @@ function render(){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div style="font-size:10px;color:var(--sub);letter-spacing:.08em;margin-top:2px;font-family:var(--sans)">v0.1.3 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div style="font-size:10px;color:var(--sub);letter-spacing:.08em;margin-top:2px;font-family:var(--sans)">v0.1.6 prototype</div></div>
     <div class="bell" onclick="nav('message')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><div class="dot"></div></div>
   </div>
 
@@ -436,7 +441,7 @@ function viewHome(){
     ${EX.map(e=>{
       const cls = e.cur>=10 ? 'done' : (e.cur<=1 ? 'idle' : '');
       const nm = STEPNAMES[e.key][e.cur-1];
-      return `<div class="card ${cls}" onclick="nav('steps',{exKey:'${e.key}'})">
+      return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
         <div class="body">
           <div class="nm">${e.name}</div>
           <div class="st">STEP ${e.cur} ／ ${nm}</div>
@@ -525,8 +530,8 @@ function viewRecord(){
 
 const QLV=[
   {name:'入門', cond:'月に4回 修行する', goal:4},
-  {name:'修行', cond:'月に12回 修行する', goal:12},
-  {name:'極意', cond:'月に20回 修行する', goal:20},
+  {name:'修行', cond:'月に15回 修行する', goal:15},
+  {name:'極意', cond:'月に28回 修行する', goal:28},
 ];
 let questLv=1, questDone=8;
 const RELICS=[
@@ -545,13 +550,16 @@ function viewQuest(){
   <div class="mission" id="missionCard">${missionInner()}</div>
   <div class="h">獲得した巻物・印</div>
   <div class="relics">
-    ${RELICS.map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="relicInfo(${i})"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
+    ${RELICS.map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo(${i}))">`+`<div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
   </div>`;
 }
 function missionInner(){
   const lv=QLV[questLv]; const pct=Math.min(100, Math.round(questDone/lv.goal*100));
   return `<div class="t">今月の修行 — 6月</div>
-    <div class="lv">${QLV.map((l,i)=>`<div class="lvbtn ${i===questLv?'sel':''}" onclick="questSelLv(${i})">${l.name}</div>`).join('')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px">
+      <span style="font-size:13px;color:var(--kin);font-family:var(--serif)">${lv.name}</span>
+      <span style="font-size:11px;color:var(--sub)">難易度変更は設定から</span>
+    </div>
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「📜 巻物」を獲得（奇数月＝巻物・偶数月＝印）・途中で下げてもOK</p>`;
@@ -583,12 +591,12 @@ function viewProfile(){
   const r=rankOf(SUM);
   return `
   <div class="prof-top">
-    <div class="avatar">士</div>
-    <div><div class="pn">ノリ</div><div class="pid">@nori_tanren</div></div>
+    <div class="avatar" onclick="openAvatarSelect()" style="cursor:pointer;font-size:32px">${currentAvatar.em}</div>
+    <div><div class="pn">ノリ</div><div class="pid">@nori_tanren</div><div style="font-size:10px;color:var(--sub);margin-top:2px">${currentAvatar.label}</div></div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
 
-  <div class="rankcard" onclick="rankList()">
+  <div class="rankcard" onclick="tapFlash(this,()=>rankList())">
     <div class="lab">階　級</div>
     <div class="nm">${r.name}</div>
     <div style="font-size:11px;color:var(--sub);margin-top:6px">タップで一覧 ›</div>
@@ -605,8 +613,8 @@ function viewProfile(){
   </div>
 
   <div class="h">フレンド</div>
-  ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="friendCompare(${idx})">
-     <div class="av">${f.kanji}</div>
+  ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
+     <div class="av" style="font-size:20px">${currentAvatar.em}</div>
      <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${[18,7][idx]}日目</div></div>
      <div class="chev">›</div>
    </div>`).join('')}
@@ -673,9 +681,13 @@ function lineChart(records, std){
 }
 
 /* ============ インタラクション ============ */
-function tapStep(el, key, i){
+function tapFlash(el, fn){
   el.classList.add('flash');
-  setTimeout(()=>nav('record',{exKey:key, step:i}), 320);
+  setTimeout(()=>{ el.classList.remove('flash'); fn(); }, 320);
+}
+
+function tapStep(el, key, i){
+  tapFlash(el, ()=>nav('record',{exKey:key, step:i}));
 }
 
 function selStd(el){
@@ -691,7 +703,34 @@ function selStd(el){
   else { const m=v.match(/(\d+)分/), s2=v.match(/(\d+)秒/);
          if(sets) sets.value=1; if(reps) reps.value = m?(parseInt(m[1],10)*60):(s2?parseInt(s2[1],10):0); }
 }
-function selLv(el){ el.parentNode.querySelectorAll('.lvbtn').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); }
+const AVATARS=[
+  {id:'m1', label:'師範（男）',    em:'🧙', desc:'男性版'},
+  {id:'f1', label:'師範（女）',    em:'🧙‍♀️', desc:'女性版'},
+  {id:'n1', label:'先輩修行者A',   em:'🧝', desc:'中性版A'},
+  {id:'n2', label:'先輩修行者B',   em:'🧝', desc:'中性版B'},
+  {id:'m2', label:'ライバル（男）', em:'⚔️', desc:'男性版'},
+  {id:'f2', label:'ライバル（女）', em:'⚔️', desc:'女性版'},
+  {id:'m3', label:'弟子（男）',    em:'👦', desc:'男性版'},
+  {id:'f3', label:'弟子（女）',    em:'👧', desc:'女性版'},
+];
+let currentAvatar=AVATARS[0];
+
+function openAvatarSelect(){
+  modal(`<div class="sheet">
+    <h3>アバターを作る</h3>
+    <p class="sub">各パーツを選んでカスタマイズ（本番実装予定）</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0">
+      ${[['髪型','💇'],['目','👁'],['鼻','👃'],['口','👄'],['肌色','🎨'],['胴体','👘']].map(([l,e])=>`
+        <div style="padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--glass)">
+          <div style="font-size:20px">${e}</div>
+          <div style="font-size:12px;color:var(--kin);margin-top:4px">${l}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">タップで選択</div>
+        </div>`).join('')}
+    </div>
+    <button class="btnprime" onclick="closeModal();toast('アバターを保存しました')">保存する</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
 function toggleMemo(el){
   const b=document.getElementById('memoBody'), t=document.getElementById('memoTog');
   if(b.style.display==='none'){ b.style.display='block'; t.textContent='▾'; } else { b.style.display='none'; t.textContent='▸'; }
@@ -708,11 +747,10 @@ function closeModal(){ const m=document.getElementById('modal'); if(m) m.remove(
 
 function restConfirm(){
   modal(`<div class="sheet">
-    <h3>今日は休養日にしますか？</h3>
-    <p class="sub">今週の休養 残り回数が 1回 減ります（残り2回 → 1回）。</p>
-    <button class="btnprime" onclick="closeModal();toast('休養日にしました')">休む</button>
-    <button class="btnghost" onclick="closeModal()">やめる</button>
-    <p class="tut-note">※あとで記録すると休養日は自動で取り消されます</p>
+    <h3>今日はどうしますか？</h3>
+    <p class="sub">休養日にすると今週の残り回数が1回減ります。あとで記録すると自動で取り消されます。</p>
+    <button class="btnprime" onclick="closeModal();toast('今日もトレーニング開始！')">トレーニングする</button>
+    <button class="btnghost" onclick="closeModal();toast('休養日にしました')">休む</button>
   </div>`);
 }
 
@@ -749,18 +787,24 @@ function memoHistory(){
 function openSettings(){
   modal(`<div class="sheet">
     <h3>設定</h3>
-    <label>アバター</label>
-    <div class="seg"><button class="sel" onclick="segPick(this)">男性</button><button onclick="segPick(this)">女性</button></div>
+    <label>今月のミッション難易度</label>
+    <div class="seg" id="lvSeg">
+      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})">${l.name}</button>`).join('')}
+    </div>
+    <p style="font-size:11px;color:var(--sub);margin:4px 0 0">入門：月4回　修行：月15回　極意：月28回</p>
     <label>週の目標日数：<span id="goalv">4</span> 日</label>
     <input type="range" min="2" max="7" value="4" oninput="document.getElementById('goalv').textContent=this.value">
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
-    <label>ユーザー名</label><input type="text" value="ノリ">
-    <button class="btnprime" onclick="closeModal();toast('保存しました')">保存する</button>
+    <label>ユーザー名</label>
+    <input type="text" value="ノリ" id="unameInput">
+    <p style="font-size:11px;color:var(--shu);margin:4px 0 0">⚠ 1・2回目は自由に変更できます。3回目以降は1年間ロックされます。</p>
+    <button class="btnprime" onclick="saveSettings()">保存する</button>
     <button class="btnghost" onclick="closeModal();openTut()">チュートリアルを見る</button>
   </div>`);
 }
-function segPick(el){ el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); }
+function settingLv(el,i){ el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); questLv=i; }
+function saveSettings(){ closeModal(); const c=document.getElementById('missionCard'); if(c) c.innerHTML=missionInner(); toast('保存しました'); }
 
 const PHRASES={
   '励まし':['今日も道場開けろ。逃げんなよ、ガチで','お前ならできるってばよ！','一緒に極めようぜ。一生バカでいいからな','その努力、尊いわ。ちゃんと見てるぞ'],
@@ -835,10 +879,10 @@ function toast(msg){
 const TUT=[
   {big:'🏯', tt:'鍛錬寺へようこそ', speech:'よく来た、新入り。<br>ここはお前を鍛え直す寺。<br>器具はいらん。己の体だけで道を極めよ。', who:true},
   {big:'🥋', tt:'六大修行', tx:'押す・蹲む・引く・脚・橋・逆立ち。<br>6つの修行をそれぞれ10段階で極めていく。'},
-  {big:'🎴', tt:'アバターを選ぶ', tx:'男 / 女 を選ぶと、仲間へ送る言葉が変わる。', seg:true},
+  {big:'👤', tt:'ユーザー名を決める', tx:'2回目まで自由に変更できます。3回目以降は1年間ロックされます。', uname:true},
   {big:'📅', tt:'週の目標を決める', tx:'週に何日 道場へ来るか。<br>2〜7日から、無理のない数を。', slider:true},
-  {big:'📜', tt:'今月の修行レベル', tx:'入門・修行・極意から選ぶ。<br>続ければ必ず巻物か印がもらえる。'},
-  {big:'🔥', tt:'準備はできた', tx:'さあ、最初の一歩を刻もう。'},
+  {big:'📜', tt:'今月の修行レベル', tx:'入門（月4回）・修行（月15回）・極意（月28回）から選ぶ。<br>続ければ必ず巻物か印がもらえる。'},
+  {big:'🔥', tt:'準備はできた', tx:'さあ、最初の一歩を刻もう。<br>アバターはプロフィールから作れます。'},
 ];
 let tutI=0;
 function openTut(){ tutI=0; document.getElementById('tut').style.display='flex'; renderTut(); }
@@ -847,7 +891,7 @@ function renderTut(){
   const t=TUT[tutI];
   let extra='';
   if(t.who) extra=`<div class="speech">${t.speech}</div>`;
-  if(t.seg) extra=`<div class="seg" style="max-width:280px"><button class="sel" onclick="segPick(this)">男性</button><button onclick="segPick(this)">女性</button></div>`;
+  if(t.uname) extra=`<div style="width:280px"><input type="text" placeholder="ユーザー名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:10px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"><p style="font-size:11px;color:#8b8f99;margin:8px 0 0">2回目まで自由に変更可・3回目以降は1年間ロック</p></div>`;
   if(t.slider) extra=`<div style="width:280px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:18px">週 <span id="tg">4</span> 日</div></div>`;
   document.getElementById('tutStage').innerHTML=`<div class="big">${t.big}</div><div class="tt">${t.tt}</div>${t.tx?`<div class="tx">${t.tx}</div>`:''}${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
