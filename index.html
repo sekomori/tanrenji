@@ -110,21 +110,18 @@
   .top .ttl small{ display:block; font-family:var(--sans); font-size:11px; color:var(--sub); letter-spacing:.1em; margin-top:1px; }
 
   /* 10ステップ一覧 */
-  #steplist{ display:flex; flex-direction:column; gap:9px; padding-top:2px; }
-  .srow{ display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:14px;
-         background:var(--glass); border:1px solid var(--line); cursor:pointer; transition:all .18s ease; }
+  #steplist{ display:flex; flex-direction:column; gap:9px; padding-top:2px; padding-bottom:180px; }
+  .srow{ display:flex; align-items:center; gap:12px; padding:13px; border-radius:14px;
+         background:var(--glass); border:1px solid var(--line); cursor:pointer; transition:border-color .18s, background .18s; min-height:72px; }
   .srow .txt{ flex:1; min-width:0; }
   .srow .n{ font-size:11px; color:var(--sub); letter-spacing:.08em; }
   .srow .nm{ font-size:14px; font-weight:600; margin-top:2px; }
-  .srow .tg{ font-size:11px; color:var(--kin); margin-top:3px; }
-  .srow .th{ width:64px; height:64px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
-             background:rgba(255,255,255,.04); display:grid; place-items:center; font-size:10px; color:var(--sub);
-             transition:all .18s ease; }
+  .srow .th{ width:56px; height:56px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
+             background:rgba(255,255,255,.04); display:grid; place-items:center; font-size:10px; color:var(--sub); }
   .badge{ font-size:9px; background:var(--kin); color:#1a1407; padding:1px 7px; border-radius:9px; margin-left:6px; font-weight:700; }
   .srow.lg{ border-color:var(--kin); background:var(--glass-2); }
-  .srow.lg .th{ width:88px; height:88px; }
+  .srow.lg .th{ width:80px; height:80px; }
   .srow.lg .nm{ font-size:17px; }
-  .srow.lg .tg{ color:var(--kin-bright); }
 
   /* 記録画面 */
   .memo-prev{ border:1px solid var(--line); border-radius:12px; background:var(--glass); padding:10px 13px; margin-bottom:10px; }
