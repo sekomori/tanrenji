@@ -135,12 +135,12 @@
   .react-hist{ border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:13px;margin-bottom:10px; }
   .react-row{ display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line); }
   .react-row:last-child{ border-bottom:none; }
-  .react-row .av{ width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;flex:0 0 auto; }
+  .react-row .av{ width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:28px;flex:0 0 auto; }
   .react-row .info{ flex:1;font-size:13px; }
   .react-row .info .who{ color:var(--kin);font-size:11px; }
   .react-row .tm{ font-size:10px;color:var(--sub); }
   .friend{ display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:8px;cursor:pointer; }
-  .friend .av{ width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:20px; }
+  .friend .av{ width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:28px; }
   .friend .nm{ font-size:14px;font-weight:600; }
   .friend .sk{ font-size:11px;color:var(--kin);margin-top:2px; }
   .friend .chev{ margin-left:auto;color:var(--sub); }
@@ -205,6 +205,22 @@
   #tut .dots i{ width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2); }
   #tut .dots i.on{ background:var(--kin);width:18px;border-radius:4px; }
   .warn{ font-size:11px;color:var(--shu);margin:4px 0 0; }
+  /* カレンダー */
+  .cal{ border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:14px; }
+  .cal-nav{ display:flex;justify-content:space-between;align-items:center;margin-bottom:12px; }
+  .cal-nav button{ width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--glass);color:var(--washi);font-size:16px;cursor:pointer; }
+  .cal-nav .month{ font-family:var(--serif);font-size:15px;color:var(--kin); }
+  .cal-grid{ display:grid;grid-template-columns:repeat(7,1fr);gap:4px; }
+  .cal-day-label{ text-align:center;font-size:10px;color:var(--sub);padding-bottom:4px; }
+  .cal-day{ aspect-ratio:1;border-radius:6px;display:grid;place-items:center;font-size:12px; }
+  .cal-day.done{ background:rgba(181,70,46,.7);color:#fff; }
+  .cal-day.rest{ background:rgba(255,182,193,.25);color:#ffb6c1; }
+  .cal-day.none{ background:rgba(110,147,166,.2);color:#6E93A6; }
+  .cal-day.empty{ background:transparent; }
+  .cal-day.today{ outline:1px solid var(--kin); }
+  .cal-legend{ display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:10px;color:var(--sub); }
+  .cal-legend span{ display:flex;align-items:center;gap:4px; }
+  .cal-legend i{ width:10px;height:10px;border-radius:3px;display:inline-block; }
 </style>
 </head>
 <body>
@@ -278,10 +294,55 @@ const FRIENDS=[
   {name:'翔',    em:'⚔️',vals:[3,3,2,4,2,2],streak:7, monthXP:210,totalXP:890, trained:false},
 ];
 
+// リアクション種別ごとのランダムセリフ
+const REACT_SERIF={
+  '👊':[
+    'まだ寝てるのか？弱いままでいるつもりかよ',
+    '言い訳は聞かん。できないんじゃなくて、やってないだけだ',
+    '今日もサボりか…草。情けねぇ',
+    'その程度か…？情けねぇな',
+  ],
+  '🔥':[
+    'マジで強くなったな…お前、化けたぞ',
+    'その修行、尊すぎるわ。ガチで鳥肌立った',
+    'その記録、歴史に刻まれろ。今日のお前は最高だった',
+    '限界を超えた先に、本当の強さがある。お前は今それを証明した',
+  ],
+  '💪':[
+    'お前と一緒なら、頂なんて余裕で取れるぜ。一緒にぶち上がろう！',
+    'お前の修行が俺の燃料だ。一緒に極致まで燃やし尽くそう',
+    'この道は一人じゃ味気ない。お前と一緒に極めたいんだよ',
+    '俺たちの青春、ここに燃やし尽くそうぜ',
+  ],
+  '💙':[
+    '今日も道場開けろ。逃げんなよ、ガチで',
+    '諦めたらそこで試合終了だよ（スラムダンク）',
+    'その努力、尊いわ。ちゃんと見てるぞ',
+    '一歩一歩でいい。百錬成鋼だ',
+  ],
+};
+function randomSerif(icon){ const a=REACT_SERIF[icon]||[]; return a[Math.floor(Math.random()*a.length)]||''; }
+
 const REACT_HIST=[
-  {who:'タカシ',em:'🧙',react:'🔥',label:'熱い',tm:'2時間前'},
-  {who:'翔',    em:'⚔️',react:'💪',label:'強い',tm:'昨日'},
-  {who:'タカシ',em:'🧙',react:'👊',label:'喝',  tm:'3日前'},
+  {who:'タカシ',em:'🧙',react:'🔥',label:'熱い', serif:'その修行、尊すぎるわ。ガチで鳥肌立った', tm:'2時間前'},
+  {who:'翔',    em:'⚔️',react:'💪',label:'強い', serif:'お前の修行が俺の燃料だ。一緒に極致まで燃やし尽くそう', tm:'昨日'},
+  {who:'タカシ',em:'🧙',react:'👊',label:'喝',   serif:'今日もサボりか…草。情けねぇ', tm:'3日前'},
+];
+let hasNewReact=true; // 未確認の通知があるか
+
+// 印：月別（アプリ開始月から自動追加、クリアしたらカラー）
+const STAMPS=[
+  {month:'4月',got:true},
+  {month:'5月',got:true},
+  {month:'6月',got:false}, // 今月・未達成
+];
+// 巻物：取得分だけ表示、条件は最初から見える
+const SCROLLS=[
+  {em:'📜',l:'初伝の巻',  got:true,  cond:'はじめて記録した'},
+  {em:'📜',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
+  {em:'📜',l:'継続の巻',  got:false, cond:'7日連続で修行した'},
+  {em:'📜',l:'全種の巻',  got:false, cond:'六大修行を全種目記録した'},
+  {em:'📜',l:'精進の巻',  got:false, cond:'30日連続で修行した'},
 ];
 
 const QLV=[
@@ -291,21 +352,51 @@ const QLV=[
 ];
 let questLv=1, questDone=8;
 
-// 印：月次ミッションクリアで獲得
-// 巻物：隠し条件（???表示）
-const RELICS=[
-  {em:'🏵️',l:'鍛錬の印',  got:true, type:'in', cond:'月次ミッションをクリア'},
-  {em:'🏵️',l:'継続の印',  got:false,type:'in', cond:'月次ミッションをクリア'},
-  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
-  {em:'📜',l:'初伝の巻',  got:true, type:'mak',cond:'はじめて記録した'},
-  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
-  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
-  {em:'🏵️',l:'???',       got:false,type:'in', cond:'???'},
-  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
-];
-
 let currentAvatar='🧘';
 const SUM=EX.reduce((a,e)=>a+e.cur,0);
+
+/* ══ カレンダー ══ */
+let calYear=2026, calMonth=6; // 今月
+
+// モックデータ：日付 → 'done'|'rest'|'none'
+const CAL_DATA={
+  '2026-6-1':'done','2026-6-2':'done','2026-6-3':'rest','2026-6-4':'done',
+  '2026-6-5':'done','2026-6-6':'none','2026-6-7':'done','2026-6-8':'done',
+  '2026-6-9':'rest','2026-6-10':'done','2026-6-11':'done','2026-6-12':'done',
+  '2026-6-13':'none','2026-6-14':'done','2026-6-15':'done','2026-6-16':'done',
+  '2026-6-17':'rest','2026-6-18':'done','2026-6-19':'done','2026-6-20':'none',
+  '2026-6-21':'done','2026-6-22':'done','2026-6-23':'done','2026-6-24':'done',
+};
+
+function buildCal(y, m){
+  const DAYS=['日','月','火','水','木','金','土'];
+  const first=new Date(y,m-1,1).getDay();
+  const last=new Date(y,m,0).getDate();
+  const today=new Date(); const isThisMonth=(today.getFullYear()===y && today.getMonth()+1===m);
+  let h=`<div class="cal-nav">
+    <button onclick="calPrev()">‹</button>
+    <div class="month">${y}年 ${m}月</div>
+    <button onclick="calNext()">›</button>
+  </div>
+  <div class="cal-grid">`;
+  DAYS.forEach(d=>h+=`<div class="cal-day-label">${d}</div>`);
+  for(let i=0;i<first;i++) h+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=last;d++){
+    const key=`${y}-${m}-${d}`;
+    const st=CAL_DATA[key]||'none';
+    const isToday=isThisMonth&&d===today.getDate();
+    h+=`<div class="cal-day ${st}${isToday?' today':''}">${d}</div>`;
+  }
+  h+=`</div>
+  <div class="cal-legend">
+    <span><i style="background:rgba(181,70,46,.7)"></i>トレーニング済み</span>
+    <span><i style="background:rgba(255,182,193,.4)"></i>休養日</span>
+    <span><i style="background:rgba(110,147,166,.4)"></i>未トレーニング</span>
+  </div>`;
+  return h;
+}
+function calPrev(){ calMonth--; if(calMonth<1){calMonth=12;calYear--;} const b=document.getElementById('calBox'); if(b) b.innerHTML=buildCal(calYear,calMonth); }
+function calNext(){ calMonth++; if(calMonth>12){calMonth=1;calYear++;} const b=document.getElementById('calBox'); if(b) b.innerHTML=buildCal(calYear,calMonth); }
 
 /* ══ ナビ ══ */
 let state={view:'home',exKey:null,step:null};
@@ -342,8 +433,8 @@ function render(){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div class="ver">v0.2.0 prototype</div></div>
-    <div class="bell" onclick="nav('friends')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><div class="dot"></div></div>
+    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div class="ver">v0.2.4 prototype</div></div>
+    <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
     <div class="fire">🔥</div>
@@ -450,35 +541,44 @@ function viewQuest(){
     <div class="bar"><i style="width:${pct}%"></i></div>
     <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「🏵️ 印」を獲得</p>
   </div>
-  <div class="h">印（月次ミッション達成）</div>
-  <div class="relics">
-    ${RELICS.filter(r=>r.type==='in').map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo('${r.type}',${RELICS.indexOf(r)}))"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.got?r.l:'???'}</div></div>`).join('')}
+  <div class="h">印（月次ミッション）</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+    ${STAMPS.map(s=>`<div onclick="tapFlash(this,()=>stampInfo('${s.month}',${s.got}))" style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};cursor:pointer;min-width:72px">
+      <div style="font-size:26px">${s.got?'🏵️':'🏵️'}</div>
+      <div style="font-size:12px;color:${s.got?'var(--kin)':'var(--sub)'};margin-top:4px">${s.month}</div>
+    </div>`).join('')}
   </div>
-  <div class="h">巻物（隠し条件）</div>
+  <div class="h">巻物</div>
   <div class="relics">
-    ${RELICS.filter(r=>r.type==='mak').map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo('${r.type}',${RELICS.indexOf(r)}))"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.got?r.l:'???'}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>r.got).map(r=>`<div class="relic got" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><div class="em">${r.em}</div><div>${r.l}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><div class="em" style="opacity:.4">📜</div><div>${r.l}</div></div>`).join('')}
   </div>`;
 }
 
 /* ══ フレンドタブ ══ */
 function viewFriends(){
+  hasNewReact=false;
   return `
-  <div class="brand"><div class="logo"><b>フレンド</b></div></div>
-  <div class="h">受け取った応援（1週間）</div>
-  <div class="react-hist">
-    ${REACT_HIST.map(r=>`<div class="react-row">
-      <div class="av">${r.em}</div>
-      <div class="info"><div class="who">${r.who}</div><div>${r.react} ${r.label} を送ってくれた</div></div>
-      <div class="tm">${r.tm}</div>
-    </div>`).join('')}
+  <div class="brand">
+    <div class="logo"><b>フレンド</b></div>
+    <button class="addbtn" style="width:auto;padding:8px 14px;margin:0;font-size:13px" onclick="addFriend()">＋ 追加</button>
   </div>
-  <div class="h">フレンド一覧</div>
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
     <div class="av">${f.em}</div>
     <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div></div>
     <div class="chev">›</div>
   </div>`).join('')}
-  <button class="addbtn" onclick="addFriend()">＋ フレンドを追加（ID検索 / QR）</button>`;
+  <div class="h">受け取った応援（1週間）</div>
+  <div class="react-hist">
+    ${REACT_HIST.map(r=>`<div class="react-row">
+      <div class="av">${r.em}</div>
+      <div class="info">
+        <div class="who">${r.who} <span style="font-size:11px;color:var(--washi)">${r.react} ${r.label}</span></div>
+        <div style="font-size:12px;color:var(--sub);margin-top:3px;line-height:1.4">「${r.serif}」</div>
+      </div>
+      <div class="tm">${r.tm}</div>
+    </div>`).join('')}
+  </div>`;
 }
 
 /* ══ プロフィール ══ */
@@ -488,8 +588,11 @@ function viewProfile(){
   <div class="prof-top">
     <div class="avatar" onclick="openAvatarSelect()">${currentAvatar}</div>
     <div class="prof-info">
-      <div class="pname">ノリ <span class="rank-badge">${r.name}</span></div>
+      <div class="pname">ノリ</div>
       <div class="pid">@nori_tanren</div>
+    </div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center">
+      <span class="rank-badge" onclick="rankList()" style="cursor:pointer;font-size:15px;padding:5px 14px">${r.name} ›</span>
     </div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
@@ -501,7 +604,9 @@ function viewProfile(){
   <div class="h">六大修行レーダー</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
-  </div>`;
+  </div>
+  <div class="h">修行カレンダー</div>
+  <div class="cal" id="calBox">${buildCal(calYear, calMonth)}</div>`;
 }
 
 /* ══ レーダー ══ */
@@ -618,11 +723,39 @@ function relicInfo(type,idx){
   </div>`,true);
 }
 
+function stampInfo(month, got){
+  modal(`<div class="sheet card-c">
+    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${got?1:.4}">🏵️</div>
+    <h3 style="text-align:center">${month}の印</h3>
+    <p style="text-align:center;font-size:13px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ 達成・獲得済み':'未達成'}</p>
+    <p style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px">月次ミッションをクリアすると獲得</p>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
+function scrollInfo(idx){
+  const r=SCROLLS[idx];
+  modal(`<div class="sheet card-c">
+    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${r.got?1:.4}">📜</div>
+    <h3 style="text-align:center">${r.got?r.l:'未取得の巻物'}</h3>
+    ${r.got
+      ? `<p class="sub" style="text-align:center">取得条件</p>
+         <p style="text-align:center;font-size:15px;margin:4px 0">${r.cond}</p>
+         <p style="text-align:center;font-size:12px;color:#7FB069;margin-top:8px">✓ 獲得済み</p>`
+      : `<p style="text-align:center;font-size:14px;color:var(--sub);margin-top:8px">取得すると条件が明らかになります</p>`
+    }
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
+
 function friendCompare(idx){
   const f=FRIENDS[idx], me={streak:12,monthXP:340,totalXP:1240,vals:EX.map(e=>e.cur)};
-  const reactBtns = f.trained
-    ? `<button onclick="closeModal();toast('🔥 熱い を送りました')">🔥 熱い</button><button onclick="closeModal();toast('💪 強い を送りました')">💪 強い</button>`
-    : `<button onclick="closeModal();toast('👊 喝 を送りました')">👊 喝</button>`;
+  const trained=f.trained;
+  const reactBtns = trained
+    ? `<button onclick="sendReact('👊','${f.name}')">👊 喝</button>
+       <button onclick="sendReact('🔥','${f.name}')">🔥 熱い</button>
+       <button onclick="sendReact('💪','${f.name}')">💪 強い</button>
+       <button onclick="sendReact('💙','${f.name}')">💙 励まし</button>`
+    : `<button onclick="sendReact('👊','${f.name}')">👊 喝</button>`;
   modal(`<div class="sheet">
     <h3>${f.name} と比較</h3>
     <p class="sub"><span style="color:#C8A24C">■</span> 自分　<span style="color:#6E93A6">■</span> ${f.name}</p>
@@ -642,10 +775,16 @@ function friendCompare(idx){
       <div class="vs">vs</div>
       <div class="side"><div class="val">${f.totalXP}</div><div class="lbl">累計XP</div></div>
     </div>
-    <p style="font-size:12px;color:var(--sub);text-align:center;margin:10px 0 4px">${f.trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
+    <p style="font-size:12px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
     <div class="react-btns">${reactBtns}</div>
+    ${!trained?'<p style="font-size:11px;color:var(--sub);text-align:center;margin-top:6px">トレーニング済みの日は全種類送れます</p>':''}
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
+}
+function sendReact(icon, name){
+  const serif=randomSerif(icon);
+  closeModal();
+  toast(`${icon} を送りました「${serif.slice(0,18)}…」`);
 }
 
 function addFriend(){
@@ -654,8 +793,35 @@ function addFriend(){
     <p class="sub">現在の門下生：87名 ／ 最大100名</p>
     <label>IDで検索</label><input type="text" placeholder="@相手のID">
     <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
-    <button class="btnghost" onclick="closeModal();toast('QRをスキャンします（仮）')">📷 QRコードで追加</button>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button class="btnghost" style="margin:0" onclick="showMyQR()">📱 自分のQRを表示</button>
+      <button class="btnghost" style="margin:0" onclick="scanQR()">📷 QRを読み取る</button>
+    </div>
   </div>`);
+}
+function showMyQR(){
+  closeModal();
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <h3>自分のQRコード</h3>
+    <p class="sub">相手にこの画面をスキャンしてもらう</p>
+    <div style="width:180px;height:180px;margin:16px auto;background:#fff;border-radius:12px;display:grid;place-items:center;font-size:11px;color:#333;padding:10px">
+      QRコード表示エリア<br>（本番実装予定）<br><br>@nori_tanren
+    </div>
+    <p style="font-size:13px;color:var(--kin);margin-top:4px">@nori_tanren</p>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
+function scanQR(){
+  closeModal();
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <h3>QRコードを読み取る</h3>
+    <p class="sub">カメラで相手のQRをスキャン</p>
+    <div style="width:220px;height:220px;margin:16px auto;background:#0c0e12;border-radius:12px;border:2px solid var(--kin);display:grid;place-items:center;position:relative;overflow:hidden">
+      <div style="color:var(--sub);font-size:12px">カメラ起動エリア<br>（本番実装予定）</div>
+      <div style="position:absolute;top:20px;left:20px;right:20px;bottom:20px;border:2px solid var(--kin);border-radius:4px;opacity:.5"></div>
+    </div>
+    <button class="btnghost" onclick="closeModal()">キャンセル</button>
+  </div>`,true);
 }
 
 function openAvatarSelect(){
@@ -725,22 +891,23 @@ function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
 function openSettings(){
   modal(`<div class="sheet">
-    <h3>設定</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h3 style="margin:0">設定</h3>
+      <span style="font-size:13px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">チュートリアル ›</span>
+    </div>
     <label>今月のミッション難易度</label>
     <div class="seg" id="lvSeg">
-      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})">${l.name}</button>`).join('')}
+      ${QLV.map((l,i)=>`<button class="${i===questLv?'sel':''}" onclick="settingLv(this,${i})" style="flex-direction:column;gap:2px;line-height:1.3">
+        <span>${l.name}</span><span style="font-size:10px;opacity:.7">月${l.goal}日</span>
+      </button>`).join('')}
     </div>
-    <p style="font-size:11px;color:var(--sub);margin:4px 0 0">入門：月4回　修行：月15回　極意：月28回</p>
     <label>週の目標日数：<span id="goalv">4</span> 日</label>
     <input type="range" min="2" max="7" value="4" oninput="document.getElementById('goalv').textContent=this.value">
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
     <label>ユーザー名</label>
     <input type="text" value="ノリ" id="unameInput">
-    <p class="warn">⚠ 1・2回目は自由に変更できます。3回目以降は1年間ロックされます。</p>
     <button class="btnprime" onclick="saveSettings()">保存する</button>
-    <button class="btnghost" onclick="closeModal();rankList()">階級一覧を見る</button>
-    <button class="btnghost" onclick="closeModal();openTut()">チュートリアルを見る</button>
   </div>`);
 }
 function settingLv(el,i){el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');questLv=i;}
