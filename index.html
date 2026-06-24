@@ -3,299 +3,214 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>鍛錬寺 Big6 — 骨格プロトタイプ</title>
+<title>鍛錬寺 Big6</title>
 <style>
   :root{
-    --sumi:#0c0e12;        /* 墨・地 */
-    --sumi2:#13161c;       /* 一段明るい地 */
-    --washi:#ECE6D8;       /* 和紙・文字 */
-    --sub:#8b8f99;         /* 補助文字 */
-    --kin:#C8A24C;         /* 金 */
-    --kin-bright:#E6C97C;  /* 明るい金 */
-    --shu:#B5462E;         /* 朱 */
-    --ai:#6E93A6;          /* 藍（フレンド） */
-    --line:rgba(200,162,76,.16);
-    --glass:rgba(236,230,216,.045);
-    --glass-2:rgba(236,230,216,.08);
-    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
-    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
+    --sumi:#0c0e12; --sumi2:#13161c; --washi:#ECE6D8; --sub:#8b8f99;
+    --kin:#C8A24C; --kin2:#E6C97C; --shu:#B5462E; --ai:#6E93A6;
+    --line:rgba(200,162,76,.16); --glass:rgba(236,230,216,.045); --glass2:rgba(236,230,216,.08);
+    --serif:"Hiragino Mincho ProN","Yu Mincho",serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
   }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ margin:0; height:100%; }
-  body{
-    font-family:var(--sans); color:var(--washi); background:#000;
-    display:flex; justify-content:center;
-  }
-  /* アプリ枠（スマホ幅。PCでは中央寄せ） */
-  #app{
-    position:relative; width:100%; max-width:460px; min-height:100vh;
-    background:var(--sumi); isolation:isolate;
-  }
-  /* 背景演出（固定して背景が流れないようにする） */
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
+  html,body{ height:100%; background:#000; font-family:var(--sans); color:var(--washi); }
+  body{ display:flex; justify-content:center; }
+  #app{ position:relative; width:100%; max-width:460px; min-height:100vh; background:var(--sumi); isolation:isolate; }
   #bg{ position:fixed; top:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px; height:100vh; z-index:0; pointer-events:none; overflow:hidden; }
-  #bg .blot{ position:absolute; border-radius:50%; filter:blur(40px); opacity:.5; }
-  #bg .b1{ width:280px;height:280px; top:-60px; left:-80px; background:radial-gradient(circle,#1b2330,transparent 70%); }
-  #bg .b2{ width:320px;height:320px; bottom:120px; right:-120px; background:radial-gradient(circle,#241d12,transparent 70%); }
-  #bg .vig{ position:absolute; inset:0; background:radial-gradient(120% 80% at 50% 30%, transparent 40%, rgba(0,0,0,.55) 100%); }
-  #bg svg{ position:absolute; }
-  .enso{ top:14%; left:50%; transform:translateX(-50%); width:360px; height:360px; opacity:.10; }
-  .mtn{ bottom:0; left:0; width:100%; opacity:.5; }
+  #bg .b1{ position:absolute; width:280px;height:280px;top:-60px;left:-80px;border-radius:50%;filter:blur(40px);opacity:.5;background:radial-gradient(circle,#1b2330,transparent 70%); }
+  #bg .b2{ position:absolute; width:320px;height:320px;bottom:120px;right:-120px;border-radius:50%;filter:blur(40px);opacity:.5;background:radial-gradient(circle,#241d12,transparent 70%); }
+  #bg .vig{ position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 30%,transparent 40%,rgba(0,0,0,.55) 100%); }
+  #bg svg.enso{ position:absolute;top:14%;left:50%;transform:translateX(-50%);width:360px;height:360px;opacity:.10; }
+  #bg svg.mtn{ position:absolute;bottom:0;left:0;width:100%;opacity:.5; }
+  #main{ position:relative;z-index:1;padding:14px 14px 150px;min-height:100vh; }
+  .scr{ animation:fade .22s ease; }
+  @keyframes fade{ from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;} }
 
-  /* 画面本体 */
-  #main{ position:relative; z-index:1; padding:14px 14px 150px; min-height:100vh; }
-  .scr{ animation:fade .25s ease; }
-  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+  /* ── 共通 ── */
+  .brand{ display:flex;align-items:center;justify-content:space-between;margin:6px 2px 14px; }
+  .logo{ font-family:var(--serif);font-size:22px;letter-spacing:.14em; }
+  .logo b{ color:var(--kin); } .logo small{ font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--sub);margin-left:8px; }
+  .ver{ font-size:10px;color:var(--sub);letter-spacing:.08em;margin-top:2px; }
+  .bell{ position:relative;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;background:var(--glass);cursor:pointer; }
+  .bell .dot{ position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--shu); }
+  .h{ font-family:var(--serif);font-size:15px;letter-spacing:.12em;margin:18px 2px 10px;color:var(--washi);display:inline-block;position:relative; }
+  .h::after{ content:"";display:block;height:2px;margin-top:5px;border-radius:2px;background:linear-gradient(90deg,var(--kin),transparent); }
+  .top{ display:flex;align-items:center;gap:10px;margin:4px 0 12px; }
+  .back{ width:40px;height:40px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);background:var(--glass);color:var(--washi);display:grid;place-items:center;cursor:pointer;font-size:18px; }
+  .top .ttl{ font-family:var(--serif);font-size:17px;letter-spacing:.06em; }
+  .top .ttl small{ display:block;font-family:var(--sans);font-size:11px;color:var(--sub);margin-top:1px; }
+  .bar{ height:7px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden; }
+  .bar>i{ display:block;height:100%;background:linear-gradient(90deg,var(--kin),var(--kin2)); }
+  .badge{ font-size:9px;background:var(--kin);color:#1a1407;padding:1px 7px;border-radius:9px;margin-left:6px;font-weight:700; }
 
-  /* ヘッダー */
-  .brand{ display:flex; align-items:center; justify-content:space-between; margin:6px 2px 14px; }
-  .brand .logo{ font-family:var(--serif); font-size:22px; letter-spacing:.14em; color:var(--washi); }
-  .brand .logo b{ color:var(--kin); font-weight:600; }
-  .brand .logo small{ font-family:var(--sans); font-size:11px; letter-spacing:.2em; color:var(--sub); margin-left:8px; }
-  .bell{ position:relative; width:40px; height:40px; border-radius:50%; border:1px solid var(--line);
-         display:flex; align-items:center; justify-content:center; background:var(--glass); cursor:pointer; }
-  .bell .dot{ position:absolute; top:7px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--shu); }
-
-  /* 見出し（金の筆線つき） */
-  .h{ font-family:var(--serif); font-size:15px; letter-spacing:.12em; margin:18px 2px 10px; color:var(--washi);
-      display:inline-block; position:relative; }
-  .h::after{ content:""; display:block; height:2px; margin-top:5px; border-radius:2px;
-      background:linear-gradient(90deg,var(--kin),transparent); }
-
-  /* 帯（ストリーク） */
-  .streak{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px;
-           background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(6px); margin-bottom:12px; }
-  .streak .fire{ font-size:26px; line-height:1; filter:drop-shadow(0 0 6px rgba(181,70,46,.5)); }
+  /* ── ホーム ── */
+  .streak{ display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(6px);margin-bottom:12px; }
+  .streak .fire{ font-size:26px;filter:drop-shadow(0 0 6px rgba(181,70,46,.5)); }
   .streak .txt{ flex:1; }
-  .streak .d{ font-family:var(--serif); font-size:17px; color:var(--washi); }
-  .streak .r{ font-size:11px; color:var(--kin); margin-top:2px; }
-  .restbtn{ padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:transparent;
-            color:var(--washi); font-size:12px; font-family:var(--sans); cursor:pointer; white-space:nowrap; }
+  .streak .d{ font-family:var(--serif);font-size:17px; }
+  .streak .r{ font-size:11px;color:var(--kin);margin-top:2px; }
+  .restbtn{ padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--washi);font-size:12px;cursor:pointer;white-space:nowrap; }
+  .xp{ padding:12px 16px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px; }
+  .xp .row{ display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:6px; }
+  .xp .row b{ color:var(--kin);font-family:var(--serif);font-size:13px; }
+  .stack{ display:flex;flex-direction:column;gap:10px; }
+  .card{ display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(6px);cursor:pointer; }
+  .card .body{ flex:1;min-width:0; }
+  .card .nm{ font-size:15px;font-weight:600; }
+  .card .st{ font-size:12px;color:var(--kin);margin-top:3px; }
+  .card .chev{ color:var(--sub);font-size:20px;margin-left:6px; }
+  .card.done{ border-color:var(--kin); }
+  @keyframes flash{ 0%{background:rgba(200,162,76,.0);}40%{background:rgba(200,162,76,.32);}100%{background:rgba(200,162,76,.0);} }
+  .flash{ animation:flash .35s ease; }
 
-  /* XPバー */
-  .xp{ padding:12px 16px; border-radius:14px; background:var(--glass); border:1px solid var(--line); margin-bottom:6px; }
-  .xp .row{ display:flex; justify-content:space-between; font-size:11px; color:var(--sub); margin-bottom:6px; }
-  .xp .row b{ color:var(--kin); font-family:var(--serif); font-size:13px; }
-  .bar{ height:7px; border-radius:6px; background:rgba(255,255,255,.07); overflow:hidden; }
-  .bar > i{ display:block; height:100%; background:linear-gradient(90deg,var(--kin),var(--kin-bright)); }
-
-  /* 種目カード（六大修行） */
-  .stack{ display:flex; flex-direction:column; gap:10px; }
-  .card{ display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px;
-         background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(6px); cursor:pointer;
-         transition:transform .07s, border-color .2s; }
-  .card:active{ transform:scale(.99); }
-  .card .ic{ width:46px; height:46px; flex:0 0 auto; border-radius:12px; display:grid; place-items:center;
-             font-family:var(--serif); font-size:20px; color:var(--washi); background:rgba(255,255,255,.05);
-             border:1px solid var(--line); }
-  .card .body{ flex:1; min-width:0; }
-  .card .nm{ font-size:15px; font-weight:600; }
-  .card .st{ font-size:12px; color:var(--kin); margin-top:3px; }
-  .card .meta{ font-size:11px; color:var(--sub); margin-top:2px; }
-  .card .prog{ width:42px; text-align:center; }
-  .card .chev{ color:var(--sub); font-size:20px; margin-left:6px; }
-  .card .prog b{ font-family:var(--serif); font-size:20px; color:var(--kin); }
-  .card .prog small{ display:block; font-size:9px; color:var(--sub); letter-spacing:.1em; }
-  /* 状態 */
-  .card.done .ic{ background:linear-gradient(135deg,rgba(200,162,76,.3),rgba(200,162,76,.08));
-                  border-color:var(--kin); color:var(--kin-bright); }
-  .card.done .prog b{ color:var(--kin-bright); }
-  .card.idle{ opacity:.6; }
-  .card.idle .st{ color:var(--sub); }
-
-  /* 戻りヘッダー */
-  .top{ display:flex; align-items:center; gap:10px; margin:4px 0 12px; }
-  .back{ width:40px; height:40px; flex:0 0 auto; border-radius:12px; border:1px solid var(--line);
-         background:var(--glass); color:var(--washi); display:grid; place-items:center; cursor:pointer; font-size:18px; }
-  .top .ttl{ font-family:var(--serif); font-size:17px; letter-spacing:.06em; }
-  .top .ttl small{ display:block; font-family:var(--sans); font-size:11px; color:var(--sub); letter-spacing:.1em; margin-top:1px; }
-
-  /* 10ステップ一覧 */
-  #steplist{ display:flex; flex-direction:column; gap:10px; padding-bottom:200px; }
-  .srow{ display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px;
-         background:var(--glass); border:1px solid var(--line); cursor:pointer; transition:border-color .15s, background .15s; }
-  .srow.current{ border-color:var(--kin); background:var(--glass-2); }
+  /* ── ステップ一覧 ── */
+  #steplist{ display:flex;flex-direction:column;gap:10px;padding-bottom:200px; }
+  .srow{ display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);cursor:pointer; }
+  .srow.current{ border-color:var(--kin);background:var(--glass2); }
   .srow.current .nm{ font-size:17px; }
-  .srow.current .th{ width:82px; height:82px; }
-  .srow .txt{ flex:1; min-width:0; }
-  .srow .n{ font-size:11px; color:var(--sub); letter-spacing:.08em; }
-  .srow .nm{ font-size:14px; font-weight:600; margin-top:2px; }
-  .srow .th{ width:54px; height:54px; flex:0 0 auto; border-radius:10px; border:1px solid var(--line);
-             background:rgba(255,255,255,.04); display:grid; place-items:center; font-size:10px; color:var(--sub);
-             transition:width .15s, height .15s; }
-  .badge{ font-size:9px; background:var(--kin); color:#1a1407; padding:1px 7px; border-radius:9px; margin-left:6px; font-weight:700; }
-  @keyframes flash{ 0%{background:rgba(200,162,76,.0);} 40%{background:rgba(200,162,76,.32);} 100%{background:rgba(200,162,76,.0);} }
-  .srow.flash{ animation:flash .35s ease; }
-  .card.flash{ animation:flash .35s ease; }
-  .relic.flash{ animation:flash .35s ease; }
-  .friend.flash{ animation:flash .35s ease; }
-  .rankcard.flash{ animation:flash .35s ease; }
-  .lvbtn.flash{ animation:flash .35s ease; }
+  .srow.current .th{ width:82px;height:82px; }
+  .srow .txt{ flex:1;min-width:0; }
+  .srow .n{ font-size:11px;color:var(--sub);letter-spacing:.08em; }
+  .srow .nm{ font-size:14px;font-weight:600;margin-top:2px; }
+  .srow .th{ width:54px;height:54px;flex:0 0 auto;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;font-size:10px;color:var(--sub);transition:width .15s,height .15s; }
 
-  /* 記録画面 */
-  .memo-prev{ border:1px solid var(--line); border-radius:12px; background:var(--glass); padding:10px 13px; margin-bottom:10px; }
-  .memo-prev .lbl{ font-size:11px; color:var(--kin); cursor:pointer; display:flex; justify-content:space-between; }
-  .memo-prev .bd{ font-size:13px; color:var(--washi); margin-top:7px; line-height:1.5; }
-  .recgrid{ display:flex; gap:10px; align-items:flex-start; margin-bottom:12px; }
-  .recimg{ width:96px; height:96px; flex:0 0 auto; border-radius:12px; border:1px solid var(--line);
-           background:rgba(255,255,255,.04); display:grid; place-items:center; gap:2px; cursor:pointer; position:relative; }
-  .recimg .ph{ font-size:11px; color:var(--sub); }
-  .recimg .tap{ position:absolute; bottom:5px; right:6px; font-size:9px; color:var(--kin); }
-  .recmeta{ flex:1; min-width:0; }
-  .recmeta .nm{ font-family:var(--serif); font-size:16px; }
-  .recmeta .sn{ font-size:11px; color:var(--sub); margin-top:2px; }
-  .stds{ display:flex; gap:7px; margin-top:9px; }
-  .std{ flex:1; text-align:center; padding:7px 3px; border-radius:9px; border:1px solid var(--line);
-        background:rgba(255,255,255,.03); cursor:pointer; transition:all .12s; }
-  .std .l{ font-size:9px; color:var(--sub); }
-  .std .v{ font-size:13px; font-weight:700; margin-top:2px; }
-  .std.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); }
+  /* ── 記録画面 ── */
+  .memo-prev{ border:1px solid var(--line);border-radius:12px;background:var(--glass);padding:10px 13px;margin-bottom:10px; }
+  .memo-prev .lbl{ font-size:11px;color:var(--kin);cursor:pointer;display:flex;justify-content:space-between; }
+  .memo-prev .bd{ font-size:13px;color:var(--washi);margin-top:7px;line-height:1.5; }
+  .recgrid{ display:flex;gap:10px;align-items:flex-start;margin-bottom:12px; }
+  .recimg{ width:96px;height:96px;flex:0 0 auto;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;gap:2px;cursor:pointer;position:relative; }
+  .recimg .ph{ font-size:11px;color:var(--sub); }
+  .recimg .tap{ position:absolute;bottom:5px;right:6px;font-size:9px;color:var(--kin); }
+  .recmeta{ flex:1;min-width:0; }
+  .recmeta .nm{ font-family:var(--serif);font-size:16px; }
+  .recmeta .sn{ font-size:11px;color:var(--sub);margin-top:2px; }
+  .stds{ display:flex;gap:7px;margin-top:9px; }
+  .std{ flex:1;text-align:center;padding:7px 3px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;transition:all .12s; }
+  .std .l{ font-size:9px;color:var(--sub); }
+  .std .v{ font-size:13px;font-weight:700;margin-top:2px; }
+  .std.sel{ background:rgba(200,162,76,.16);border-color:var(--kin); }
   .std.sel .l{ color:var(--kin); }
-  .inrow{ display:flex; gap:8px; align-items:flex-end; margin-bottom:9px; }
+  .inrow{ display:flex;gap:8px;align-items:flex-end;margin-bottom:9px; }
   .inrow .f{ flex:1; }
-  .inrow .f label{ font-size:10px; color:var(--sub); display:block; margin-bottom:4px; }
-  .inrow input{ width:100%; background:var(--sumi2); border:1px solid var(--line); border-radius:9px;
-                color:var(--washi); padding:11px 10px; font-size:16px; font-family:var(--sans); }
-  .recbtn{ flex:1.1; background:linear-gradient(135deg,var(--kin),var(--kin-bright)); color:#1a1407;
-           border:none; border-radius:9px; padding:12px 6px; font-weight:700; font-size:14px; cursor:pointer; height:44px; }
-  .memrow{ display:flex; gap:8px; margin-bottom:6px; }
-  .memrow input{ flex:1; background:var(--sumi2); border:1px solid var(--line); border-radius:9px;
-                 color:var(--washi); padding:11px 10px; font-size:15px; }
-  .histbtn{ flex:0 0 auto; width:48px; border-radius:9px; border:1px solid var(--line); background:var(--glass);
-            color:var(--kin); font-size:18px; cursor:pointer; }
-  .divider{ height:1px; background:var(--line); margin:16px 0 6px; }
-
-  /* グラフ枠 */
-  .chartbox{ border:1px solid var(--line); border-radius:14px; background:var(--glass); padding:12px 10px 6px; }
-  .legend{ display:flex; gap:14px; justify-content:center; font-size:11px; color:var(--sub); margin-top:6px; }
-  .legend i{ display:inline-block; width:12px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
-  .log{ padding:9px 2px; border-bottom:1px solid var(--line); }
-  .log .lr{ display:flex; justify-content:space-between; font-size:13px; }
-  .log .d{ color:var(--sub); }
+  .inrow .f label{ font-size:10px;color:var(--sub);display:block;margin-bottom:4px; }
+  .inrow input{ width:100%;background:var(--sumi2);border:1px solid var(--line);border-radius:9px;color:var(--washi);padding:11px 10px;font-size:16px; }
+  .recbtn{ flex:1.1;background:linear-gradient(135deg,var(--kin),var(--kin2));color:#1a1407;border:none;border-radius:9px;padding:12px 6px;font-weight:700;font-size:14px;cursor:pointer;height:44px; }
+  .memrow{ display:flex;gap:8px;margin-bottom:6px; }
+  .memrow input{ flex:1;background:var(--sumi2);border:1px solid var(--line);border-radius:9px;color:var(--washi);padding:11px 10px;font-size:15px; }
+  .histbtn{ flex:0 0 auto;width:48px;border-radius:9px;border:1px solid var(--line);background:var(--glass);color:var(--kin);font-size:18px;cursor:pointer; }
+  .divider{ height:1px;background:var(--line);margin:16px 0 6px; }
+  .chartbox{ border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:12px 10px 6px; }
+  .legend{ display:flex;gap:14px;justify-content:center;font-size:11px;color:var(--sub);margin-top:6px; }
+  .legend i{ display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle; }
+  .log{ padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer; }
+  .log .lr{ display:flex;justify-content:space-between;font-size:13px;align-items:center; }
+  .log .d{ color:var(--sub);display:flex;align-items:center;gap:6px; }
   .log .r{ font-weight:700; }
-  .itag{ font-size:9px; padding:1px 6px; border-radius:8px; margin-left:6px; color:#0c0c0c; font-weight:700; }
-  .log .ln{ font-size:12px; color:var(--sub); margin-top:4px; }
+  .itag{ font-size:9px;padding:1px 6px;border-radius:8px;color:#0c0c0c;font-weight:700; }
+  .log .ln{ font-size:12px;color:var(--sub);margin-top:5px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:8px;display:none; }
+  .log.open .ln{ display:block; }
+  .log .memo-hint{ font-size:10px;color:var(--kin);margin-left:4px; }
 
-  /* クエスト */
-  .mission{ border:1px solid var(--line); border-radius:16px; background:var(--glass); padding:16px; margin-bottom:14px; }
-  .mission .t{ font-family:var(--serif); font-size:16px; }
-  .mission .lv{ display:flex; gap:8px; margin:12px 0; }
-  .lvbtn{ flex:1; text-align:center; padding:9px 4px; border-radius:10px; border:1px solid var(--line);
-          background:rgba(255,255,255,.03); font-size:12px; cursor:pointer; }
-  .lvbtn.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); color:var(--kin); }
-  .mission .pr{ font-size:11px; color:var(--sub); margin-bottom:6px; display:flex; justify-content:space-between; }
-  .relics{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-  .relic{ aspect-ratio:1; border-radius:12px; border:1px solid var(--line); background:var(--glass);
-          display:grid; place-items:center; text-align:center; gap:3px; font-size:10px; color:var(--sub); }
+  /* XP獲得演出 */
+  #xpPop{ position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:90;pointer-events:none;display:none;text-align:center; }
+  #xpPop .xpnum{ font-family:var(--serif);font-size:54px;color:var(--kin2);text-shadow:0 0 20px rgba(200,162,76,.8),0 0 40px rgba(200,162,76,.4);animation:xpbounce .6s ease; }
+  #xpPop .xplabel{ font-size:16px;color:var(--washi);letter-spacing:.1em;margin-top:4px; }
+  .sparkle{ position:absolute;border-radius:50%;animation:spark 1s ease forwards; }
+  @keyframes xpbounce{ 0%{transform:scale(.4);opacity:0;}60%{transform:scale(1.2);}100%{transform:scale(1);opacity:1;} }
+  @keyframes spark{ 0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0);} }
+
+  /* ── クエスト ── */
+  .mission{ border:1px solid var(--line);border-radius:16px;background:var(--glass);padding:16px;margin-bottom:14px; }
+  .mission .t{ font-family:var(--serif);font-size:16px; }
+  .mission .pr{ font-size:11px;color:var(--sub);margin:10px 0 6px;display:flex;justify-content:space-between; }
+  .relics{ display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+  .relic{ aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:var(--glass);display:grid;place-items:center;text-align:center;gap:3px;font-size:10px;color:var(--sub);cursor:pointer; }
   .relic .em{ font-size:24px; }
   .relic.locked{ opacity:.32; }
-  .relic.got{ border-color:var(--kin); color:var(--washi); }
+  .relic.got{ border-color:var(--kin);color:var(--washi); }
   .relic.got .em{ filter:drop-shadow(0 0 5px rgba(200,162,76,.5)); }
 
-  /* メッセージ */
-  .msg{ display:flex; gap:11px; padding:13px; border-radius:13px; background:var(--glass);
-        border:1px solid var(--line); margin-bottom:9px; }
-  .msg .av{ width:38px; height:38px; flex:0 0 auto; border-radius:50%; background:rgba(255,255,255,.06);
-            border:1px solid var(--line); display:grid; place-items:center; font-family:var(--serif); }
-  .msg .c{ flex:1; }
-  .msg .who{ font-size:12px; color:var(--kin); }
-  .msg .bd{ font-size:14px; margin-top:3px; line-height:1.4; }
-  .msg .tm{ font-size:10px; color:var(--sub); margin-top:4px; }
+  /* ── フレンドタブ ── */
+  .react-hist{ border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:13px;margin-bottom:10px; }
+  .react-row{ display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line); }
+  .react-row:last-child{ border-bottom:none; }
+  .react-row .av{ width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;flex:0 0 auto; }
+  .react-row .info{ flex:1;font-size:13px; }
+  .react-row .info .who{ color:var(--kin);font-size:11px; }
+  .react-row .tm{ font-size:10px;color:var(--sub); }
+  .friend{ display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:8px;cursor:pointer; }
+  .friend .av{ width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-size:20px; }
+  .friend .nm{ font-size:14px;font-weight:600; }
+  .friend .sk{ font-size:11px;color:var(--kin);margin-top:2px; }
+  .friend .chev{ margin-left:auto;color:var(--sub); }
+  .addbtn{ width:100%;padding:13px;border-radius:13px;border:1px dashed var(--line);background:transparent;color:var(--kin);font-size:13px;cursor:pointer;margin-top:2px; }
 
-  /* プロフィール */
-  .prof-top{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
-  .avatar{ width:72px; height:72px; flex:0 0 auto; border-radius:50%;
-           background:radial-gradient(circle at 35% 30%, #2a3340, #11141a); border:2px solid var(--kin);
-           display:grid; place-items:center; font-family:var(--serif); font-size:26px; color:var(--kin-bright); }
-  .prof-top .pn{ font-family:var(--serif); font-size:20px; }
-  .prof-top .pid{ font-size:11px; color:var(--sub); margin-top:2px; }
-  .prof-top .gear{ margin-left:auto; width:40px; height:40px; border-radius:12px; border:1px solid var(--line);
-                   background:var(--glass); display:grid; place-items:center; cursor:pointer; font-size:18px; }
-  .stat3{ display:flex; gap:10px; margin-bottom:6px; }
-  .stat{ flex:1; text-align:center; padding:13px 6px; border-radius:13px; background:var(--glass); border:1px solid var(--line); }
-  .stat b{ display:block; font-family:var(--serif); font-size:21px; color:var(--kin); }
-  .stat small{ font-size:10px; color:var(--sub); letter-spacing:.08em; }
-  .rankcard{ text-align:center; padding:18px; border-radius:16px; background:var(--glass); border:1px solid var(--line);
-             position:relative; overflow:hidden; }
-  .rankcard .lab{ font-size:11px; color:var(--sub); letter-spacing:.2em; }
-  .rankcard .nm{ font-family:var(--serif); font-size:30px; color:var(--kin-bright); margin-top:4px; letter-spacing:.1em; }
-  .friend{ display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:13px;
-           background:var(--glass); border:1px solid var(--line); margin-bottom:8px; cursor:pointer; }
-  .friend .av{ width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.06);
-               border:1px solid var(--line); display:grid; place-items:center; font-family:var(--serif); }
-  .friend .nm{ font-size:14px; font-weight:600; }
-  .friend .sk{ font-size:11px; color:var(--kin); margin-top:2px; }
-  .friend .chev{ margin-left:auto; color:var(--sub); }
-  .addbtn{ width:100%; padding:13px; border-radius:13px; border:1px dashed var(--line); background:transparent;
-           color:var(--kin); font-size:13px; cursor:pointer; margin-top:2px; }
+  /* ── プロフィール ── */
+  .prof-top{ display:flex;align-items:center;gap:14px;margin-bottom:14px; }
+  .avatar{ width:72px;height:72px;flex:0 0 auto;border-radius:50%;background:radial-gradient(circle at 35% 30%,#2a3340,#11141a);border:2px solid var(--kin);display:grid;place-items:center;font-size:32px;cursor:pointer; }
+  .prof-info{ flex:1; }
+  .prof-info .pname{ font-family:var(--serif);font-size:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+  .prof-info .rank-badge{ font-size:11px;background:rgba(200,162,76,.18);border:1px solid var(--kin);color:var(--kin);padding:2px 9px;border-radius:9px;font-family:var(--sans); }
+  .prof-info .pid{ font-size:11px;color:var(--sub);margin-top:3px; }
+  .gear{ width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--glass);display:grid;place-items:center;cursor:pointer;font-size:18px;flex:0 0 auto; }
+  .stat3{ display:flex;gap:10px;margin-bottom:6px; }
+  .stat{ flex:1;text-align:center;padding:13px 6px;border-radius:13px;background:var(--glass);border:1px solid var(--line); }
+  .stat b{ display:block;font-family:var(--serif);font-size:21px;color:var(--kin); }
+  .stat small{ font-size:10px;color:var(--sub);letter-spacing:.08em; }
 
-  /* タブバー */
-  .tabbar{ position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:460px;
-           display:flex; justify-content:space-around; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-           background:rgba(10,12,16,.86); backdrop-filter:blur(12px); border-top:1px solid var(--line); z-index:20; }
-  .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:5px 0; cursor:pointer;
-        color:var(--sub); }
-  .tab svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.6; }
-  .tab span{ font-size:10px; letter-spacing:.05em; }
+  /* ── タブバー ── */
+  .tabbar{ position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:rgba(10,12,16,.86);backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:20; }
+  .tab{ flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;cursor:pointer;color:var(--sub); }
+  .tab svg{ width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6; }
+  .tab span{ font-size:10px;letter-spacing:.05em; }
   .tab.on{ color:var(--kin); }
-  .tab.on::after{ content:""; width:5px; height:5px; border-radius:50%; background:var(--kin); margin-top:1px; }
 
-  /* シート/モーダル */
-  .ovl{ position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.6); display:flex; align-items:flex-end;
-        justify-content:center; animation:fade .2s; }
+  /* ── シート/モーダル ── */
+  .ovl{ position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s; }
   .ovl.center{ align-items:center; }
-  .sheet{ width:100%; max-width:460px; background:#15181f; border:1px solid var(--line);
-          border-radius:18px 18px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); animation:up .25s ease; }
-  .sheet.card-c{ border-radius:18px; margin:0 16px; }
-  @keyframes up{ from{ transform:translateY(30px); opacity:.5; } to{ transform:none; opacity:1; } }
-  .sheet h3{ font-family:var(--serif); font-size:17px; margin:0 0 4px; }
-  .sheet p.sub{ font-size:12px; color:var(--sub); margin:0 0 8px; }
-  .sheet label{ display:block; font-size:12px; color:var(--sub); margin:14px 0 5px; }
-  .sheet input[type=text], .sheet input[type=number]{ width:100%; background:var(--sumi2); border:1px solid var(--line);
-        border-radius:9px; color:var(--washi); padding:11px; font-size:16px; }
-  .sheet input[type=range]{ width:100%; accent-color:var(--kin); }
-  .seg{ display:flex; gap:8px; }
-  .seg button{ flex:1; padding:11px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,.03);
-               color:var(--washi); font-size:14px; cursor:pointer; }
-  .seg button.sel{ background:rgba(200,162,76,.16); border-color:var(--kin); color:var(--kin); }
-  .btnprime{ width:100%; margin-top:16px; padding:13px; border:none; border-radius:11px;
-             background:linear-gradient(135deg,var(--kin),var(--kin-bright)); color:#1a1407; font-weight:700; font-size:15px; cursor:pointer; }
-  .btnghost{ width:100%; margin-top:9px; padding:12px; border:1px solid var(--line); border-radius:11px;
-             background:transparent; color:var(--washi); font-size:14px; cursor:pointer; }
-  .btndanger{ background:var(--shu); border-color:var(--shu); color:#fff; }
-  .phrase{ padding:11px 13px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,.03);
-           font-size:14px; margin-bottom:8px; cursor:pointer; }
-  .phrase:active{ background:rgba(200,162,76,.14); }
-  .phrase-cat{ font-size:11px; color:var(--kin); letter-spacing:.1em; margin:12px 2px 6px; font-family:var(--serif); }
-  .imgpair{ display:flex; gap:10px; }
-  .imgpair .one{ flex:1; aspect-ratio:4/3; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,.04);
-                 display:grid; place-items:center; gap:4px; color:var(--sub); font-size:12px; transition:border-color .2s; }
-  .imgpair .one.on{ border-color:var(--kin); color:var(--washi); }
-  .imgcap{ font-size:11px; color:var(--sub); text-align:center; margin-top:10px; }
+  .sheet{ width:100%;max-width:460px;background:#15181f;border:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));animation:up .25s ease;max-height:85vh;overflow-y:auto; }
+  .sheet.card-c{ border-radius:18px;margin:0 16px;max-height:80vh; }
+  @keyframes up{ from{transform:translateY(30px);opacity:.5;}to{transform:none;opacity:1;} }
+  .sheet h3{ font-family:var(--serif);font-size:17px;margin:0 0 4px; }
+  .sheet p.sub{ font-size:12px;color:var(--sub);margin:0 0 8px; }
+  .sheet label{ display:block;font-size:12px;color:var(--sub);margin:14px 0 5px; }
+  .sheet input[type=text],.sheet input[type=number]{ width:100%;background:var(--sumi2);border:1px solid var(--line);border-radius:9px;color:var(--washi);padding:11px;font-size:16px; }
+  .sheet input[type=range]{ width:100%;accent-color:var(--kin); }
+  .seg{ display:flex;gap:8px; }
+  .seg button{ flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--washi);font-size:14px;cursor:pointer; }
+  .seg button.sel{ background:rgba(200,162,76,.16);border-color:var(--kin);color:var(--kin); }
+  .btnprime{ width:100%;margin-top:16px;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--kin),var(--kin2));color:#1a1407;font-weight:700;font-size:15px;cursor:pointer; }
+  .btnghost{ width:100%;margin-top:9px;padding:12px;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--washi);font-size:14px;cursor:pointer; }
+  .btndanger{ background:var(--shu);border-color:var(--shu);color:#fff; }
+
+  /* フレンド比較 */
+  .cmp{ display:flex;justify-content:space-around;margin:12px 0;text-align:center; }
+  .cmp .side .val{ font-family:var(--serif);font-size:24px;color:var(--kin); }
+  .cmp .side .lbl{ font-size:11px;color:var(--sub);margin-top:2px; }
+  .cmp .vs{ font-size:13px;color:var(--sub);align-self:center; }
+  .react-btns{ display:flex;gap:10px;margin-top:14px; }
+  .react-btns button{ flex:1;padding:12px 6px;border-radius:12px;border:1px solid var(--line);background:var(--glass);color:var(--washi);font-size:14px;cursor:pointer; }
+  .react-btns button:active{ background:rgba(200,162,76,.2); }
 
   /* チュートリアル */
-  #tut{ position:fixed; inset:0; z-index:80; background:linear-gradient(180deg,#0c0e12,#161210);
-        display:none; flex-direction:column; padding:30px 22px calc(24px + env(safe-area-inset-bottom)); }
-  #tut .skip{ position:absolute; top:18px; right:18px; color:var(--sub); font-size:13px; cursor:pointer; }
-  #tut .stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:18px; }
+  #tut{ position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,#0c0e12,#161210);display:none;flex-direction:column;padding:30px 22px calc(24px + env(safe-area-inset-bottom)); }
+  #tut .skip{ position:absolute;top:18px;right:18px;color:var(--sub);font-size:13px;cursor:pointer; }
+  #tut .stage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px; }
   #tut .big{ font-size:60px; }
-  #tut .tt{ font-family:var(--serif); font-size:24px; letter-spacing:.08em; }
-  #tut .tx{ font-size:14px; color:var(--sub); line-height:1.7; max-width:300px; }
-  #tut .speech{ background:var(--glass); border:1px solid var(--line); border-radius:14px; padding:14px 16px;
-                font-size:14px; line-height:1.6; max-width:300px; }
-  #tut .dots{ display:flex; gap:7px; justify-content:center; margin-bottom:16px; }
-  #tut .dots i{ width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); }
-  #tut .dots i.on{ background:var(--kin); width:18px; border-radius:4px; }
-  .tut-note{ font-size:11px; color:var(--sub); text-align:center; margin:14px 2px 0; }
-
-  .hint-strip{ font-size:11px; color:var(--sub); text-align:center; background:var(--glass); border:1px dashed var(--line);
-               border-radius:10px; padding:8px; margin-bottom:12px; }
-  .hint-strip b{ color:var(--kin); cursor:pointer; }
+  #tut .tt{ font-family:var(--serif);font-size:24px;letter-spacing:.08em; }
+  #tut .tx{ font-size:14px;color:var(--sub);line-height:1.7;max-width:300px; }
+  #tut .speech{ background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.6;max-width:300px; }
+  #tut .dots{ display:flex;gap:7px;justify-content:center;margin-bottom:16px; }
+  #tut .dots i{ width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2); }
+  #tut .dots i.on{ background:var(--kin);width:18px;border-radius:4px; }
+  .warn{ font-size:11px;color:var(--shu);margin:4px 0 0; }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="bg">
-    <div class="blot b1"></div><div class="blot b2"></div>
+    <div class="b1"></div><div class="b2"></div>
     <svg class="enso" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#C8A24C" stroke-width="2.4" stroke-dasharray="250 14" stroke-linecap="round" transform="rotate(-20 50 50)"/></svg>
     <svg class="mtn" viewBox="0 0 460 160" preserveAspectRatio="none">
       <path d="M0,160 L0,110 L70,70 L130,105 L200,55 L270,100 L340,60 L400,95 L460,72 L460,160 Z" fill="#0a0d11"/>
@@ -303,36 +218,32 @@
     </svg>
     <div class="vig"></div>
   </div>
-
   <div id="main"></div>
-
   <div class="tabbar" id="tabbar"></div>
 </div>
-
-<!-- チュートリアル -->
+<div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">XP 獲得！</div></div>
 <div id="tut">
   <div class="skip" onclick="closeTut()">スキップ</div>
   <div class="stage" id="tutStage"></div>
   <div class="dots" id="tutDots"></div>
   <button class="btnprime" id="tutNext" onclick="tutNext()">次へ</button>
 </div>
-
 <script>
-/* ============ モックデータ ============ */
+/* ══ マスターデータ ══ */
 const RANKS=[
   {min:6,name:'門前払い'},{min:12,name:'入門'},{min:18,name:'修行僧'},{min:24,name:'鍛錬者'},
   {min:30,name:'求道者'},{min:36,name:'武練士'},{min:42,name:'道師'},{min:48,name:'達人'},
   {min:54,name:'仙人'},{min:60,name:'覚者'}
 ];
-function rankOf(sum){ let r=RANKS[0]; for(const x of RANKS){ if(sum>=x.min) r=x; } return r; }
+function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
 
 const EX=[
-  {key:'push', kanji:'押', name:'プッシュアップ', cur:5},
-  {key:'squat',kanji:'蹲', name:'スクワット',     cur:4},
-  {key:'pull', kanji:'引', name:'プルアップ',     cur:3},
-  {key:'leg',  kanji:'腹', name:'レッグレイズ',   cur:6},
-  {key:'bridge',kanji:'橋',name:'ブリッジ',       cur:2},
-  {key:'hand', kanji:'逆', name:'ハンドスタンド・プッシュアップ', cur:3},
+  {key:'push', name:'プッシュアップ', cur:5},
+  {key:'squat',name:'スクワット',     cur:4},
+  {key:'pull', name:'プルアップ',     cur:3},
+  {key:'leg',  name:'レッグレイズ',   cur:6},
+  {key:'bridge',name:'ブリッジ',      cur:2},
+  {key:'hand', name:'ハンドスタンド・プッシュアップ', cur:3},
 ];
 const STEPNAMES={
   push:['ウォール','インクライン','ニーリング','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
@@ -342,408 +253,348 @@ const STEPNAMES={
   bridge:['ショート','ストレート','アングルド','ヘッド','ハーフ','フル','ウォール下り','ウォール上り','クロージング','スタンド'],
   hand:['ウォール頭立','クロウ','ウォール倒立','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
 };
-const STD={ // ステップ別の初級/中級/上級（サンプル：全ステップ共通の代表値）
-  default:{b:'1×8', i:'2×12', p:'2×20'}
-};
-function stdOf(){ return STD.default; }
-
-// 記録画面用のモック記録（押・STEP5）
-const MOCK_LOGS=[
-  {date:'05/02', sets:2, reps:10, intensity:'b', note:'肘が開いた'},
-  {date:'05/06', sets:2, reps:14, intensity:'i', note:''},
-  {date:'05/11', sets:2, reps:12, intensity:'i', note:'肩幅を意識'},
-  {date:'05/15', sets:2, reps:18, intensity:'i', note:''},
-  {date:'05/20', sets:1, reps:8,  intensity:'p', note:'フォーム重視'},
-  {date:'05/25', sets:2, reps:11, intensity:'p', note:''},
-];
+const STD={b:'1×8', i:'2×12', p:'2×20'};
 const SER=[{k:'b',l:'初級',c:'#6E93A6'},{k:'i',l:'中級',c:'#C8A24C'},{k:'p',l:'上級',c:'#7FB069'}];
-function serOf(k){ for(const s of SER){ if(s.k===k) return s; } return {k:'',l:'自由',c:'#8b8f99'}; }
+function serOf(k){ return SER.find(s=>s.k===k)||{k:'',l:'自由',c:'#8b8f99'}; }
+
+// XP計算：基本=ステップ×10、強度ボーナス 中+10 上+20
+function calcXP(step, intensity){
+  const base = step * 10;
+  const bonus = intensity==='p'?20 : intensity==='i'?10 : 0;
+  return base + bonus;
+}
+
+const MOCK_LOGS=[
+  {date:'05/02',sets:2,reps:10,intensity:'b',note:'肘が開いた'},
+  {date:'05/06',sets:2,reps:14,intensity:'i',note:''},
+  {date:'05/11',sets:2,reps:12,intensity:'i',note:'肩幅を意識'},
+  {date:'05/15',sets:2,reps:18,intensity:'i',note:''},
+  {date:'05/20',sets:1,reps:8, intensity:'p',note:'フォーム重視'},
+  {date:'05/25',sets:2,reps:11,intensity:'p',note:''},
+];
 
 const FRIENDS=[
-  {name:'タカシ', kanji:'隆', vals:[6,5,4,7,3,4]},
-  {name:'翔',     kanji:'翔', vals:[3,3,2,4,2,2]},
-];
-const MESSAGES=[
-  {who:'タカシ', kanji:'隆', body:'俺の背中が見えるか？追いつきたきゃ本気出せよ', tm:'2時間前'},
-  {who:'翔',     kanji:'翔', body:'一緒に極めようぜ。一生バカでいいからな', tm:'昨日'},
-  {who:'タカシ', kanji:'隆', body:'マジで強くなったな…お前、化けたぞ', tm:'3日前'},
+  {name:'タカシ',em:'🧙',vals:[6,5,4,7,3,4],streak:18,monthXP:520,totalXP:2100,trained:true},
+  {name:'翔',    em:'⚔️',vals:[3,3,2,4,2,2],streak:7, monthXP:210,totalXP:890, trained:false},
 ];
 
-let SUM = EX.reduce((a,e)=>a+e.cur,0); // 23 → 修行僧
+const REACT_HIST=[
+  {who:'タカシ',em:'🧙',react:'🔥',label:'熱い',tm:'2時間前'},
+  {who:'翔',    em:'⚔️',react:'💪',label:'強い',tm:'昨日'},
+  {who:'タカシ',em:'🧙',react:'👊',label:'喝',  tm:'3日前'},
+];
 
-/* ============ 状態・ナビ ============ */
-let state={ view:'home', exKey:null, step:null };
+const QLV=[
+  {name:'入門',cond:'月に4回 修行する',goal:4},
+  {name:'修行',cond:'月に15回 修行する',goal:15},
+  {name:'極意',cond:'月に28回 修行する',goal:28},
+];
+let questLv=1, questDone=8;
+
+// 印：月次ミッションクリアで獲得
+// 巻物：隠し条件（???表示）
+const RELICS=[
+  {em:'🏵️',l:'鍛錬の印',  got:true, type:'in', cond:'月次ミッションをクリア'},
+  {em:'🏵️',l:'継続の印',  got:false,type:'in', cond:'月次ミッションをクリア'},
+  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
+  {em:'📜',l:'初伝の巻',  got:true, type:'mak',cond:'はじめて記録した'},
+  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
+  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
+  {em:'🏵️',l:'???',       got:false,type:'in', cond:'???'},
+  {em:'📜',l:'???',       got:false,type:'mak',cond:'???'},
+];
+
+let currentAvatar='🧘';
+const SUM=EX.reduce((a,e)=>a+e.cur,0);
+
+/* ══ ナビ ══ */
+let state={view:'home',exKey:null,step:null};
 const $main=document.getElementById('main');
 
-function nav(view, data){
-  state.view=view;
-  if(data){ Object.assign(state, data); }
-  history.pushState({...state}, '');
+function nav(view,data){
+  state={view,...(data||{})};
+  history.pushState({...state},'');
   render();
 }
-window.addEventListener('popstate', e=>{
-  if(e.state){ state=e.state; render(); }
-  else { state={view:'home'}; render(); }
-});
+window.addEventListener('popstate',e=>{ if(e.state){state=e.state;render();} else{state={view:'home'};render();} });
 
 const TABS=[
-  {id:'home', label:'ホーム', icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
-  {id:'quest',label:'クエスト', icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
-  {id:'profile',label:'プロフィール', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
+  {id:'home',   label:'ホーム',      icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
+  {id:'quest',  label:'クエスト',    icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
+  {id:'friends',label:'フレンド',    icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="8" r="3"/><path d="M14 21c0-2.5 1.5-4.5 3-5.5"/>'},
+  {id:'profile',label:'プロフィール',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
 ];
 function renderTabs(){
-  const cur = ['home','steps','record'].includes(state.view) ? 'home' : state.view;
-  document.getElementById('tabbar').innerHTML = TABS.map(t=>
+  const cur=['home','steps','record'].includes(state.view)?'home':state.view;
+  document.getElementById('tabbar').innerHTML=TABS.map(t=>
     `<div class="tab ${t.id===cur?'on':''}" onclick="nav('${t.id}')">
        <svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.label}</span></div>`).join('');
 }
 
 function render(){
   renderTabs();
-  let html='';
-  switch(state.view){
-    case 'home': html=viewHome(); break;
-    case 'steps': html=viewSteps(); break;
-    case 'record': html=viewRecord(); break;
-    case 'quest': html=viewQuest(); break;
-    case 'message': html=viewMessage(); break;
-    case 'profile': html=viewProfile(); break;
-    default: html=viewHome();
-  }
-  $main.innerHTML=`<div class="scr">${html}</div>`;
+  const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,friends:viewFriends,profile:viewProfile};
+  $main.innerHTML=`<div class="scr">${(map[state.view]||viewHome)()}</div>`;
   window.scrollTo(0,0);
-  if(state.view==='steps') window.onscroll=null;
 }
 
-/* ============ 画面 ============ */
+/* ══ ホーム ══ */
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div style="font-size:10px;color:var(--sub);letter-spacing:.08em;margin-top:2px;font-family:var(--sans)">v0.1.6 prototype</div></div>
-    <div class="bell" onclick="nav('message')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><div class="dot"></div></div>
+    <div class="logo"><b>鍛錬寺</b> Big6<small>六大修行</small><div class="ver">v0.2.0 prototype</div></div>
+    <div class="bell" onclick="nav('friends')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><div class="dot"></div></div>
   </div>
-
-  <div class="hint-strip">これは骨格プレビューです・<b onclick="openTut()">チュートリアルを見る ▶</b></div>
-
   <div class="streak">
     <div class="fire">🔥</div>
     <div class="txt"><div class="d">修行 12日目</div><div class="r">今週 残り2回 休養OK</div></div>
     <button class="restbtn" onclick="restConfirm()">今日は休む</button>
   </div>
-
   <div class="xp">
     <div class="row"><span>今日の修行 XP</span><b>30 / 50</b></div>
     <div class="bar"><i style="width:60%"></i></div>
   </div>
-
   <div class="h">六大修行</div>
   <div class="stack">
     ${EX.map(e=>{
-      const cls = e.cur>=10 ? 'done' : (e.cur<=1 ? 'idle' : '');
-      const nm = STEPNAMES[e.key][e.cur-1];
+      const cls=e.cur>=10?'done':'';
+      const nm=STEPNAMES[e.key][e.cur-1];
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
-        <div class="body">
-          <div class="nm">${e.name}</div>
-          <div class="st">STEP ${e.cur} ／ ${nm}</div>
-        </div>
-        <div class="chev">›</div>
-      </div>`;
+        <div class="body"><div class="nm">${e.name}</div><div class="st">STEP ${e.cur} ／ ${nm}</div></div>
+        <div class="chev">›</div></div>`;
     }).join('')}
   </div>`;
 }
 
+/* ══ ステップ一覧 ══ */
 function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
   let rows='';
   for(let i=1;i<=10;i++){
-    const nm=STEPNAMES[e.key][i-1];
-    const isCur = i===e.cur;
-    rows+=`<div class="srow${isCur?' current':''}" data-i="${i}" onclick="tapStep(this,'${e.key}',${i})">
+    const nm=STEPNAMES[e.key][i-1], isCur=i===e.cur;
+    rows+=`<div class="srow${isCur?' current':''}" onclick="tapStep(this,'${e.key}',${i})">
       <div class="txt">
-        <div class="n">STEP ${i}${isCur?'<span class="badge">現在</span>':''}</div>
+        <div class="n">STEP ${i}${isCur?`<span class="badge">現在</span>`:''}</div>
         <div class="nm">${nm}</div>
       </div>
-      <div class="th">${state.exKey.slice(0,1)}-${i}a</div>
+      <div class="th">${e.key.slice(0,1)}-${i}a</div>
     </div>`;
   }
   return `
-  <div class="top">
-    <div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">${e.name}<small>六大修行</small></div>
-  </div>
+  <div class="top"><div class="back" onclick="history.back()">‹</div>
+    <div class="ttl">${e.name}<small>六大修行</small></div></div>
   <div id="steplist">${rows}</div>`;
 }
 
+/* ══ 記録画面 ══ */
 function viewRecord(){
-  const e=EX.find(x=>x.key===state.exKey); const i=state.step;
-  const nm=STEPNAMES[e.key][i-1]; const std=stdOf();
+  const e=EX.find(x=>x.key===state.exKey), i=state.step;
+  const nm=STEPNAMES[e.key][i-1];
   return `
-  <div class="top">
-    <div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">STEP ${i} ／ ${nm}<small>${e.name}</small></div>
-  </div>
-
+  <div class="top"><div class="back" onclick="history.back()">‹</div>
+    <div class="ttl">STEP ${i} ／ ${nm}<small>${e.name}</small></div></div>
   <div class="memo-prev">
     <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回のメモ</span><span id="memoTog">▾</span></div>
     <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
-
   <div class="recgrid">
     <div class="recimg" onclick="imgPopup('${e.key}',${i})">
-      <div class="ph">${e.key.slice(0,1)}-${i}a</div>
-      <div class="tap">タップ</div>
+      <div class="ph">${e.key.slice(0,1)}-${i}a</div><div class="tap">タップ</div>
     </div>
     <div class="recmeta">
-      <div class="nm">${nm}</div>
-      <div class="sn">${e.name}・STEP ${i}</div>
+      <div class="nm">${nm}</div><div class="sn">${e.name}・STEP ${i}</div>
       <div class="stds">
-        <div class="std" onclick="selStd(this)"><div class="l">初級</div><div class="v">${std.b}</div></div>
-        <div class="std" onclick="selStd(this)"><div class="l">中級</div><div class="v">${std.i}</div></div>
-        <div class="std" onclick="selStd(this)"><div class="l">上級</div><div class="v">${std.p}</div></div>
+        <div class="std" onclick="selStd(this)"><div class="l">初級</div><div class="v">${STD.b}</div></div>
+        <div class="std" onclick="selStd(this)"><div class="l">中級</div><div class="v">${STD.i}</div></div>
+        <div class="std" onclick="selStd(this)"><div class="l">上級</div><div class="v">${STD.p}</div></div>
       </div>
     </div>
   </div>
-
   <div class="inrow">
     <div class="f"><label>セット数</label><input id="inSets" type="number" inputmode="numeric" value="2"></div>
     <div class="f"><label>回数 / 秒</label><input id="inReps" type="number" inputmode="numeric" placeholder="20"></div>
-    <button class="recbtn" onclick="toast('記録しました')">記録する</button>
+    <button class="recbtn" onclick="doRecord(${i})">記録する</button>
   </div>
   <div class="memrow">
     <input type="text" placeholder="メモ（次回のヒントに）">
     <button class="histbtn" onclick="memoHistory()">📋</button>
   </div>
-
   <div class="divider"></div>
   <div class="h">推移グラフ</div>
-  <div class="chartbox">${lineChart(MOCK_LOGS, std)}</div>
-
+  <div class="chartbox">${lineChart(MOCK_LOGS)}</div>
   <div class="h">これまでの記録</div>
   <div>${MOCK_LOGS.slice().reverse().map(g=>{
     const so=serOf(g.intensity);
-    return `<div class="log"><div class="lr"><span class="d">${g.date}
-      <span class="itag" style="background:${so.c}">${so.l}</span></span>
-      <span class="r">${g.sets}×${g.reps}</span></div>
-      ${g.note?`<div class="ln">📝 ${g.note}</div>`:''}</div>`;
+    return `<div class="log" onclick="toggleLog(this)">
+      <div class="lr">
+        <span class="d">${g.date}<span class="itag" style="background:${so.c}">${so.l}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
+        <span class="r">${g.sets}×${g.reps}</span>
+      </div>
+      ${g.note?`<div class="ln">📝 ${g.note}</div>`:''}
+    </div>`;
   }).join('')}</div>`;
 }
 
-const QLV=[
-  {name:'入門', cond:'月に4回 修行する', goal:4},
-  {name:'修行', cond:'月に15回 修行する', goal:15},
-  {name:'極意', cond:'月に28回 修行する', goal:28},
-];
-let questLv=1, questDone=8;
-const RELICS=[
-  {em:'📜',l:'初伝の巻',got:true,  cond:'はじめて記録した'},
-  {em:'📜',l:'継続の巻',got:true,  cond:'7日連続で修行した'},
-  {em:'🏵️',l:'鍛錬の印',got:true,  cond:'同じステップを10回記録した'},
-  {em:'📜',l:'百錬の巻',got:false, cond:'通算100回 修行する'},
-  {em:'🏵️',l:'求道の印',got:false, cond:'階級「求道者」に到達する'},
-  {em:'🏵️',l:'達人の印',got:false, cond:'階級「達人」に到達する'},
-  {em:'📜',l:'極致の巻',got:false, cond:'30日連続で修行する'},
-  {em:'🏵️',l:'覚者の印',got:false, cond:'六大修行をすべてSTEP10にする'},
-];
+/* ══ クエスト ══ */
 function viewQuest(){
+  const lv=QLV[questLv], pct=Math.min(100,Math.round(questDone/lv.goal*100));
   return `
   <div class="brand"><div class="logo"><b>クエスト</b></div></div>
-  <div class="mission" id="missionCard">${missionInner()}</div>
-  <div class="h">獲得した巻物・印</div>
-  <div class="relics">
-    ${RELICS.map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo(${i}))">`+`<div class="em">${r.got?r.em:'🔒'}</div><div>${r.l}</div></div>`).join('')}
-  </div>`;
-}
-function missionInner(){
-  const lv=QLV[questLv]; const pct=Math.min(100, Math.round(questDone/lv.goal*100));
-  return `<div class="t">今月の修行 — 6月</div>
+  <div class="mission">
+    <div class="t">今月の修行 — 6月</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px">
       <span style="font-size:13px;color:var(--kin);font-family:var(--serif)">${lv.name}</span>
       <span style="font-size:11px;color:var(--sub)">難易度変更は設定から</span>
     </div>
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
-    <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「📜 巻物」を獲得（奇数月＝巻物・偶数月＝印）・途中で下げてもOK</p>`;
-}
-function questSelLv(i){ questLv=i; const c=document.getElementById('missionCard'); if(c) c.innerHTML=missionInner(); }
-function relicInfo(i){
-  const r=RELICS[i];
-  modal(`<div class="sheet card-c">
-    <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:'🔒'}</div>
-    <h3 style="text-align:center">${r.l}</h3>
-    <p class="sub" style="text-align:center">取得条件</p>
-    <p style="text-align:center;font-size:15px;margin:0 0 4px">${r.cond}</p>
-    <p style="text-align:center;font-size:12px;color:${r.got?'#7FB069':'#8b8f99'};margin-top:8px">${r.got?'✓ 獲得済み':'未獲得'}</p>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
-  </div>`, true);
+    <p style="font-size:11px;color:var(--sub);margin:10px 0 0">達成で「🏵️ 印」を獲得</p>
+  </div>
+  <div class="h">印（月次ミッション達成）</div>
+  <div class="relics">
+    ${RELICS.filter(r=>r.type==='in').map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo('${r.type}',${RELICS.indexOf(r)}))"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.got?r.l:'???'}</div></div>`).join('')}
+  </div>
+  <div class="h">巻物（隠し条件）</div>
+  <div class="relics">
+    ${RELICS.filter(r=>r.type==='mak').map((r,i)=>`<div class="relic ${r.got?'got':'locked'}" onclick="tapFlash(this,()=>relicInfo('${r.type}',${RELICS.indexOf(r)}))"><div class="em">${r.got?r.em:'🔒'}</div><div>${r.got?r.l:'???'}</div></div>`).join('')}
+  </div>`;
 }
 
-function viewMessage(){
+/* ══ フレンドタブ ══ */
+function viewFriends(){
   return `
-  <div class="brand"><div class="logo"><b>メッセージ</b></div></div>
-  <p style="font-size:12px;color:var(--sub);margin:0 2px 12px">仲間からの言葉（最新30件）</p>
-  ${MESSAGES.map(m=>`<div class="msg">
-     <div class="av">${m.kanji}</div>
-     <div class="c"><div class="who">${m.who}</div><div class="bd">${m.body}</div><div class="tm">${m.tm}</div></div>
-   </div>`).join('')}`;
+  <div class="brand"><div class="logo"><b>フレンド</b></div></div>
+  <div class="h">受け取った応援（1週間）</div>
+  <div class="react-hist">
+    ${REACT_HIST.map(r=>`<div class="react-row">
+      <div class="av">${r.em}</div>
+      <div class="info"><div class="who">${r.who}</div><div>${r.react} ${r.label} を送ってくれた</div></div>
+      <div class="tm">${r.tm}</div>
+    </div>`).join('')}
+  </div>
+  <div class="h">フレンド一覧</div>
+  ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
+    <div class="av">${f.em}</div>
+    <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div></div>
+    <div class="chev">›</div>
+  </div>`).join('')}
+  <button class="addbtn" onclick="addFriend()">＋ フレンドを追加（ID検索 / QR）</button>`;
 }
 
+/* ══ プロフィール ══ */
 function viewProfile(){
   const r=rankOf(SUM);
   return `
   <div class="prof-top">
-    <div class="avatar" onclick="openAvatarSelect()" style="cursor:pointer;font-size:32px">${currentAvatar.em}</div>
-    <div><div class="pn">ノリ</div><div class="pid">@nori_tanren</div><div style="font-size:10px;color:var(--sub);margin-top:2px">${currentAvatar.label}</div></div>
+    <div class="avatar" onclick="openAvatarSelect()">${currentAvatar}</div>
+    <div class="prof-info">
+      <div class="pname">ノリ <span class="rank-badge">${r.name}</span></div>
+      <div class="pid">@nori_tanren</div>
+    </div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
-
-  <div class="rankcard" onclick="tapFlash(this,()=>rankList())">
-    <div class="lab">階　級</div>
-    <div class="nm">${r.name}</div>
-    <div style="font-size:11px;color:var(--sub);margin-top:6px">タップで一覧 ›</div>
-  </div>
-
-  <div class="stat3" style="margin-top:12px">
+  <div class="stat3">
     <div class="stat"><b>12</b><small>修行日数</small></div>
+    <div class="stat"><b>340</b><small>今月XP</small></div>
     <div class="stat"><b>1,240</b><small>累計XP</small></div>
   </div>
-
   <div class="h">六大修行レーダー</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
-    ${radar([EX.map(e=>e.cur)], ['#C8A24C'])}
-  </div>
-
-  <div class="h">フレンド</div>
-  ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
-     <div class="av" style="font-size:20px">${currentAvatar.em}</div>
-     <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${[18,7][idx]}日目</div></div>
-     <div class="chev">›</div>
-   </div>`).join('')}
-  <button class="addbtn" onclick="addFriend()">＋ フレンドを追加（ID検索 / QR）</button>`;
+    ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
+  </div>`;
 }
 
-/* ============ レーダー（六角形） ============ */
-function radar(setsArr, colors){
-  const W=240,H=220,cx=120,cy=112,R=82,MAX=10;
-  const labels=EX.map(e=>e.kanji);
-  const N=6;
-  const ang=i=> (-90 + i*60) * Math.PI/180;
-  const pt=(i,rad)=>[cx+rad*Math.cos(ang(i)), cy+rad*Math.sin(ang(i))];
+/* ══ レーダー ══ */
+function radar(setsArr,colors){
+  const W=240,H=220,cx=120,cy=112,R=82,MAX=10,N=6;
+  const labels=EX.map(e=>e.name.slice(0,2));
+  const ang=i=>(-90+i*60)*Math.PI/180;
+  const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
   let s=`<svg viewBox="0 0 ${W} ${H}" width="230">`;
-  // リング
-  for(let g=1;g<=5;g++){
-    const rr=R*g/5;
-    let p='';
-    for(let i=0;i<N;i++){ const [x,y]=pt(i,rr); p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }
-    s+=`<path d="${p}Z" fill="none" stroke="rgba(200,162,76,.14)" stroke-width="1"/>`;
-  }
-  // 軸＋ラベル
-  for(let i=0;i<N;i++){
-    const [x,y]=pt(i,R); s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;
-    const [lx,ly]=pt(i,R+15);
-    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="14" text-anchor="middle" font-family="serif">${labels[i]}</text>`;
-  }
-  // データ
-  setsArr.forEach((vals,si)=>{
-    const col=colors[si]; let p='';
-    for(let i=0;i<N;i++){ const [x,y]=pt(i, R*Math.max(0.04,vals[i]/MAX)); p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }
-    s+=`<path d="${p}Z" fill="${col}" fill-opacity="0.22" stroke="${col}" stroke-width="2"/>`;
-    for(let i=0;i<N;i++){ const [x,y]=pt(i, R*Math.max(0.04,vals[i]/MAX)); s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${col}"/>`; }
-  });
-  s+=`</svg>`;
-  return s;
+  for(let g=1;g<=5;g++){const rr=R*g/5;let p='';for(let i=0;i<N;i++){const[x,y]=pt(i,rr);p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}s+=`<path d="${p}Z" fill="none" stroke="rgba(200,162,76,.14)" stroke-width="1"/>`;}
+  for(let i=0;i<N;i++){const[x,y]=pt(i,R);s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;const[lx,ly]=pt(i,R+15);s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="11" text-anchor="middle">${labels[i]}</text>`;}
+  setsArr.forEach((vals,si)=>{const col=colors[si];let p='';for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}s+=`<path d="${p}Z" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="2"/>`;for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${col}"/>"`;}});
+  return s+'</svg>';
 }
 
-/* ============ 折れ線（強度色分け） ============ */
-function lineChart(records, std){
-  const targets={b:parseInt((std.b.split('×')[1]||'')), i:parseInt((std.i.split('×')[1]||'')), p:parseInt((std.p.split('×')[1]||''))};
-  const W=320,H=150,pl=28,pr=12,pt=12,pb=26, n=records.length;
+/* ══ 折れ線グラフ ══ */
+function lineChart(records){
+  const W=320,H=150,pl=28,pr=12,pt=12,pb=26,n=records.length;
   const vals=records.map(r=>+r.reps||0);
-  let maxV=Math.max(...vals, targets.b||0, targets.i||0, targets.p||0, 1);
-  const X=i=> n===1? (pl+(W-pl-pr)/2) : pl+(W-pl-pr)*i/(n-1);
-  const Y=v=> pt+(H-pt-pb)*(1-v/maxV);
+  let maxV=Math.max(...vals,1);
+  const X=i=>n===1?(pl+(W-pl-pr)/2):pl+(W-pl-pr)*i/(n-1);
+  const Y=v=>pt+(H-pt-pb)*(1-v/maxV);
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
   s+=`<line x1="${pl}" y1="${Y(0)}" x2="${W-pr}" y2="${Y(0)}" stroke="rgba(200,162,76,.18)"/>`;
   s+=`<text x="${pl-4}" y="${pt+4}" fill="#8b8f99" font-size="9" text-anchor="end">${maxV}</text>`;
-  s+=`<text x="${pl-4}" y="${Y(0)}" fill="#8b8f99" font-size="9" text-anchor="end">0</text>`;
   const present={};
   SER.forEach(se=>{
     const pts=[]; records.forEach((r,i)=>{ if((r.intensity||'')===se.k) pts.push([X(i),Y(+r.reps||0)]); });
     if(!pts.length) return; present[se.k]=true;
-    if(targets[se.k]){ const ty=Y(targets[se.k]); s+=`<line x1="${pl}" y1="${ty}" x2="${W-pr}" y2="${ty}" stroke="${se.c}" stroke-dasharray="3 4" opacity=".4"/>`; }
     if(pts.length>1) s+=`<polyline points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${se.c}" stroke-width="2"/>`;
     s+=pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="${se.c}"/>`).join('');
   });
-  s+=`<text x="${X(0)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="start">${records[0].date}</text>`;
-  s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="end">${records[n-1].date}</text>`;
-  s+=`</svg>`;
-  let leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')+'</div>';
+  if(n){s+=`<text x="${X(0)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="start">${records[0].date}</text>`;}
+  if(n>1){s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="9" text-anchor="end">${records[n-1].date}</text>`;}
+  s+='</svg>';
+  const leg='<div class="legend">'+SER.filter(se=>present[se.k]).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')+'</div>';
   return s+leg;
 }
 
-/* ============ インタラクション ============ */
-function tapFlash(el, fn){
-  el.classList.add('flash');
-  setTimeout(()=>{ el.classList.remove('flash'); fn(); }, 320);
+/* ══ インタラクション ══ */
+function tapFlash(el,fn){ el.classList.add('flash'); setTimeout(()=>{el.classList.remove('flash');fn();},320); }
+function tapStep(el,key,i){ tapFlash(el,()=>nav('record',{exKey:key,step:i})); }
+function toggleLog(el){ el.classList.toggle('open'); }
+function toggleMemo(el){
+  const b=document.getElementById('memoBody'),t=document.getElementById('memoTog');
+  if(b.style.display==='none'){b.style.display='block';t.textContent='▾';}else{b.style.display='none';t.textContent='▸';}
 }
-
-function tapStep(el, key, i){
-  tapFlash(el, ()=>nav('record',{exKey:key, step:i}));
-}
-
 function selStd(el){
-  const all=el.parentNode.querySelectorAll('.std');
-  const on=el.classList.contains('sel');
+  const all=el.parentNode.querySelectorAll('.std'), on=el.classList.contains('sel');
   all.forEach(x=>x.classList.remove('sel'));
   const sets=document.getElementById('inSets'), reps=document.getElementById('inReps');
-  if(on){ if(reps) reps.value=''; return; }
+  if(on){if(reps)reps.value='';return;}
   el.classList.add('sel');
-  const v=el.querySelector('.v').textContent.trim();
-  const parts=v.split('×');
-  if(parts.length>=2){ if(sets) sets.value=parseInt(parts[0],10)||1; if(reps) reps.value=parseInt(parts[1],10)||0; }
-  else { const m=v.match(/(\d+)分/), s2=v.match(/(\d+)秒/);
-         if(sets) sets.value=1; if(reps) reps.value = m?(parseInt(m[1],10)*60):(s2?parseInt(s2[1],10):0); }
-}
-const AVATARS=[
-  {id:'m1', label:'師範（男）',    em:'🧙', desc:'男性版'},
-  {id:'f1', label:'師範（女）',    em:'🧙‍♀️', desc:'女性版'},
-  {id:'n1', label:'先輩修行者A',   em:'🧝', desc:'中性版A'},
-  {id:'n2', label:'先輩修行者B',   em:'🧝', desc:'中性版B'},
-  {id:'m2', label:'ライバル（男）', em:'⚔️', desc:'男性版'},
-  {id:'f2', label:'ライバル（女）', em:'⚔️', desc:'女性版'},
-  {id:'m3', label:'弟子（男）',    em:'👦', desc:'男性版'},
-  {id:'f3', label:'弟子（女）',    em:'👧', desc:'女性版'},
-];
-let currentAvatar=AVATARS[0];
-
-function openAvatarSelect(){
-  modal(`<div class="sheet">
-    <h3>アバターを作る</h3>
-    <p class="sub">各パーツを選んでカスタマイズ（本番実装予定）</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0">
-      ${[['髪型','💇'],['目','👁'],['鼻','👃'],['口','👄'],['肌色','🎨'],['胴体','👘']].map(([l,e])=>`
-        <div style="padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--glass)">
-          <div style="font-size:20px">${e}</div>
-          <div style="font-size:12px;color:var(--kin);margin-top:4px">${l}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">タップで選択</div>
-        </div>`).join('')}
-    </div>
-    <button class="btnprime" onclick="closeModal();toast('アバターを保存しました')">保存する</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
-  </div>`);
-}
-function toggleMemo(el){
-  const b=document.getElementById('memoBody'), t=document.getElementById('memoTog');
-  if(b.style.display==='none'){ b.style.display='block'; t.textContent='▾'; } else { b.style.display='none'; t.textContent='▸'; }
+  const v=el.querySelector('.v').textContent.trim(), parts=v.split('×');
+  if(parts.length>=2){if(sets)sets.value=parseInt(parts[0],10)||1;if(reps)reps.value=parseInt(parts[1],10)||0;}
 }
 
-/* ---- モーダル基盤 ---- */
-function modal(html, center){
+function doRecord(step){
+  const intensity=document.querySelector('.std.sel')?.querySelector('.l')?.textContent;
+  const ikey = intensity==='上級'?'p':intensity==='中級'?'i':'b';
+  const xp=calcXP(step, ikey);
+  showXP(xp);
+}
+
+/* XPキラキラ演出 */
+function showXP(xp){
+  const pop=document.getElementById('xpPop'), num=document.getElementById('xpNum');
+  num.textContent='+'+xp;
+  pop.style.display='block';
+  // スパークル
+  pop.querySelectorAll('.sparkle').forEach(s=>s.remove());
+  const colors=['#C8A24C','#E6C97C','#fff','#7FB069'];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('div');
+    const size=4+Math.random()*6, angle=Math.random()*Math.PI*2, dist=60+Math.random()*80;
+    s.className='sparkle';
+    s.style.cssText=`width:${size}px;height:${size}px;background:${colors[i%colors.length]};
+      left:calc(50% + ${Math.cos(angle)*10}px);top:calc(50% + ${Math.sin(angle)*10}px);
+      --tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;
+      animation-delay:${Math.random()*.2}s;`;
+    pop.appendChild(s);
+  }
+  setTimeout(()=>{ pop.style.display='none'; toast('記録しました'); },3000);
+}
+
+/* ══ モーダル ══ */
+function modal(html,center){
   closeModal();
   const d=document.createElement('div'); d.className='ovl'+(center?' center':''); d.id='modal';
-  d.innerHTML=html; d.onclick=e=>{ if(e.target===d) closeModal(); };
+  d.innerHTML=html; d.onclick=e=>{ if(e.target===d)closeModal(); };
   document.body.appendChild(d);
 }
-function closeModal(){ const m=document.getElementById('modal'); if(m) m.remove(); }
+function closeModal(){ const m=document.getElementById('modal'); if(m)m.remove(); }
 
 function restConfirm(){
   modal(`<div class="sheet">
@@ -754,7 +605,107 @@ function restConfirm(){
   </div>`);
 }
 
-let imgState='a';
+function relicInfo(type,idx){
+  const r=RELICS[idx];
+  const typeLabel=type==='in'?'印（月次ミッション達成）':'巻物（隠し条件）';
+  modal(`<div class="sheet card-c">
+    <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:(type==='in'?'🏵️':'📜')}</div>
+    <h3 style="text-align:center">${r.got?r.l:typeLabel}</h3>
+    <p class="sub" style="text-align:center">取得条件</p>
+    <p style="text-align:center;font-size:15px;margin:0 0 4px">${r.got?r.cond:'取得すると明らかになります'}</p>
+    <p style="text-align:center;font-size:12px;color:${r.got?'#7FB069':'#8b8f99'};margin-top:8px">${r.got?'✓ 獲得済み':'未獲得'}</p>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
+
+function friendCompare(idx){
+  const f=FRIENDS[idx], me={streak:12,monthXP:340,totalXP:1240,vals:EX.map(e=>e.cur)};
+  const reactBtns = f.trained
+    ? `<button onclick="closeModal();toast('🔥 熱い を送りました')">🔥 熱い</button><button onclick="closeModal();toast('💪 強い を送りました')">💪 強い</button>`
+    : `<button onclick="closeModal();toast('👊 喝 を送りました')">👊 喝</button>`;
+  modal(`<div class="sheet">
+    <h3>${f.name} と比較</h3>
+    <p class="sub"><span style="color:#C8A24C">■</span> 自分　<span style="color:#6E93A6">■</span> ${f.name}</p>
+    <div style="display:grid;place-items:center;padding:6px 0">${radar([me.vals,f.vals],['#C8A24C','#6E93A6'])}</div>
+    <div class="cmp">
+      <div class="side"><div class="val">${me.streak}日</div><div class="lbl">🔥 ストリーク</div></div>
+      <div class="vs">vs</div>
+      <div class="side"><div class="val">${f.streak}日</div><div class="lbl">🔥 ストリーク</div></div>
+    </div>
+    <div class="cmp">
+      <div class="side"><div class="val">${me.monthXP}</div><div class="lbl">今月XP</div></div>
+      <div class="vs">vs</div>
+      <div class="side"><div class="val">${f.monthXP}</div><div class="lbl">今月XP</div></div>
+    </div>
+    <div class="cmp">
+      <div class="side"><div class="val">${me.totalXP}</div><div class="lbl">累計XP</div></div>
+      <div class="vs">vs</div>
+      <div class="side"><div class="val">${f.totalXP}</div><div class="lbl">累計XP</div></div>
+    </div>
+    <p style="font-size:12px;color:var(--sub);text-align:center;margin:10px 0 4px">${f.trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
+    <div class="react-btns">${reactBtns}</div>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function addFriend(){
+  modal(`<div class="sheet">
+    <h3>フレンドを追加</h3>
+    <p class="sub">現在の門下生：87名 ／ 最大100名</p>
+    <label>IDで検索</label><input type="text" placeholder="@相手のID">
+    <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
+    <button class="btnghost" onclick="closeModal();toast('QRをスキャンします（仮）')">📷 QRコードで追加</button>
+  </div>`);
+}
+
+function openAvatarSelect(){
+  modal(`<div class="sheet">
+    <h3>アバターを作る</h3>
+    <p class="sub">各パーツを選んでカスタマイズ（本番実装予定）</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0">
+      ${[['髪型','💇'],['目','👁'],['鼻','👃'],['口','👄'],['肌色','🎨'],['胴体','👘']].map(([l,e])=>`
+        <div style="padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--glass);cursor:pointer" onclick="tapFlash(this,()=>{})">
+          <div style="font-size:20px">${e}</div>
+          <div style="font-size:12px;color:var(--kin);margin-top:4px">${l}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">タップで選択</div>
+        </div>`).join('')}
+    </div>
+    <button class="btnprime" onclick="closeModal();toast('アバターを保存しました')">保存する</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function rankList(){
+  const cur=rankOf(SUM);
+  const rows=RANKS.map((r,i)=>{
+    const next=RANKS[i+1]; const range=next?`${r.min}〜${next.min-1}`:r.min+'〜';
+    const isCur=r.name===cur.name;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(200,162,76,.14)':'rgba(255,255,255,.02)'}">
+      <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin2)':'var(--sub)'};font-size:15px">${i+1}</div>
+      <div style="flex:1;font-family:var(--serif);font-size:16px;color:${isCur?'var(--kin2)':'var(--washi)'}">${r.name}</div>
+      <div style="font-size:11px;color:var(--sub)">合計 ${range}</div>
+      ${isCur?'<div style="font-size:10px;color:var(--kin);font-weight:700">現在地</div>':''}
+    </div>`;
+  }).join('');
+  modal(`<div class="sheet">
+    <h3>階級一覧</h3>
+    <p class="sub">六大修行の合計ステップ（最大60）で昇級。現在：${cur.name}</p>
+    <div style="max-height:60vh;overflow:auto;margin-top:6px">${rows}</div>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+function memoHistory(){
+  const items=MOCK_LOGS.filter(l=>l.note).slice().reverse();
+  modal(`<div class="sheet">
+    <h3>メモ履歴</h3>
+    <p class="sub">このステップに残した過去のメモ</p>
+    ${items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln" style="display:block">📝 ${m.note}</div></div>`).join('')}
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+
+let imgState='a', flipTimer=null;
 function imgPopup(key,i){
   stopFlip();
   const d=document.createElement('div'); d.id='imgfull';
@@ -762,27 +713,15 @@ function imgPopup(key,i){
   d.innerHTML=`<div id="ifimg" style="width:88%;max-width:430px;aspect-ratio:4/3;border:1px solid rgba(200,162,76,.3);border-radius:16px;display:grid;place-items:center;background:#0d0f13;color:#ECE6D8;font-size:54px;font-family:var(--serif)"></div>
     <div id="ifcap" style="color:#C8A24C;font-size:14px;font-family:var(--serif)"></div>
     <div style="color:#8b8f99;font-size:12px">タップで戻る</div>`;
-  d.onclick=()=>{ stopFlip(); d.remove(); };
+  d.onclick=()=>{stopFlip();d.remove();};
   document.body.appendChild(d);
   const img=d.querySelector('#ifimg'), cap=d.querySelector('#ifcap');
   imgState='a';
-  function show(){ img.textContent = imgState==='a'?'①':'②';
-    cap.textContent = (imgState==='a'?'開始ポジション':'動作の終点')+'　'+key.slice(0,1)+'-'+i+imgState; }
+  function show(){img.textContent=imgState==='a'?'①':'②';cap.textContent=(imgState==='a'?'開始ポジション':'動作の終点')+'　'+key.slice(0,1)+'-'+i+imgState;}
   show();
-  flipTimer=setInterval(()=>{ imgState=imgState==='a'?'b':'a'; show(); }, 900);
+  flipTimer=setInterval(()=>{imgState=imgState==='a'?'b':'a';show();},900);
 }
-let flipTimer=null;
-function stopFlip(){ if(flipTimer){ clearInterval(flipTimer); flipTimer=null; } }
-
-function memoHistory(){
-  const items=MOCK_LOGS.filter(l=>l.note).slice().reverse();
-  modal(`<div class="sheet">
-    <h3>メモ履歴</h3>
-    <p class="sub">このステップに残した過去のメモ</p>
-    ${items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln">📝 ${m.note}</div></div>`).join('')}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
-  </div>`);
-}
+function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
 function openSettings(){
   modal(`<div class="sheet">
@@ -798,108 +737,47 @@ function openSettings(){
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
     <label>ユーザー名</label>
     <input type="text" value="ノリ" id="unameInput">
-    <p style="font-size:11px;color:var(--shu);margin:4px 0 0">⚠ 1・2回目は自由に変更できます。3回目以降は1年間ロックされます。</p>
+    <p class="warn">⚠ 1・2回目は自由に変更できます。3回目以降は1年間ロックされます。</p>
     <button class="btnprime" onclick="saveSettings()">保存する</button>
+    <button class="btnghost" onclick="closeModal();rankList()">階級一覧を見る</button>
     <button class="btnghost" onclick="closeModal();openTut()">チュートリアルを見る</button>
   </div>`);
 }
-function settingLv(el,i){ el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); questLv=i; }
-function saveSettings(){ closeModal(); const c=document.getElementById('missionCard'); if(c) c.innerHTML=missionInner(); toast('保存しました'); }
+function settingLv(el,i){el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');questLv=i;}
+function saveSettings(){closeModal();toast('保存しました');}
 
-const PHRASES={
-  '励まし':['今日も道場開けろ。逃げんなよ、ガチで','お前ならできるってばよ！','一緒に極めようぜ。一生バカでいいからな','その努力、尊いわ。ちゃんと見てるぞ'],
-  '挑発':['まだ寝てるのか？弱いままでいるつもりかよ','その程度か…？情けねぇな','俺の背中が見えるか？追いつきたきゃ本気出せよ','今日もサボりか…草。情けねぇ'],
-  '称賛':['マジで強くなったな…お前、化けたぞ','完璧だ。お前、今めっちゃ輝いてるぞ','その記録、歴史に刻まれろ'],
-  '仲間':['お前と一緒なら、頂なんて余裕で取れるぜ','お前の修行が俺の燃料だ','この道は一人じゃ味気ない。お前と一緒に極めたいんだよ'],
-};
-function sendPhrase(name){
-  let body='';
-  for(const cat in PHRASES){
-    body+=`<div class="phrase-cat">${cat}</div>`;
-    body+=PHRASES[cat].map(p=>`<div class="phrase" onclick="closeModal();toast('${name}に送りました')">${p}</div>`).join('');
-  }
-  modal(`<div class="sheet"><h3>${name} に送る</h3><p class="sub">定型文をタップで送信</p>${body}<button class="btnghost" onclick="closeModal()">閉じる</button></div>`);
-}
-
-function rankList(){
-  const cur=rankOf(SUM);
-  const rows=RANKS.map((r,i)=>{
-    const next=RANKS[i+1]; const range = next ? `${r.min}〜${next.min-1}` : `${r.min}`;
-    const isCur = r.name===cur.name;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;
-       border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(200,162,76,.14)':'rgba(255,255,255,.02)'}">
-       <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin-bright)':'var(--sub)'};font-size:15px">${i+1}</div>
-       <div style="flex:1;font-family:var(--serif);font-size:16px;color:${isCur?'var(--kin-bright)':'var(--washi)'}">${r.name}</div>
-       <div style="font-size:11px;color:var(--sub)">合計 ${range}</div>
-       ${isCur?'<div style="font-size:10px;color:var(--kin);font-weight:700">現在地</div>':''}
-     </div>`;
-  }).join('');
-  modal(`<div class="sheet">
-    <h3>階級一覧</h3>
-    <p class="sub">六大修行の合計ステップ（最大60）で昇級。現在：${cur.name}</p>
-    <div style="max-height:60vh;overflow:auto;margin-top:6px">${rows}</div>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
-  </div>`);
-}
-
-function friendCompare(idx){
-  const f=FRIENDS[idx];
-  modal(`<div class="sheet">
-    <h3>レーダー比較</h3>
-    <p class="sub"><span style="color:#C8A24C">■</span> 自分　<span style="color:#6E93A6">■</span> ${f.name}</p>
-    <div style="display:grid;place-items:center;padding:6px 0">
-      ${radar([EX.map(e=>e.cur), f.vals], ['#C8A24C','#6E93A6'])}
-    </div>
-    <button class="btnprime" onclick="closeModal();sendPhrase('${f.name}')">${f.name} に言葉を送る</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
-  </div>`);
-}
-
-function addFriend(){
-  modal(`<div class="sheet">
-    <h3>フレンドを追加</h3>
-    <label>IDで検索</label><input type="text" placeholder="@相手のID">
-    <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
-    <button class="btnghost" onclick="closeModal();toast('QRをスキャンします（仮）')">📷 QRコードで追加</button>
-    <p class="tut-note">自分のQRを見せて相手にスキャンしてもらうこともできます</p>
-  </div>`);
-}
-
-/* ---- トースト ---- */
-let tt;
-function toast(msg){
-  let t=document.getElementById('toast');
-  if(!t){ t=document.createElement('div'); t.id='toast';
-    t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';
-    document.body.appendChild(t); }
-  t.textContent=msg; t.style.opacity='1'; clearTimeout(tt); tt=setTimeout(()=>t.style.opacity='0',1500);
-}
-
-/* ============ チュートリアル ============ */
+/* ══ チュートリアル ══ */
 const TUT=[
-  {big:'🏯', tt:'鍛錬寺へようこそ', speech:'よく来た、新入り。<br>ここはお前を鍛え直す寺。<br>器具はいらん。己の体だけで道を極めよ。', who:true},
-  {big:'🥋', tt:'六大修行', tx:'押す・蹲む・引く・脚・橋・逆立ち。<br>6つの修行をそれぞれ10段階で極めていく。'},
-  {big:'👤', tt:'ユーザー名を決める', tx:'2回目まで自由に変更できます。3回目以降は1年間ロックされます。', uname:true},
-  {big:'📅', tt:'週の目標を決める', tx:'週に何日 道場へ来るか。<br>2〜7日から、無理のない数を。', slider:true},
-  {big:'📜', tt:'今月の修行レベル', tx:'入門（月4回）・修行（月15回）・極意（月28回）から選ぶ。<br>続ければ必ず巻物か印がもらえる。'},
-  {big:'🔥', tt:'準備はできた', tx:'さあ、最初の一歩を刻もう。<br>アバターはプロフィールから作れます。'},
+  {big:'🏯',tt:'鍛錬寺へようこそ',speech:'よく来た、新入り。<br>ここはお前を鍛え直す寺。<br>器具はいらん。己の体だけで道を極めよ。',who:true},
+  {big:'🥋',tt:'六大修行',tx:'押す・蹲む・引く・脚・橋・逆立ち。<br>6つの修行をそれぞれ10段階で極めていく。'},
+  {big:'👤',tt:'ユーザー名を決める',tx:'2回目まで自由に変更できます。3回目以降は1年間ロックされます。',uname:true},
+  {big:'📅',tt:'週の目標を決める',tx:'週に何日 道場へ来るか。<br>2〜7日から、無理のない数を。',slider:true},
+  {big:'📜',tt:'今月の修行レベル',tx:'入門（月4回）・修行（月15回）・極意（月28回）から選ぶ。<br>続ければ必ず印がもらえる。'},
+  {big:'🔥',tt:'準備はできた',tx:'さあ、最初の一歩を刻もう。<br>アバターはプロフィールから作れます。'},
 ];
 let tutI=0;
-function openTut(){ tutI=0; document.getElementById('tut').style.display='flex'; renderTut(); }
-function closeTut(){ stopFlip(); document.getElementById('tut').style.display='none'; }
+function openTut(){tutI=0;document.getElementById('tut').style.display='flex';renderTut();}
+function closeTut(){document.getElementById('tut').style.display='none';}
 function renderTut(){
-  const t=TUT[tutI];
-  let extra='';
+  const t=TUT[tutI]; let extra='';
   if(t.who) extra=`<div class="speech">${t.speech}</div>`;
-  if(t.uname) extra=`<div style="width:280px"><input type="text" placeholder="ユーザー名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:10px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"><p style="font-size:11px;color:#8b8f99;margin:8px 0 0">2回目まで自由に変更可・3回目以降は1年間ロック</p></div>`;
+  if(t.uname) extra=`<div style="width:280px"><input type="text" placeholder="ユーザー名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:10px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"><p style="font-size:11px;color:#8b8f99;margin:8px 0 0">2回目まで自由・3回目以降は1年間ロック</p></div>`;
   if(t.slider) extra=`<div style="width:280px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:18px">週 <span id="tg">4</span> 日</div></div>`;
   document.getElementById('tutStage').innerHTML=`<div class="big">${t.big}</div><div class="tt">${t.tt}</div>${t.tx?`<div class="tx">${t.tx}</div>`:''}${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
-  document.getElementById('tutNext').textContent = tutI===TUT.length-1 ? 'はじめる' : '次へ';
+  document.getElementById('tutNext').textContent=tutI===TUT.length-1?'はじめる':'次へ';
 }
-function tutNext(){ if(tutI<TUT.length-1){ tutI++; renderTut(); } else { closeTut(); nav('home'); } }
+function tutNext(){if(tutI<TUT.length-1){tutI++;renderTut();}else{closeTut();nav('home');}}
 
-/* ============ 起動 ============ */
+/* ══ トースト ══ */
+let tt;
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(tt);tt=setTimeout(()=>t.style.opacity='0',1500);
+}
+
+/* ══ 起動 ══ */
 history.replaceState({view:'home'},'');
 render();
 </script>
