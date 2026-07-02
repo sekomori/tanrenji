@@ -313,12 +313,12 @@ function calcXP(step, intensity){
 }
 
 const MOCK_LOGS=[
-  {date:'05/02',sets:2,reps:10,intensity:'b',note:'肘が開いた'},
-  {date:'05/06',sets:2,reps:14,intensity:'i',note:''},
-  {date:'05/11',sets:2,reps:12,intensity:'i',note:'肩幅を意識'},
-  {date:'05/15',sets:2,reps:18,intensity:'i',note:''},
-  {date:'05/20',sets:1,reps:8, intensity:'p',note:'フォーム重視'},
-  {date:'05/25',sets:2,reps:11,intensity:'p',note:''},
+  {date:'05/02',sets:3,reps:5, note:'肘が開いた'},
+  {date:'05/06',sets:3,reps:6, note:''},
+  {date:'05/11',sets:3,reps:6, note:'肩幅を意識'},
+  {date:'05/15',sets:3,reps:7, note:''},
+  {date:'05/20',sets:3,reps:7, note:'フォーム重視'},
+  {date:'05/25',sets:3,reps:8, note:''},
 ];
 
 const FRIENDS=[
@@ -525,10 +525,10 @@ function bindLogLongPress(){
 }
 
 function logMenu(idx){
-  const g=MOCK_LOGS[idx]; const so=serOf(g.intensity);
+  const g=MOCK_LOGS[idx];
   modal(`<div class="sheet">
     <h3>記録の操作</h3>
-    <p class="sub">${g.date}・${g.sets}×${g.reps}・${so.l}</p>
+    <p class="sub">${g.date}・${g.sets}×${g.reps}</p>
     <button class="btnprime" onclick="closeModal();editLog(${idx})">編集</button>
     <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog(${idx})">削除</button>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
@@ -537,17 +537,13 @@ function logMenu(idx){
 
 function editLog(idx){
   const g=MOCK_LOGS[idx];
-  const opts=[{v:'',l:'未選択'},{v:'b',l:'初級'},{v:'i',l:'中級'},{v:'p',l:'上級'}];
   modal(`<div class="sheet">
     <h3>記録を編集</h3>
-    <label>日付</label><input type="date" id="eDate" value="${g.date.replace('/','-').replace('/','-')}">
     <div style="display:flex;gap:10px;margin-top:12px">
       <div style="flex:1"><label>組数</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets}"></div>
       <div style="flex:1"><label>回数 / 秒</label><input type="number" id="eReps" inputmode="numeric" value="${g.reps}"></div>
     </div>
-    <label>強度</label>
-    <div class="seg">${opts.map(o=>`<button class="${g.intensity===o.v?'sel':''}" onclick="this.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">${o.l}</button>`).join('')}</div>
-    <label>メモ</label><input type="text" id="eMemo" value="${g.note||''}">
+    <label>覚書</label><input type="text" id="eMemo" value="${g.note||''}">
     <button class="btnprime" onclick="saveEditLog(${idx})">保存する</button>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
@@ -557,10 +553,8 @@ function saveEditLog(idx){
   const sets=parseInt(document.getElementById('eSets').value)||1;
   const reps=parseInt(document.getElementById('eReps').value)||0;
   const note=document.getElementById('eMemo').value;
-  const selBtn=document.querySelector('#modal .seg button.sel');
   if(reps<=0){ toast('回数を入力してください'); return; }
   MOCK_LOGS[idx].sets=sets; MOCK_LOGS[idx].reps=reps; MOCK_LOGS[idx].note=note;
-  if(selBtn){ const l=selBtn.textContent.trim(); MOCK_LOGS[idx].intensity=l==='初級'?'b':l==='中級'?'i':l==='上級'?'p':''; }
   closeModal(); nav('record',{exKey:state.exKey,step:state.step}); toast('更新しました');
 }
 
@@ -583,7 +577,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.4 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.5 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -664,11 +658,11 @@ function viewRecord(){
   <div class="chartbox">${lineChart(MOCK_LOGS)}</div>
   <div class="h">過去の足跡 <span style="font-size:12px;color:var(--sub);font-family:var(--sans)">（長押しで編集・削除）</span></div>
   <div id="logList">${MOCK_LOGS.slice().reverse().map((g,idx)=>{
-    const so=serOf(g.intensity);
     const realIdx=MOCK_LOGS.length-1-idx;
+    const score=+(loadScore(state.step||1,g.sets,g.reps)).toFixed(1);
     return `<div class="log" data-idx="${realIdx}" onclick="toggleLog(this)" oncontextmenu="return false">
       <div class="lr">
-        <span class="d">${g.date}<span class="itag" style="background:${so.c}">${so.l}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
+        <span class="d">${g.date}<span class="itag" style="background:var(--kin);color:#1a1407">負荷 ${score}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
         <span class="r">${g.sets}×${g.reps}</span>
       </div>
       ${g.note?`<div class="ln">📝 ${g.note}</div>`:''}
@@ -839,10 +833,9 @@ function lineChart(records){
     const pts=scores.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
     s+=`<polyline points="${pts}" fill="none" stroke="var(--kin)" stroke-width="2"/>`;
   }
-  // ドット（強度ごとに色）
+  // ドット（総負荷スコア・金）
   scores.forEach((v,i)=>{
-    const so=serOf(records[i].intensity);
-    s+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="5" fill="${so.c}" stroke="var(--sumi)" stroke-width="1.5" onclick="showLoadTip(${i},${v},${step},${records[i].sets},${records[i].reps},'${records[i].intensity}','${records[i].date}')" style="cursor:pointer"/>`;
+    s+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="5" fill="var(--kin2)" stroke="var(--sumi)" stroke-width="1.5" onclick="showLoadTip(${v},${step},${records[i].sets},${records[i].reps},'${records[i].date}')" style="cursor:pointer"/>`;
   });
 
   // 日付ラベル
@@ -850,23 +843,18 @@ function lineChart(records){
   if(n>1) s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="10" text-anchor="end">${records[n-1].date}</text>`;
   s+=`</svg>`;
 
-  const leg=`<div class="legend">
-    ${SER.filter(se=>records.some(r=>r.intensity===se.k)).map(se=>`<span><i style="background:${se.c}"></i>${se.l}</span>`).join('')}
-    <span style="color:var(--sub)">Y軸：総負荷スコア</span>
-  </div>`;
+  const leg=`<div class="legend"><span style="color:var(--sub)">Y軸：総負荷スコア（強度係数 × 組数 × 回数）</span></div>`;
   return s+leg;
 }
 
-function showLoadTip(i,score,step,sets,reps,intensity,date){
+function showLoadTip(score,step,sets,reps,date){
   const coeff=STEP_COEFF[step]||1.0;
-  const so=serOf(intensity);
   const isPR=score===Math.max(...MOCK_LOGS.map(r=>loadScore(step,r.sets,r.reps)));
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:12px;color:var(--sub)">${date}</div>
     <div style="font-size:32px;font-weight:700;color:var(--kin);margin:8px 0">${score}</div>
     <div style="font-size:13px;color:var(--washi)">総負荷スコア</div>
-    <div style="font-size:12px;color:var(--sub);margin-top:8px">強度係数 ${coeff} × ${sets}セット × ${reps}回</div>
-    <div style="margin-top:8px"><span class="itag" style="background:${so.c}">${so.l}</span></div>
+    <div style="font-size:12px;color:var(--sub);margin-top:8px">強度係数 ${coeff} × ${sets}組 × ${reps}回</div>
     ${isPR?'<div style="color:#7FB069;font-size:13px;margin-top:8px">★ 過去最高スコア！</div>':''}
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`,true);
