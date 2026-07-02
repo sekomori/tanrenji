@@ -506,7 +506,6 @@ function openSelfMenu(){
     <h3 style="text-align:center">何を見る？</h3>
     <button class="btnprime" onclick="closeModal();nav('profile')">己（プロフィール）</button>
     <button class="btnprime" style="margin-top:10px" onclick="closeModal();nav('achieve')">功績</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
 }
 
@@ -589,7 +588,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.1 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.2 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -702,15 +701,14 @@ function viewQuest(){
     <div class="t" style="margin:0 0 10px">今週の合力</div>
     <div class="pr"><span>みんなの経験値</span><span>${cur.toLocaleString()} / ${goal.toLocaleString()}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
-    <p style="font-size:12px;color:var(--sub);margin:10px 0 0">達成で全員にボーナス経験値。未達でも参加賞あり</p>
   </div>
   <div class="h">同行の士（最大3名）</div>
   ${party.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid ${p.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
      <div style="font-size:26px">${p.em}</div>
      <div style="flex:1"><div style="font-size:14px;font-weight:700;color:${p.me?'var(--kin)':'var(--washi)'}">${p.name}${p.me?'（自分）':''}</div>
-       <div style="font-size:12px;color:var(--sub)">今週の貢献 ${(p.lvxp*p.week).toLocaleString()} 経験値</div></div>
+       <div style="font-size:12px;color:var(--sub)">今週の目標経験値 ${(p.lvxp*p.week).toLocaleString()}</div></div>
    </div>`).join('')}
-  <p style="font-size:12px;color:var(--sub);text-align:center;margin-top:10px">目標＝各自の「レベル経験値 × 先週の週合計」の合算</p>`;
+`;
 }
 
 /* ══ 功績 ══ */
@@ -760,6 +758,7 @@ function viewAchieve(){
 /* ══ 掲示板 ══ */
 const BOARD=[
   {who:'ノリ',   me:true, type:'rank', text:'『修行僧』に昇格した', tm:'たった今'},
+  {who:'ノリ・タカシ・翔', me:true, type:'quest', text:'道連れ修行「百八の煩悩退治」を成就した', tm:'30分前'},
   {who:'タカシ', me:false,type:'streak',text:'20日 連続修行を達成', tm:'1時間前'},
   {who:'翔',     me:false,type:'step', text:'〈フル・プルアップ〉第8段に到達', tm:'3時間前'},
   {who:'ノリ',   me:true, type:'step', text:'〈フル・プッシュアップ〉第5段に到達', tm:'今日'},
@@ -767,11 +766,10 @@ const BOARD=[
   {who:'翔',     me:false,type:'streak',text:'10日 連続修行を達成', tm:'昨日'},
   {who:'ノリ',   me:true, type:'streak',text:'10日 連続修行を達成', tm:'2日前'},
 ];
-const BOARD_ICON={ rank:'🎖️', streak:'🔥', step:'⬆️' };
+const BOARD_ICON={ rank:'🎖️', streak:'🔥', step:'⬆️', quest:'🤝' };
 function viewBoard(){
   return `
   <div class="brand"><div class="logo"><b>掲示板</b></div></div>
-  <p style="font-size:12px;color:var(--sub);margin:0 2px 12px">同志と自分の歩みが流れる場所</p>
   ${BOARD.map(b=>{
     const icon=`<div style="font-size:22px;flex:0 0 auto">${BOARD_ICON[b.type]}</div>`;
     const body=`<div style="flex:1;${b.me?'text-align:right':''}">
@@ -788,7 +786,7 @@ function viewFriends(){
   hasNewReact=false;
   return `
   <div class="brand">
-    <div class="logo"><b>フレンド</b></div>
+    <div class="logo"><b>門下生</b></div>
     <button class="addbtn" style="width:auto;padding:8px 14px;margin:0;font-size:13px" onclick="addFriend()">＋ 追加</button>
   </div>
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
@@ -833,7 +831,7 @@ function viewProfile(){
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
-  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦 <span style="font-size:12px;color:var(--sub)">（押下で月表示）</span></div>
+  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦 <span style="font-size:12px;color:var(--sub)">（月表示）</span></div>
   <div class="cal" id="calBox">${buildWeekCal()}</div>`;
 }
 
@@ -1160,7 +1158,7 @@ function sendReact(icon, name){
 
 function addFriend(){
   modal(`<div class="sheet">
-    <h3>フレンドを追加</h3>
+    <h3>門下生を追加</h3>
     <p class="sub">現在の門下生：87名 ／ 最大100名</p>
     <label>IDで検索</label><input type="text" placeholder="@相手のID">
     <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
