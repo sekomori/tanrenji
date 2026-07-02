@@ -580,7 +580,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.7 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.9 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -632,7 +632,7 @@ function viewRecord(){
   const c=criteria(e.key,i);
   const isTime=(ty==='s');
   const unitLabel=isTime?'秒数':'回数';
-  const tempoJP = ty==='n' ? '下げ5秒かけてゆっくり' : (ty==='s' ? 'キープ姿勢を保つ' : '上げ1秒・止めない・下げ2秒・キープ1秒');
+  const tempoJP = ty==='n' ? '下げ5秒かけてゆっくり' : (ty==='s' ? 'キープ姿勢を保つ' : '上げ1秒・下げ2秒・キープ1秒');
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
@@ -641,22 +641,22 @@ function viewRecord(){
     <div style="position:absolute;bottom:10px;right:12px;font-size:12px;color:var(--kin)">押下で拡大</div>
   </div>
   <div style="text-align:center;font-size:13px;color:var(--kin);margin-bottom:12px">🥋 ${tempoJP}</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="histbtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="startRest(${c.rest})">⏱ 休息 ${c.rest}秒</button>
+    ${ty!=='s'?`<button class="histbtn" id="metroBtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="toggleMetro()">🥁 拍子</button>`:''}
+  </div>
   <div class="inrow">
     <div class="f"><label>組数</label><input id="inSets" type="number" inputmode="numeric" value="3"></div>
     <div class="f"><label>${unitLabel}</label><input id="inReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
     <button class="recbtn" onclick="doRecord(${i})">記す</button>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:6px">
-    <button class="histbtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="startRest(${c.rest})">⏱ 休息 ${c.rest}秒</button>
-    ${ty!=='s'?`<button class="histbtn" id="metroBtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="toggleMetro()">🥁 拍子</button>`:''}
+  <div class="memo-prev">
+    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
+    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
   <div class="memrow">
     <input type="text" placeholder="覚書（次回のヒントに）">
     <button class="histbtn" onclick="memoHistory()">📋</button>
-  </div>
-  <div class="memo-prev">
-    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
-    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
   <div class="divider"></div>
   <div class="h">練度推移</div>
@@ -754,7 +754,7 @@ function viewProfile(){
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
-  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦 <span style="font-size:12px;color:var(--sub)">（押下で月表示）</span></div>
+  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦</div>
   <div class="cal" id="calBox">${buildWeekCal()}</div>`;
 }
 
