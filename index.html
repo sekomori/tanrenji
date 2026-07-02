@@ -503,6 +503,7 @@ function renderTabs(){
 
 function render(){
   renderTabs();
+  if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
   const bgMap={home:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
   setBg(bgMap[state.view]||'t1');
   const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,friends:viewFriends,profile:viewProfile};
@@ -579,7 +580,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.6 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.3.7 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -631,22 +632,15 @@ function viewRecord(){
   const c=criteria(e.key,i);
   const isTime=(ty==='s');
   const unitLabel=isTime?'秒数':'回数';
+  const tempoJP = ty==='n' ? '下げ5秒かけてゆっくり' : (ty==='s' ? 'キープ姿勢を保つ' : '上げ1秒・止めない・下げ2秒・キープ1秒');
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・${TYPE_LABEL[ty]}（目標 ${c.clearTxt}）</small></div></div>
-  <div class="memo-prev">
-    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
-    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
+    <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
+  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
+    <div style="font-size:20px;color:var(--sub)">${e.key.slice(0,2)}-${i}a</div>
+    <div style="position:absolute;bottom:10px;right:12px;font-size:12px;color:var(--kin)">押下で拡大</div>
   </div>
-  <div class="recgrid">
-    <div class="recimg" onclick="imgPopup('${e.key}',${i})">
-      <div class="ph">${e.key.slice(0,2)}-${i}a</div><div class="tap">押下</div>
-    </div>
-    <div class="recmeta">
-      <div class="nm">${nm}</div><div class="sn">${e.name}・第${i}段</div>
-      <div style="font-size:12px;color:var(--kin);margin-top:6px">クリア基準 ${c.clearTxt}${c.tempo?` ／ ${c.tempo}`:''}</div>
-    </div>
-  </div>
+  <div style="text-align:center;font-size:13px;color:var(--kin);margin-bottom:12px">🥋 ${tempoJP}</div>
   <div class="inrow">
     <div class="f"><label>組数</label><input id="inSets" type="number" inputmode="numeric" value="3"></div>
     <div class="f"><label>${unitLabel}</label><input id="inReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
@@ -654,11 +648,15 @@ function viewRecord(){
   </div>
   <div style="display:flex;gap:8px;margin-bottom:6px">
     <button class="histbtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="startRest(${c.rest})">⏱ 休息 ${c.rest}秒</button>
-    ${ty!=='s'?`<button class="histbtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="toggleMetro()">🎵 テンポ音</button>`:''}
+    ${ty!=='s'?`<button class="histbtn" id="metroBtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="toggleMetro()">🥁 拍子</button>`:''}
   </div>
   <div class="memrow">
     <input type="text" placeholder="覚書（次回のヒントに）">
     <button class="histbtn" onclick="memoHistory()">📋</button>
+  </div>
+  <div class="memo-prev">
+    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
+    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
   <div class="divider"></div>
   <div class="h">練度推移</div>
@@ -952,17 +950,19 @@ function startRest(sec){
 }
 function stopRest(){ if(restTimer){clearInterval(restTimer);restTimer=null;} const d=document.getElementById('restOvl'); if(d)d.remove(); }
 
-/* メトロノーム（任意）：WebAudioでテンポ音 */
-let metroCtx=null, metroTimer=null, metroOn=false;
+/* 拍子（太鼓）：sound/sound_reward.mp3 をテンポで鳴らす */
+let metroAudio=null, metroTimer=null, metroOn=false;
 function toggleMetro(){
   metroOn=!metroOn;
+  const btn=document.getElementById('metroBtn');
   if(metroOn){
-    try{ metroCtx=metroCtx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ toast('この端末では音が出せません'); metroOn=false; return; }
-    toast('テンポ音 ON（1-0-2-1）');
-    const beat=()=>{ const o=metroCtx.createOscillator(),g=metroCtx.createGain(); o.frequency.value=880; o.connect(g); g.connect(metroCtx.destination); g.gain.setValueAtTime(.15,metroCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,metroCtx.currentTime+.05); o.start(); o.stop(metroCtx.currentTime+.05); };
+    try{ metroAudio=metroAudio||new Audio('sound/sound_reward.mp3'); }catch(e){}
+    if(btn){ btn.style.background='rgba(200,162,76,.2)'; btn.textContent='🥁 拍子 ●'; }
+    const beat=()=>{ try{ metroAudio.currentTime=0; metroAudio.play().catch(()=>{}); }catch(e){} };
     beat(); metroTimer=setInterval(beat,1000);
   } else {
-    if(metroTimer){clearInterval(metroTimer);metroTimer=null;} toast('テンポ音 OFF');
+    if(metroTimer){clearInterval(metroTimer);metroTimer=null;}
+    if(btn){ btn.style.background=''; btn.textContent='🥁 拍子'; }
   }
 }
 
