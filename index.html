@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>鍛錬寺 Big6</title>
+<title>鍛錬寺</title>
+<meta name="theme-color" content="#0c0e12">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="鍛錬寺">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --sumi:#0c0e12; --sumi2:#13161c; --washi:#ECE6D8; --sub:#8b8f99;
@@ -588,7 +595,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.3 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.4 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -1385,6 +1392,11 @@ function toast(msg){
 /* ══ 起動 ══ */
 history.replaceState({view:'home'},'');
 render();
+
+/* PWA: service worker 登録 */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>
