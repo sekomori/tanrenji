@@ -464,9 +464,9 @@ function dayDetail(key){
     const total=logs.reduce((a,l)=>a+l.xp,0);
     body=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)">
         <div><div style="font-size:14px;font-weight:600">${l.ex}</div><div style="font-size:12px;color:var(--kin)">第${l.step}段 ／ ${l.detail}</div></div>
-        <div style="font-size:13px;color:var(--kin2);font-weight:700">+${l.xp} XP</div>
+        <div style="font-size:13px;color:var(--kin2);font-weight:700">+${l.xp} 経験値</div>
       </div>`).join('')
-      +`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:14px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} XP</span></div>`;
+      +`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:14px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} 経験値</span></div>`;
   }
   modal(`<div class="sheet card-c">
     <h3>${title} の修行</h3>
@@ -489,17 +489,25 @@ function nav(view,data){
 window.addEventListener('popstate',e=>{ if(e.state){state=e.state;render();} else{state={view:'home'};render();} });
 
 const TABS=[
-  {id:'home',   label:'道場',  icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
-  {id:'quest',  label:'試練',  icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
-  {id:'board',  label:'掲示板',icon:'<rect x="3" y="4" width="18" height="14" rx="1"/><path d="M7 8h10M7 12h6"/>'},
-  {id:'friends',label:'同志',  icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="8" r="3"/><path d="M14 21c0-2.5 1.5-4.5 3-5.5"/>'},
-  {id:'profile',label:'己',    icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
+  {id:'home',   icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
+  {id:'quest',  icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
+  {id:'board',  icon:'<rect x="3" y="4" width="18" height="14" rx="1"/><path d="M7 8h10M7 12h6"/>'},
+  {id:'friends',icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="8" r="3"/><path d="M14 21c0-2.5 1.5-4.5 3-5.5"/>'},
+  {id:'profile',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
 ];
 function renderTabs(){
-  const cur=['home','steps','record'].includes(state.view)?'home':state.view;
+  const cur=['home','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
-    `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);nav('${t.id}')">
-       <svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.label}</span></div>`).join('');
+    `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);${t.id==='profile'?'openSelfMenu()':`nav('${t.id}')`}">
+       <svg viewBox="0 0 24 24">${t.icon}</svg></div>`).join('');
+}
+function openSelfMenu(){
+  modal(`<div class="sheet">
+    <h3 style="text-align:center">何を見る？</h3>
+    <button class="btnprime" onclick="closeModal();nav('profile')">己（プロフィール）</button>
+    <button class="btnprime" style="margin-top:10px" onclick="closeModal();nav('achieve')">功績</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
 }
 
 function render(){
@@ -507,7 +515,7 @@ function render(){
   if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
   const bgMap={home:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
   setBg(bgMap[state.view]||'t1');
-  const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,board:viewBoard,friends:viewFriends,profile:viewProfile};
+  const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,board:viewBoard,friends:viewFriends,profile:viewProfile,achieve:viewAchieve};
   $main.innerHTML=`<div class="scr">${(map[state.view]||viewHome)()}</div>`;
   window.scrollTo(0,0);
   if(state.view==='record') bindLogLongPress();
@@ -581,7 +589,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.0 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.1 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -590,7 +598,7 @@ function viewHome(){
     <button class="restbtn" onclick="restConfirm()">今日は休む</button>
   </div>
   <div class="xp">
-    <div class="row"><span>今日の修行 XP</span><b>30 / 50</b></div>
+    <div class="row"><span>今日の修行 経験値</span><b>30 / 50</b></div>
     <div class="bar"><i style="width:60%"></i></div>
   </div>
   <div class="stack">
@@ -678,9 +686,38 @@ function viewRecord(){
 
 /* ══ 試練 ══ */
 function viewQuest(){
+  // 道連れ修行（共闘クエスト・週替わり・最大3名）
+  const party=[
+    {name:'ノリ',   em:'🧘', lvxp:50, week:18, me:true},
+    {name:'タカシ', em:'🧙', lvxp:40, week:15, me:false},
+    {name:'翔',     em:'⚔️', lvxp:30, week:12, me:false},
+  ];
+  const goal=party.reduce((a,p)=>a+p.lvxp*p.week,0);
+  const cur=Math.round(goal*0.62);
+  const pct=Math.min(100,Math.round(cur/goal*100));
+  return `
+  <div class="brand"><div class="logo"><b>道連れ修行</b></div></div>
+  <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">同志と力を合わせ、目標の経験値を積む（週替わり）</p>
+  <div class="mission">
+    <div class="t" style="margin:0 0 10px">今週の合力</div>
+    <div class="pr"><span>みんなの経験値</span><span>${cur.toLocaleString()} / ${goal.toLocaleString()}</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+    <p style="font-size:12px;color:var(--sub);margin:10px 0 0">達成で全員にボーナス経験値。未達でも参加賞あり</p>
+  </div>
+  <div class="h">同行の士（最大3名）</div>
+  ${party.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid ${p.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
+     <div style="font-size:26px">${p.em}</div>
+     <div style="flex:1"><div style="font-size:14px;font-weight:700;color:${p.me?'var(--kin)':'var(--washi)'}">${p.name}${p.me?'（自分）':''}</div>
+       <div style="font-size:12px;color:var(--sub)">今週の貢献 ${(p.lvxp*p.week).toLocaleString()} 経験値</div></div>
+   </div>`).join('')}
+  <p style="font-size:12px;color:var(--sub);text-align:center;margin-top:10px">目標＝各自の「レベル経験値 × 先週の週合計」の合算</p>`;
+}
+
+/* ══ 功績 ══ */
+function viewAchieve(){
   const lv=QLV[questLv], pct=Math.min(100,Math.round(questDone/lv.goal*100));
   return `
-  <div class="brand"><div class="logo"><b>試練</b></div></div>
+  <div class="brand"><div class="logo"><b>功績</b></div></div>
   <div class="mission">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div class="t" style="margin:0">今月の修行目標 — 6月</div>
@@ -689,6 +726,20 @@ function viewQuest(){
     <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0">目標達成で「🏵️ 印」を獲得</p>
+  </div>
+  <div class="h" style="display:flex;justify-content:space-between;align-items:center">
+    <span>徳</span><span style="font-size:13px;color:var(--kin)">☯️ 現在 <b>28</b> 徳</span>
+  </div>
+  <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
+    <p style="font-size:13px;margin:0 0 10px">徳を積むと、師匠より褒美を授かる</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${[['🪧 御札','30徳'],['🏮 道場の装い','50徳'],['🥋 己の装い','40徳']].map(([n,c])=>`
+        <div style="flex:1;min-width:90px;text-align:center;padding:10px;border-radius:10px;border:1px solid var(--line)">
+          <div style="font-size:22px">${n.split(' ')[0]}</div>
+          <div style="font-size:12px;margin-top:4px">${n.split(' ')[1]}</div>
+          <div style="font-size:12px;color:var(--kin);margin-top:2px">${c}</div>
+        </div>`).join('')}
+    </div>
   </div>
   <div class="h">印</div>
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
@@ -721,13 +772,16 @@ function viewBoard(){
   return `
   <div class="brand"><div class="logo"><b>掲示板</b></div></div>
   <p style="font-size:12px;color:var(--sub);margin:0 2px 12px">同志と自分の歩みが流れる場所</p>
-  ${BOARD.map(b=>`<div style="display:flex;gap:11px;padding:13px;border-radius:13px;background:var(--glass);border:1px solid ${b.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
-     <div style="font-size:22px;flex:0 0 auto">${BOARD_ICON[b.type]}</div>
-     <div style="flex:1">
+  ${BOARD.map(b=>{
+    const icon=`<div style="font-size:22px;flex:0 0 auto">${BOARD_ICON[b.type]}</div>`;
+    const body=`<div style="flex:1;${b.me?'text-align:right':''}">
        <div style="font-size:13px"><span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}</div>
        <div style="font-size:12px;color:var(--sub);margin-top:3px">${b.tm}</div>
-     </div>
-   </div>`).join('')}`;
+     </div>`;
+    return `<div style="display:flex;gap:11px;padding:13px;border-radius:13px;background:var(--glass);border:1px solid ${b.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
+      ${b.me? body+icon : icon+body}
+    </div>`;
+  }).join('')}`;
 }
 
 function viewFriends(){
@@ -772,8 +826,8 @@ function viewProfile(){
   </div>
   <div class="stat3">
     <div class="stat"><b>47</b><small>全期間修行日数</small></div>
-    <div class="stat"><b>340</b><small>今月XP</small></div>
-    <div class="stat"><b>1,240</b><small>累計XP</small></div>
+    <div class="stat"><b>340</b><small>今月の経験値</small></div>
+    <div class="stat"><b>1,240</b><small>累計経験値</small></div>
   </div>
   <div class="h">鍛錬の形</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
@@ -1083,8 +1137,8 @@ function friendCompare(idx){
     </div>
     <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
       ${[['🔥 ストリーク', me.streak+'日', f.streak+'日'],
-         ['今月XP', me.monthXP, f.monthXP],
-         ['累計XP', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
+         ['今月の経験値', me.monthXP, f.monthXP],
+         ['累計経験値', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
         ].map(([label,mv,fv])=>`
         <div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;border-bottom:1px solid var(--line)">
           <div style="padding:12px 8px;text-align:center;font-size:14px;font-weight:700;color:var(--kin)">${mv}</div>
