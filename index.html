@@ -242,29 +242,66 @@
 <script>
 /* ══ マスターデータ ══ */
 const RANKS=[
-  {min:6,name:'門前払い'},{min:12,name:'入門'},{min:18,name:'修行僧'},{min:24,name:'鍛錬者'},
-  {min:30,name:'求道者'},{min:36,name:'武練士'},{min:42,name:'道師'},{min:48,name:'達人'},
-  {min:54,name:'仙人'},{min:60,name:'覚者'}
+  {min:6,name:'門前払い'},{min:14,name:'入門'},{min:22,name:'修行僧'},{min:31,name:'鍛錬者'},
+  {min:40,name:'求道者'},{min:49,name:'武練士'},{min:58,name:'道師'},{min:67,name:'達人'},
+  {min:75,name:'仙人'},{min:84,name:'覚者'}
 ];
 function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
 
 const EX=[
-  {key:'push', name:'プッシュアップ', cur:5},
-  {key:'squat',name:'スクワット',     cur:4},
-  {key:'pull', name:'プルアップ',     cur:3},
-  {key:'leg',  name:'レッグレイズ',   cur:6},
-  {key:'bridge',name:'ブリッジ',      cur:2},
-  {key:'hand', name:'ハンドスタンド・プッシュアップ', cur:3},
+  {key:'push',  name:'プッシュアップ',       cur:5},
+  {key:'pull',  name:'プルアップ',           cur:5},
+  {key:'squat', name:'スクワット',           cur:3},
+  {key:'core',  name:'レッグレイズ（コア）', cur:5},
+  {key:'bridge',name:'ブリッジ＆裏もも',     cur:2},
+  {key:'hand',  name:'ハンドスタンド',       cur:3},
 ];
-const STEPNAMES={
-  push:['ウォール','インクライン','ニーリング','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
-  squat:['ショルダースタンド','ジャックナイフ','サポーテッド','ハーフ','フル','クローズ','アンイーブン','ハーフワンレッグ','アシストワンレッグ','ワンレッグ'],
-  pull:['バーティカル','ホリゾンタル','ジャックナイフ','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','アシストワンアーム','ワンアーム'],
-  leg:['ニータック','フラットニー','フラットベント','フラットフロッグ','フラットストレート','ハンギングニー','ハンギングベント','ハンギングフロッグ','パーシャル','ハンギングストレート'],
-  bridge:['ショート','ストレート','アングルド','ヘッド','ハーフ','フル','ウォール下り','ウォール上り','クロージング','スタンド'],
-  hand:['ウォール頭立','クロウ','ウォール倒立','ハーフ','フル','クローズ','アンイーブン','ハーフワンアーム','レバー','ワンアーム'],
+// [ステップ名, タイプ] タイプ: d=動的 s=静的 n=ネガティブ
+const STEPS={
+  push:[
+    ['壁プッシュアップ','d'],['高インクライン・プッシュアップ','d'],['インクライン・プッシュアップ','d'],
+    ['膝つきプッシュアップ','d'],['フル・プッシュアップ','d'],['ダイヤモンド・プッシュアップ','d'],
+    ['ワイド・プッシュアップ','d'],['擬似プランシェ・プッシュアップ','d'],['アーチャー・プッシュアップ','d'],
+    ['片手腕立て・ネガティブ','n'],['インクライン・ワンアーム','d'],['ストラドル・ワンアーム','d'],
+    ['フル・ワンアーム・プッシュアップ','d'],['プランシェ・プッシュアップ','d'],
+  ],
+  pull:[
+    ['バーティカル・ロウ','d'],['インクライン・ロウ','d'],['ホリゾンタル・ロウ','d'],['スキャプラ・プル','d'],
+    ['プルアップ・ホールド','s'],['ジャンプ・ネガティブ懸垂','n'],['ハーフ・プルアップ','d'],['フル・プルアップ','d'],
+    ['ワイド・プルアップ','d'],['Lシット・プルアップ','d'],['アーチャー・プルアップ','d'],['ワンアーム・ネガティブ','n'],
+    ['補助付きワンアーム','d'],['ハーフ・ワンアーム','d'],['ワンアーム・チンアップ','d'],
+  ],
+  squat:[
+    ['アシステッド・スクワット','d'],['ボックス・スクワット','d'],['フル・スクワット','d'],['スプリット・スクワット','d'],
+    ['ブルガリアン・スプリット','d'],['アシステッド・ピストル','d'],['ビギナー・シュリンプ','d'],['ボックス・ピストル','d'],
+    ['インターメディエイト・シュリンプ','d'],['エレベーテッド・ピストル','d'],['フル・ピストル・スクワット','d'],
+    ['アドバンスド・シュリンプ','d'],['ウェイテッド・ピストル','d'],['シシー・スクワット','d'],
+  ],
+  core:[
+    ['プランク','s'],['ホロウボディ・ホールド','s'],['フロア・ニーレイズ','d'],['フロア・ストレートレイズ','d'],
+    ['ハンギング・ニーレイズ','d'],['ハンギング・ベントレイズ','d'],['タック・Lシット','s'],['ハンギング・レッグレイズ','d'],
+    ['Lシット','s'],['トゥズ・トゥ・バー','d'],['Vシット','s'],['タック・ドラゴンフラッグ','d'],
+    ['ワンレッグ・ドラゴンフラッグ','d'],['フル・ドラゴンフラッグ','d'],
+  ],
+  bridge:[
+    ['ショート・ブリッジ','d'],['エレベーテッド・ブリッジ','d'],['シングルレッグ・ブリッジ','d'],['テーブル・トップ','s'],
+    ['ヘッド・ブリッジ','s'],['フル・ブリッジ','s'],['シングルレッグ・デッドリフト','d'],['ワンレッグ／ワンアーム・ブリッジ','s'],
+    ['ウォール・ウォーク・ダウン','n'],['スタンド・トゥ・スタンド','d'],['ノルディックカール・ネガティブ','n'],
+    ['アシステッド・ノルディックカール','d'],['フル・ノルディックカール','d'],
+  ],
+  hand:[
+    ['パイク・ホールド','s'],['パイク・プッシュアップ','d'],['エレベーテッド・パイク','d'],['ウォール・ヘッドスタンド','s'],
+    ['ウォール・ハンドスタンド','s'],['壁倒立ネガティブ','n'],['ボックス・HSPU','d'],['パーシャル壁HSPU','d'],
+    ['フル壁HSPU','d'],['デフィシット壁HSPU','d'],['フリー・ハンドスタンド','s'],['フリーHSPU・ネガティブ','n'],
+    ['フル・フリーHSPU','d'],['90度HSPU','d'],['ワンアーム・ハンドスタンド','s'],
+  ],
 };
-const STD={b:'1×8', i:'2×12', p:'2×20'};
+// タイプ別のクリア基準表示
+const TYPE_STD={ d:'3×8回', s:'3×30秒', n:'3×5回' };
+const TYPE_LABEL={ d:'動的', s:'静的', n:'ネガティブ' };
+function stepName(key,i){ return STEPS[key][i-1][0]; }
+function stepType(key,i){ return STEPS[key][i-1][1]; }
+function stepCount(key){ return STEPS[key].length; }
 const SER=[{k:'b',l:'初級',c:'#6E93A6'},{k:'i',l:'中級',c:'#C8A24C'},{k:'p',l:'上級',c:'#7FB069'}];
 function serOf(k){ return SER.find(s=>s.k===k)||{k:'',l:'自由',c:'#8b8f99'}; }
 
@@ -373,7 +410,7 @@ function buildWeekCal(){
     const textColor=st==='done'?'#fff':st==='rest'?'#ffb6c1':'#6E93A6';
     h+=`<div style="text-align:center">
       <div style="font-size:12px;color:var(--sub);margin-bottom:4px">${DAY_JP[d.getDay()]}</div>
-      <div style="aspect-ratio:1;border-radius:8px;background:${color};display:flex;align-items:center;justify-content:center;font-size:13px;color:${textColor};${isToday?'outline:2px solid var(--kin)':''}">${d.getDate()}</div>
+      <div onclick="dayDetail('${key}')" style="aspect-ratio:1;border-radius:8px;background:${color};display:flex;align-items:center;justify-content:center;font-size:13px;color:${textColor};cursor:pointer;${isToday?'outline:2px solid var(--kin)':''}">${d.getDate()}</div>
     </div>`;
   }
   h+=`</div>
@@ -394,6 +431,47 @@ const CAL_DATA={
   '2026-6-17':'rest','2026-6-18':'done','2026-6-19':'done','2026-6-20':'none',
   '2026-6-21':'done','2026-6-22':'done','2026-6-23':'done','2026-6-24':'done',
 };
+// その日の修行内容モック（種目・ステップ・セット×回数・XP）
+const DAY_LOG={
+  '2026-6-24':[
+    {ex:'プッシュアップ',step:5,detail:'3×8',xp:80},
+    {ex:'スクワット',step:4,detail:'3×8',xp:80},
+    {ex:'プルアップ',step:3,detail:'3×6',xp:60},
+  ],
+  '2026-6-23':[
+    {ex:'ブリッジ',step:2,detail:'3×30秒',xp:90},
+    {ex:'ハンドスタンド',step:3,detail:'3×8',xp:80},
+  ],
+  '2026-6-22':[
+    {ex:'レッグレイズ',step:6,detail:'3×8',xp:80},
+    {ex:'プッシュアップ',step:5,detail:'2×10',xp:100},
+  ],
+};
+function dayDetail(key){
+  const st=CAL_DATA[key]||'none';
+  const [y,m,d]=key.split('-');
+  const title=`${m}月${d}日`;
+  let body='';
+  if(st==='rest'){
+    body=`<div style="text-align:center;padding:20px;color:#ffb6c1;font-size:15px">🍵 休養日</div>
+      <p style="text-align:center;font-size:12px;color:var(--sub)">体を休めることも修行のうち</p>`;
+  } else if(st==='none'){
+    body=`<div style="text-align:center;padding:20px;color:var(--sub);font-size:15px">記録なし</div>`;
+  } else {
+    const logs=DAY_LOG[key]||[{ex:'プッシュアップ',step:5,detail:'3×8',xp:80}];
+    const total=logs.reduce((a,l)=>a+l.xp,0);
+    body=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)">
+        <div><div style="font-size:14px;font-weight:600">${l.ex}</div><div style="font-size:12px;color:var(--kin)">STEP ${l.step} ／ ${l.detail}</div></div>
+        <div style="font-size:13px;color:var(--kin2);font-weight:700">+${l.xp} XP</div>
+      </div>`).join('')
+      +`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:14px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} XP</span></div>`;
+  }
+  modal(`<div class="sheet card-c">
+    <h3>${title} の修行</h3>
+    ${body}
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
 
 /* ══ ナビ ══ */
 let state={view:'home',exKey:null,step:null};
@@ -505,7 +583,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.3.1 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b> BIG 6<div class="ver">v0.3.3 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -521,7 +599,7 @@ function viewHome(){
   <div class="stack">
     ${EX.map(e=>{
       const cls=e.cur>=10?'done':'';
-      const nm=STEPNAMES[e.key][e.cur-1];
+      const nm=stepName(e.key,e.cur);
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
         <div style="width:52px;height:52px;flex:0 0 auto;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;font-size:12px;color:var(--sub)">${e.key.slice(0,1)}</div>
         <div class="body"><div class="nm">${e.name}</div><div class="st">STEP ${e.cur} ／ ${nm}</div></div>
@@ -533,50 +611,49 @@ function viewHome(){
 /* ══ ステップ一覧 ══ */
 function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
+  const n=stepCount(e.key);
   let rows='';
-  for(let i=1;i<=10;i++){
-    const nm=STEPNAMES[e.key][i-1], isCur=i===e.cur;
+  for(let i=1;i<=n;i++){
+    const nm=stepName(e.key,i), ty=stepType(e.key,i), isCur=i===e.cur;
     rows+=`<div class="srow${isCur?' current':''}" onclick="tapStep(this,'${e.key}',${i})">
       <div class="txt">
-        <div class="n">STEP ${i}${isCur?`<span class="badge">現在</span>`:''}</div>
+        <div class="n">STEP ${i}${isCur?`<span class="badge">現在</span>`:''} <span style="color:var(--sub)">・${TYPE_LABEL[ty]}</span></div>
         <div class="nm">${nm}</div>
       </div>
-      <div class="th">${e.key.slice(0,1)}-${i}a</div>
+      <div class="th">${e.key.slice(0,2)}-${i}</div>
     </div>`;
   }
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">${e.name}<small>六大修行</small></div></div>
+    <div class="ttl">${e.name}<small>全${n}段階</small></div></div>
   <div id="steplist">${rows}</div>`;
 }
 
 /* ══ 記録画面 ══ */
 function viewRecord(){
   const e=EX.find(x=>x.key===state.exKey), i=state.step;
-  const nm=STEPNAMES[e.key][i-1];
+  const nm=stepName(e.key,i), ty=stepType(e.key,i);
+  const isTime=(ty==='s');
+  const unitLabel=isTime?'秒数':'回数';
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">STEP ${i} ／ ${nm}<small>${e.name}</small></div></div>
+    <div class="ttl">STEP ${i} ／ ${nm}<small>${e.name}・${TYPE_LABEL[ty]}（目標 ${TYPE_STD[ty]}）</small></div></div>
   <div class="memo-prev">
     <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回のメモ</span><span id="memoTog">▾</span></div>
     <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
   </div>
   <div class="recgrid">
     <div class="recimg" onclick="imgPopup('${e.key}',${i})">
-      <div class="ph">${e.key.slice(0,1)}-${i}a</div><div class="tap">タップ</div>
+      <div class="ph">${e.key.slice(0,2)}-${i}a</div><div class="tap">タップ</div>
     </div>
     <div class="recmeta">
       <div class="nm">${nm}</div><div class="sn">${e.name}・STEP ${i}</div>
-      <div class="stds">
-        <div class="std" onclick="selStd(this)"><div class="l">初級</div><div class="v">${STD.b}</div></div>
-        <div class="std" onclick="selStd(this)"><div class="l">中級</div><div class="v">${STD.i}</div></div>
-        <div class="std" onclick="selStd(this)"><div class="l">上級</div><div class="v">${STD.p}</div></div>
-      </div>
+      <div style="font-size:12px;color:var(--kin);margin-top:6px">${TYPE_LABEL[ty]}種目 ／ クリア基準 ${TYPE_STD[ty]}</div>
     </div>
   </div>
   <div class="inrow">
-    <div class="f"><label>セット数</label><input id="inSets" type="number" inputmode="numeric" value="2"></div>
-    <div class="f"><label>回数 / 秒</label><input id="inReps" type="number" inputmode="numeric" placeholder="20"></div>
+    <div class="f"><label>セット数</label><input id="inSets" type="number" inputmode="numeric" value="3"></div>
+    <div class="f"><label>${unitLabel}</label><input id="inReps" type="number" inputmode="numeric" placeholder="${isTime?'30':'8'}"></div>
     <button class="recbtn" onclick="doRecord(${i})">記録する</button>
   </div>
   <div class="memrow">
@@ -684,9 +761,9 @@ function viewProfile(){
 }
 
 /* ══ レーダー ══ */
-const RADAR_LABELS=['プッシュ','スクワット','プルアップ','レッグ','ブリッジ','ハンド'];
+const RADAR_LABELS=['プッシュ','プル','スクワット','コア','ブリッジ','ハンド'];
 function radar(setsArr,colors){
-  const W=340,H=300,cx=170,cy=150,R=88,MAX=10,N=6;
+  const W=340,H=300,cx=170,cy=150,R=88,MAX=15,N=6;
   const ang=i=>(-90+i*60)*Math.PI/180;
   const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">`;
@@ -721,7 +798,7 @@ function showMonthCal(){
     const isToday=isThisMonth&&d===today.getDate();
     const bg=st==='done'?'rgba(181,70,46,.7)':st==='rest'?'rgba(255,182,193,.25)':'rgba(110,147,166,.2)';
     const tc=st==='done'?'#fff':st==='rest'?'#ffb6c1':'#6E93A6';
-    grid+=`<div style="aspect-ratio:1;border-radius:6px;background:${bg};display:grid;place-items:center;font-size:13px;color:${tc};${isToday?'outline:2px solid var(--kin)':''}">${d}</div>`;
+    grid+=`<div onclick="dayDetail('${key}')" style="aspect-ratio:1;border-radius:6px;background:${bg};display:grid;place-items:center;font-size:13px;color:${tc};cursor:pointer;${isToday?'outline:2px solid var(--kin)':''}">${d}</div>`;
   }
   grid+=`</div>`;
   modal(`<div class="sheet">
@@ -815,9 +892,13 @@ function selStd(el){
 }
 
 function doRecord(step){
-  const intensity=document.querySelector('.std.sel')?.querySelector('.l')?.textContent;
-  const ikey = intensity==='上級'?'p':intensity==='中級'?'i':'b';
-  const xp=calcXP(step, ikey);
+  const e=EX.find(x=>x.key===state.exKey);
+  const ty=stepType(e.key,step);
+  const sets=parseInt(document.getElementById('inSets')?.value)||0;
+  const reps=parseInt(document.getElementById('inReps')?.value)||0;
+  if(sets<=0||reps<=0){ toast('セット数と回数を入力してください'); return; }
+  const per = ty==='s'?3 : ty==='n'?20 : 10;
+  const xp = sets*reps*per;
   vib(30);
   showXP(xp);
 }
