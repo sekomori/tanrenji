@@ -318,8 +318,6 @@ function criteria(key,i){
   if(sys==='lower') return {goal:15, start:8, unit:'回', rest:150, tempo:'1-0-2-1', clearTxt:'3組×15回'};
   return {goal:15, start:8, unit:'回', rest:105, tempo:'1-0-2-1', clearTxt:'3組×15回'};
 }
-const SER=[{k:'b',l:'初級',c:'#6E93A6'},{k:'i',l:'中級',c:'#C8A24C'},{k:'p',l:'上級',c:'#7FB069'}];
-function serOf(k){ return SER.find(s=>s.k===k)||{k:'',l:'自由',c:'#8b8f99'}; }
 
 const MOCK_LOGS=[
   {date:'05/02',sets:3,reps:5, note:'肘が開いた'},
@@ -379,17 +377,17 @@ const STAMPS=[
 ];
 // 巻物：取得分だけ表示、条件は最初から見える
 const SCROLLS=[
-  {em:'📜',l:'初伝の巻',  got:true,  cond:'はじめて記録した'},
+  {em:'📜',l:'初学の巻',  got:true,  cond:'はじめて記録した'},
   {em:'📜',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
   {em:'📜',l:'継続の巻',  got:false, cond:'7日連続で修行した'},
-  {em:'📜',l:'全種の巻',  got:false, cond:'六大修行を全種目記録した'},
+  {em:'📜',l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
   {em:'📜',l:'精進の巻',  got:false, cond:'30日連続で修行した'},
   {em:'🗝️',l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
 ];
 
 const QLV=[
-  {name:'入門', cond:'月に4回 修行する',  goal:4},
-  {name:'中堅', cond:'月に15回 修行する', goal:15},
+  {name:'初伝', cond:'月に4回 修行する',  goal:4},
+  {name:'中伝', cond:'月に15回 修行する', goal:15},
   {name:'極意', cond:'月に28回 修行する', goal:28},
 ];
 let questLv=1, questDone=8;
@@ -595,7 +593,7 @@ function doDeleteLog(idx){
 function viewHome(){
   return `
   <div class="brand">
-    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.4 prototype</div></div>
+    <div class="logo"><b>鍛錬寺</b><div class="ver">v0.4.5 prototype</div></div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ECE6D8" stroke-width="1.6"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
   <div class="streak">
@@ -703,7 +701,7 @@ function viewQuest(){
   const pct=Math.min(100,Math.round(cur/goal*100));
   return `
   <div class="brand"><div class="logo"><b>道連れ修行</b></div></div>
-  <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">同志と力を合わせ、目標の経験値を積む（週替わり）</p>
+  <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
   <div class="mission">
     <div class="t" style="margin:0 0 10px">今週の合力</div>
     <div class="pr"><span>みんなの経験値</span><span>${cur.toLocaleString()} / ${goal.toLocaleString()}</span></div>
@@ -733,7 +731,7 @@ function viewAchieve(){
     <p style="font-size:12px;color:var(--sub);margin:10px 0 0">目標達成で「🏵️ 印」を獲得</p>
   </div>
   <div class="h" style="display:flex;justify-content:space-between;align-items:center">
-    <span>徳</span><span style="font-size:13px;color:var(--kin)">☯️ 現在 <b>28</b> 徳</span>
+    <span>徳</span><span style="font-size:13px;color:var(--kin)">現在 <b>28</b> 徳</span>
   </div>
   <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
     <p style="font-size:13px;margin:0 0 10px">徳を積むと、師匠より褒美を授かる</p>
@@ -1297,7 +1295,7 @@ function rankList(){
   }).join('');
   modal(`<div class="sheet">
     <h3>階級一覧</h3>
-    <p class="sub">六大修行の合計ステップ（最大60）で昇級。現在：${cur.name}</p>
+    <p class="sub">六種の修行の合計段位（最大85）で昇級。現在：${cur.name}</p>
     <div style="max-height:60vh;overflow:auto;margin-top:6px">${rows}</div>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
@@ -1353,14 +1351,14 @@ function saveSettings(){closeModal();toast('保存しました');}
 const TUT=[
   {big:'🏯', tt:'鍛錬寺へようこそ',
    speech:'よく来た。ここは鍛錬寺。<br>器具はいらん、己の体だけで道を極める場所だ。<br>覚悟があるなら、門を開けてやろう。'},
-  {big:'🥋', tt:'BIG 6 — 六大修行',
-   speech:'修行は6種目。それぞれ10段階ある。<br>プッシュアップに始まり、<br>ワンアームを極めるまでの道のりだ。'},
+  {big:'🥋', tt:'六種の修行',
+   speech:'修行は6種目。それぞれ13〜15の段がある。<br>やさしい段から始まり、<br>片手・倒立などの極みへ至る道のりだ。'},
   {big:'👤', tt:'まず名前を決めろ',
    speech:'お前の修行名を決めろ。<br>2回目まで変えられる。<br>3度目以降は1年間変更できん。慎重に。', uname:true},
   {big:'📅', tt:'週の目標を決めろ',
    speech:'週に何日 道場へ来るか。<br>2日でも構わん。続けることが全てだ。', slider:true},
   {big:'📜', tt:'今月の修行目標',
-   speech:'毎月、修行目標が課される。<br>入門（月4日）・修行（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。'},
+   speech:'毎月、修行目標が課される。<br>初伝（月4日）・中伝（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。'},
   {big:'🔥', tt:'始める時が来た',
    speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
 ];
