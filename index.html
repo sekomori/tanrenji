@@ -252,6 +252,31 @@
   .cal-legend{ display:flex;gap:12px;justify-content:center;margin-top:12px;font-size:11px;color:var(--sub);font-weight:500; }
   .cal-legend span{ display:flex;align-items:center;gap:4px; }
   .cal-legend i{ width:10px;height:10px;border-radius:3px;display:inline-block; }
+  /* ── 修行（実演）オーバーレイ ── */
+  #dojo{ position:fixed;inset:0;z-index:88;background:radial-gradient(circle at 50% 30%,#241a16,#120d0b 70%);display:none;flex-direction:column;color:var(--washi);overflow:hidden; }
+  #dojo .dtop{ display:flex;justify-content:space-between;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 20px 8px; }
+  #dojo .dset{ font-size:12px;letter-spacing:.24em;color:var(--sub);font-weight:700; }
+  #dojo .dquit{ font-size:13px;color:var(--faint);cursor:pointer;font-weight:700; }
+  #dojo .dstage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative; }
+  #dojo .dphase{ font-family:var(--serif);font-size:min(17vw,74px);font-weight:800;letter-spacing:.1em;line-height:1;transition:color .15s; }
+  #dojo .dcount{ font-family:var(--serif);font-size:min(34vw,150px);font-weight:800;line-height:.9;color:var(--kin2);text-shadow:0 0 40px rgba(217,172,82,.35); }
+  #dojo .dtarget{ font-size:14px;color:var(--sub);letter-spacing:.1em;font-weight:500;margin-top:8px; }
+  #dojo .dpulse{ position:absolute;width:min(74vw,340px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(229,72,46,.35);pointer-events:none; }
+  #dojo .dcd{ font-family:var(--serif);font-size:min(50vw,220px);font-weight:800;color:var(--shu2);line-height:1;text-shadow:0 0 50px rgba(229,72,46,.5); }
+  #dojo .dcdlabel{ font-size:14px;letter-spacing:.4em;color:var(--sub);font-weight:700;margin-bottom:10px; }
+  #dojo .dbtns{ padding:0 22px calc(28px + env(safe-area-inset-bottom)); }
+  #dojo .dstop{ width:100%;height:64px;border:none;border-radius:18px;background:linear-gradient(135deg,var(--shu),var(--shu2));color:#fff;font-family:var(--sans);font-weight:900;font-size:18px;letter-spacing:.2em;cursor:pointer;box-shadow:0 6px 20px rgba(229,72,46,.35); }
+  #dojo .dstop:active{ transform:scale(.98); }
+  #dojo .dghost{ width:100%;height:52px;margin-top:10px;border:1px solid var(--line2);border-radius:16px;background:transparent;color:var(--washi);font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans); }
+  @keyframes phasePulse{ 0%{transform:scale(1);}50%{transform:scale(1.4);opacity:.15;}100%{transform:scale(1);} }
+  .pulsing{ animation:phasePulse var(--pdur,1s) ease-in-out; }
+  @keyframes cdpop{ 0%{transform:scale(.5);opacity:0;}40%{transform:scale(1.1);opacity:1;}100%{transform:scale(1);opacity:1;} }
+  .cdpop{ animation:cdpop .3s ease; }
+  /* 段クリア大演出 */
+  #clearFx{ position:fixed;inset:0;z-index:92;display:none;align-items:center;justify-content:center;background:rgba(10,8,7,.86);backdrop-filter:blur(4px); }
+  #clearFx .seal{ width:230px;height:230px;border-radius:50%;border:4px solid var(--shu);display:grid;place-items:center;position:relative;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
+  #clearFx .seal .k{ font-family:var(--serif);font-size:88px;font-weight:800;color:var(--shu2); }
+  @keyframes sealIn{ 0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;} }
 </style>
 </head>
 <body>
@@ -261,6 +286,12 @@
     <div class="vig"></div>
   </div>
   <div id="main"></div>
+  <div id="dojo">
+    <div class="dtop"><div class="dset" id="dSet"></div><div class="dquit" onclick="quitWorkout()">やめる</div></div>
+    <div class="dstage" id="dStage"></div>
+    <div class="dbtns" id="dBtns"></div>
+  </div>
+  <div id="clearFx"></div>
   <div class="tabbar" id="tabbar"></div>
 </div>
 <div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
@@ -639,7 +670,7 @@ function viewHome(){
     <div>
       <div class="eyebrow">TANRENJI · DOJO</div>
       <div class="logo"><b>鍛錬寺</b></div>
-      <div class="ver">v0.5.0 prototype</div>
+      <div class="ver">v0.6.0 prototype</div>
     </div>
     <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4ECDC" stroke-width="2" stroke-linecap="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
   </div>
@@ -705,20 +736,23 @@ function viewRecord(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
-  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
-    <div style="font-size:20px;color:var(--sub)">${e.key.slice(0,2)}-${i}a</div>
+  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid var(--line);background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
+    <div style="font-size:20px;color:var(--faint)">${e.key.slice(0,2)}-${i}a</div>
     <div style="position:absolute;bottom:10px;right:12px;font-size:12px;color:var(--kin)">押下で拡大</div>
   </div>
-  <div style="text-align:center;font-size:13px;color:var(--kin);margin-bottom:12px">🥋 ${tempoJP}</div>
-  <div style="display:flex;gap:8px;margin-bottom:12px">
-    <button class="histbtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="startRest(${c.rest})">⏱ 休息 ${c.rest}秒</button>
-    ${ty!=='s'?`<button class="histbtn" id="metroBtn" style="flex:1;width:auto;font-size:13px;padding:10px" onclick="toggleMetro()">🥁 拍子</button>`:''}
+  <div style="text-align:center;font-size:13px;color:var(--kin);margin-bottom:14px">🥋 ${tempoJP}</div>
+
+  <div style="border:1px solid var(--line2);border-radius:18px;background:var(--card);padding:16px;margin-bottom:14px">
+    <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">組数</label>
+        <input id="inGoalSets" type="number" inputmode="numeric" value="3" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:13px;font-size:17px;font-weight:700;text-align:center;font-family:var(--sans)"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">1組の${unitLabel}</label>
+        <input id="inGoalReps" type="number" inputmode="numeric" value="${c.goal}" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:13px;font-size:17px;font-weight:700;text-align:center;font-family:var(--sans)"></div>
+    </div>
+    <button class="recbtn" style="width:100%;height:56px;font-size:16px;letter-spacing:.2em" onclick="startWorkout('${e.key}',${i})">修行を始める</button>
+    <div style="text-align:center;margin-top:10px"><span onclick="quickRecordSheet('${e.key}',${i})" style="font-size:12px;color:var(--sub);cursor:pointer;font-weight:500">実演なしで記録する ›</span></div>
   </div>
-  <div class="inrow">
-    <div class="f"><label>組数</label><input id="inSets" type="number" inputmode="numeric" value="3"></div>
-    <div class="f"><label>${unitLabel}</label><input id="inReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
-    <button class="recbtn" onclick="doRecord(${i})">記す</button>
-  </div>
+
   <div class="memo-prev">
     <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
     <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
@@ -1020,6 +1054,263 @@ function selStd(el){
   el.classList.add('sel');
   const v=el.querySelector('.v').textContent.trim(), parts=v.split('×');
   if(parts.length>=2){if(sets)sets.value=parseInt(parts[0],10)||1;if(reps)reps.value=parseInt(parts[1],10)||0;}
+}
+
+/* ══════════ 修行エンジン（実演フロー） ══════════ */
+let WK=null; // {key,step,ty,goalSets,goalReps,curSet,tally:[],timer,audio}
+
+function playTaiko(){ try{ if(!WK) return; if(!WK.audio) WK.audio=new Audio('sound/sound_reward.mp3'); WK.audio.currentTime=0; WK.audio.play().catch(()=>{}); }catch(e){} }
+
+function startWorkout(key,step){
+  const ty=stepType(key,step);
+  const gs=parseInt(document.getElementById('inGoalSets')?.value)||3;
+  const gr=parseInt(document.getElementById('inGoalReps')?.value)||criteria(key,step).goal;
+  WK={key,step,ty,goalSets:gs,goalReps:gr,curSet:1,tally:[],timer:null,audio:null};
+  document.getElementById('dojo').style.display='flex';
+  countdownThenGo();
+}
+
+function clearWKTimers(){ if(WK&&WK.timer){ clearTimeout(WK.timer); clearInterval(WK.timer); WK.timer=null; } }
+
+function countdownThenGo(){
+  const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
+  document.getElementById('dSet').textContent=`${WK.curSet} / ${WK.goalSets} 組目`;
+  btns.innerHTML='';
+  let n=5;
+  const tick=()=>{
+    if(n<=0){ stage.innerHTML=`<div class="dphase" style="color:var(--shu2)">始</div>`; vib(40); playTaiko();
+      WK.timer=setTimeout(()=> (WK.ty==='s'?holdSet():dynamicSet()), 700); return; }
+    stage.innerHTML=`<div class="dcdlabel">まもなく始まる</div><div class="dcd cdpop" key="${n}">${n}</div>`;
+    vib(15); playTaiko();
+    n--; WK.timer=setTimeout(tick,1000);
+  };
+  tick();
+}
+
+/* 動的・ネガティブ：フェーズ表示のループ */
+function dynamicSet(){
+  const stage=document.getElementById('dStage');
+  const isNeg=WK.ty==='n';
+  // フェーズ定義（秒）
+  const phases = isNeg
+    ? [['下げる',5,'var(--ai)'],['戻す',1,'var(--washi)']]
+    : [['上げる',1,'var(--shu2)'],['下げる',2,'var(--ai)'],['キープ',1,'var(--kin2)']];
+  let rep=1, pi=0;
+  const goal=WK.goalReps;
+  const showRep=()=>{
+    stage.innerHTML=`
+      <div class="dpulse pulsing" id="dPulse"></div>
+      <div class="dphase" id="dPhase"></div>
+      <div class="dcount" id="dCount">${rep}</div>
+      <div class="dtarget">目標 ${goal} 回　—　${WK.curSet}/${WK.goalSets}組</div>`;
+    stepPhase();
+  };
+  const stepPhase=()=>{
+    const [label,sec,color]=phases[pi];
+    const ph=document.getElementById('dPhase'); if(!ph) return;
+    ph.textContent=label; ph.style.color=color;
+    const pulse=document.getElementById('dPulse');
+    if(pulse){ pulse.style.setProperty('--pdur',sec+'s'); pulse.classList.remove('pulsing'); void pulse.offsetWidth; pulse.classList.add('pulsing'); }
+    vib(label==='上げる'||label==='戻す'?30:12); playTaiko();
+    WK.timer=setTimeout(()=>{
+      pi++;
+      if(pi>=phases.length){ pi=0; rep++;
+        if(rep>goal){ endSetPrompt(); return; }
+        const c=document.getElementById('dCount'); if(c) c.textContent=rep;
+      }
+      stepPhase();
+    }, sec*1000);
+  };
+  showRep();
+  renderStopBtn();
+}
+
+/* 静的：秒数カウントダウン */
+function holdSet(){
+  const stage=document.getElementById('dStage');
+  let left=WK.goalReps;
+  stage.innerHTML=`
+    <div class="dpulse" style="animation:phasePulse 2s ease-in-out infinite"></div>
+    <div class="dphase" style="color:var(--kin2)">キープ</div>
+    <div class="dcount" id="dCount">${left}</div>
+    <div class="dtarget">秒キープ　—　${WK.curSet}/${WK.goalSets}組</div>`;
+  playTaiko(); vib(20);
+  WK.timer=setInterval(()=>{
+    left--;
+    const c=document.getElementById('dCount'); if(c) c.textContent=Math.max(0,left);
+    if(left%1===0) playTaiko();
+    if(left<=0){ clearWKTimers(); endSetPrompt(); }
+  },1000);
+  renderStopBtn();
+}
+
+function renderStopBtn(){
+  document.getElementById('dBtns').innerHTML=`<button class="dstop" onclick="stopSet()">止 め る</button>`;
+}
+
+/* ユーザーが停止 → 実数確認 */
+function stopSet(){ clearWKTimers(); endSetPrompt(true); }
+
+function endSetPrompt(auto){
+  clearWKTimers();
+  const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
+  const unit=WK.ty==='s'?'秒':'回';
+  const def=WK.goalReps;
+  stage.innerHTML=`
+    <div class="dphase" style="font-size:min(9vw,34px);color:var(--washi)">${WK.curSet}組目 完了</div>
+    <div style="font-size:13px;color:var(--sub);margin:14px 0 6px">実際にできた${unit}数は？</div>
+    <input id="dActual" type="number" inputmode="numeric" value="${def}" style="width:150px;background:var(--sumi3);border:1.5px solid var(--kin);border-radius:14px;color:var(--kin2);padding:16px;font-size:32px;font-weight:800;text-align:center;font-family:var(--serif)">
+    <div style="font-size:12px;color:var(--faint);margin-top:8px">少なく終えた時はここで直せる</div>`;
+  btns.innerHTML=`<button class="dstop" onclick="commitSet()">この組を記録</button>`;
+}
+
+function commitSet(){
+  const v=parseInt(document.getElementById('dActual')?.value)||0;
+  WK.tally.push(v);
+  vib(30);
+  if(WK.curSet>=WK.goalSets){ finishWorkout(); return; }
+  // 休憩 or 次へ
+  restPrompt();
+}
+
+function restPrompt(){
+  const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
+  const rec=criteria(WK.key,WK.step).rest;
+  stage.innerHTML=`
+    <div class="dphase" style="font-size:min(8vw,30px);color:var(--kin2)">${WK.curSet}組目 記録</div>
+    <div style="font-size:14px;color:var(--sub);margin-top:14px">休息をとって次の組へ</div>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center">
+      ${[90,120,150,180,210].map(s=>`<button onclick="beginRest(${s})" style="padding:14px 18px;border-radius:14px;border:1px solid ${s===rec?'var(--kin)':'var(--line2)'};background:${s===rec?'rgba(217,172,82,.14)':'var(--card)'};color:var(--washi);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans)">${s}<span style="font-size:11px;color:var(--sub)">秒</span></button>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--kin);margin-top:12px">推奨 ${rec}秒</div>`;
+  btns.innerHTML=`<button class="dghost" onclick="beginRest(0)">休まず次へ</button><button class="dghost" onclick="finishWorkout()">修行を終える（ここまでを記録）</button>`;
+}
+
+function beginRest(sec){
+  WK.curSet++;
+  if(sec<=0){ countdownThenGo(); return; }
+  const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
+  let left=sec;
+  const draw=()=>{
+    stage.innerHTML=`<div class="dcdlabel">休息</div>
+      <div class="dcount" style="color:var(--ai)">${left}</div>
+      <div class="dtarget">次は ${WK.curSet}/${WK.goalSets} 組目</div>`;
+  };
+  draw();
+  btns.innerHTML=`<button class="dstop" style="background:linear-gradient(135deg,#5b7a88,#82A7BC)" onclick="skipRest()">休息を省略</button>`;
+  WK.timer=setInterval(()=>{ left--; if(left<=0){ clearWKTimers(); vib([30,20,30]); countdownThenGo(); } else { const c=document.querySelector('#dStage .dcount'); if(c)c.textContent=left; } },1000);
+}
+function skipRest(){ clearWKTimers(); countdownThenGo(); }
+
+/* 全組終了 → 合計を記録 */
+function finishWorkout(){
+  clearWKTimers();
+  const sets=WK.tally.length;
+  const total=WK.tally.reduce((a,b)=>a+b,0);
+  const avg=sets?Math.round(total/sets):0;
+  const ty=WK.ty, c=criteria(WK.key,WK.step);
+  const per = ty==='s'?3 : ty==='n'?20 : 10;
+  const xp = total*per;
+  // クリア判定：全組が閾値以上
+  const cleared = sets>=3 && WK.tally.every(v=>v>=c.goal);
+  // ログに追加（当日）
+  const today=new Date(); const md=`${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+  MOCK_LOGS.push({date:md,sets:sets,reps:avg,note:''});
+  const key=WK.key, step=WK.step;
+  // 終了画面
+  const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
+  stage.innerHTML=`
+    <div class="dphase" style="font-size:min(10vw,40px);color:var(--kin2)">修行 成就</div>
+    <div style="display:flex;gap:22px;margin:22px 0;text-align:center">
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${sets}</div><div style="font-size:11px;color:var(--sub);letter-spacing:.1em">組</div></div>
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${total}</div><div style="font-size:11px;color:var(--sub);letter-spacing:.1em">合計${ty==='s'?'秒':'回'}</div></div>
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--kin2)">+${xp}</div><div style="font-size:11px;color:var(--sub);letter-spacing:.1em">経験値</div></div>
+    </div>
+    <div style="font-size:13px;color:var(--sub)">各組：${WK.tally.join(' / ')}</div>`;
+  btns.innerHTML=`<button class="dstop" onclick="closeWorkout(${cleared},'${key}',${step})">記録する</button>`;
+  vib([50,40,80]);
+}
+
+function closeWorkout(cleared,key,step){
+  document.getElementById('dojo').style.display='none';
+  WK=null;
+  // 練度上昇の演出
+  showXPBurst();
+  if(cleared){ setTimeout(()=>bigClear(key,step), 900); }
+  else { setTimeout(()=>{ nav('record',{exKey:key,step:step}); }, 900); }
+}
+
+function showXPBurst(){
+  const pop=document.getElementById('xpPop'), num=document.getElementById('xpNum');
+  num.textContent='成就'; pop.style.display='block';
+  pop.querySelectorAll('.sparkle').forEach(s=>s.remove());
+  const colors=['#D9AC52','#F2CF7E','#fff','#E5482E'];
+  for(let k=0;k<20;k++){ const s=document.createElement('div'); const size=5+Math.random()*7, ang=Math.random()*Math.PI*2, dist=70+Math.random()*110;
+    s.className='sparkle'; s.style.cssText=`width:${size}px;height:${size}px;background:${colors[k%colors.length]};left:50%;top:50%;--tx:${Math.cos(ang)*dist}px;--ty:${Math.sin(ang)*dist}px;animation-delay:${Math.random()*.2}s;`;
+    pop.appendChild(s); }
+  setTimeout(()=>{ pop.style.display='none'; },1600);
+}
+
+/* 段クリアの大演出（朱印） */
+function bigClear(key,step){
+  const n=stepCount(key);
+  const fx=document.getElementById('clearFx');
+  const nextName = step<n ? stepName(key,step+1) : null;
+  const nc = step<n ? criteria(key,step+1) : null;
+  const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
+  fx.style.display='flex';
+  fx.innerHTML=`<div style="text-align:center;padding:0 30px">
+    <div class="seal"><div class="k">成</div></div>
+    <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:24px;letter-spacing:.1em">第${step}段 クリア</div>
+    ${nextName?`<div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-top:20px;text-align:left;display:flex;gap:12px;align-items:flex-start">
+      <div style="font-size:26px">🧑‍🏫</div>
+      <div><div style="font-size:12px;color:var(--kin)">${ch.name}</div><div style="font-size:14px;line-height:1.6;margin-top:4px">${ch.say(nextName,nc.start)}</div></div>
+    </div>
+    <button class="btnprime" onclick="afterBigClear('${key}',${step+1})">次の段へ進む</button>
+    <button class="btnghost" onclick="afterBigClear('${key}',${step})">まだこの段で鍛える</button>`
+    : `<div style="font-size:14px;color:var(--sub);margin-top:16px">この修行を極めた！</div><button class="btnprime" onclick="afterBigClear('${key}',${step})">戻る</button>`}
+  </div>`;
+  vib([60,40,60,40,120]);
+}
+function afterBigClear(key,step){ document.getElementById('clearFx').style.display='none'; nav('record',{exKey:key,step:step}); }
+
+function quitWorkout(){
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <h3>修行を中断する？</h3>
+    <p class="sub" style="text-align:center">ここまでの記録は残りません</p>
+    <button class="btnprime btndanger" onclick="closeModal();forceQuitWorkout()">中断する</button>
+    <button class="btnghost" onclick="closeModal()">続ける</button>
+  </div>`,true);
+}
+function forceQuitWorkout(){ clearWKTimers(); document.getElementById('dojo').style.display='none'; const k=WK?WK.key:null,s=WK?WK.step:null; WK=null; if(k) nav('record',{exKey:k,step:s}); }
+
+/* 実演なしで記録（従来の簡易記録） */
+function quickRecordSheet(key,step){
+  const ty=stepType(key,step), c=criteria(key,step), unit=ty==='s'?'秒':'回';
+  modal(`<div class="sheet">
+    <h3>実演なしで記録</h3>
+    <p class="sub">すでに終えた修行を手入力で記録します</p>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <div style="flex:1"><label>組数</label><input id="qSets" type="number" inputmode="numeric" value="3"></div>
+      <div style="flex:1"><label>1組の${unit}数</label><input id="qReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
+    </div>
+    <button class="btnprime" onclick="quickRecord('${key}',${step})">記録する</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+function quickRecord(key,step){
+  const sets=parseInt(document.getElementById('qSets')?.value)||0;
+  const reps=parseInt(document.getElementById('qReps')?.value)||0;
+  if(sets<=0||reps<=0){ toast('組数と回数を入力してください'); return; }
+  const ty=stepType(key,step), c=criteria(key,step);
+  const per=ty==='s'?3:ty==='n'?20:10;
+  const today=new Date(); const md=`${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+  MOCK_LOGS.push({date:md,sets,reps,note:''});
+  closeModal();
+  const cleared=sets>=3&&reps>=c.goal;
+  showXPBurst();
+  if(cleared) setTimeout(()=>bigClear(key,step),900);
+  else setTimeout(()=>nav('record',{exKey:key,step}),700);
 }
 
 const CHARS=[
