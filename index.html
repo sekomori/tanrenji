@@ -298,7 +298,7 @@
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   .mstep .flag{ position:absolute;right:calc(50% + 34px);font-size:11px;color:var(--sub);white-space:nowrap;font-weight:700; }
   .mstep.here .flag{ color:var(--kin); }
-  .today-card{ position:sticky;bottom:78px;margin-top:6px;padding:16px;border-radius:20px;background:linear-gradient(145deg,var(--card2),var(--card));border:1px solid var(--line2);box-shadow:0 8px 30px rgba(0,0,0,.4); }
+  .today-card{ margin:20px 0 8px;padding:16px;border-radius:20px;background:linear-gradient(145deg,var(--card2),var(--card));border:1px solid var(--line2);box-shadow:0 8px 30px rgba(0,0,0,.4); }
   .today-card .q{ font-family:var(--serif);font-size:17px;font-weight:700;text-align:center;margin-bottom:12px;letter-spacing:.06em; }
   .today-card .two{ display:flex;gap:10px; }
   .tbtn{ flex:1;padding:15px 6px;border-radius:14px;border:none;font-family:var(--sans);font-weight:900;font-size:15px;letter-spacing:.14em;cursor:pointer; }
@@ -312,6 +312,18 @@
   @keyframes floaty{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);} }
   #restFx .zzz{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.2em;color:var(--ai); }
   #restFx .rsub{ font-size:13px;color:var(--sub);max-width:260px;text-align:center;line-height:1.7; }
+  /* ── 道連れ修行：三つ巴カルーセル ── */
+  .party-stage{ position:relative;height:300px;margin:6px 0 10px;perspective:1000px;touch-action:pan-y; user-select:none; }
+  .pchar{ position:absolute;left:50%;top:50%;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s,filter .5s;will-change:transform; }
+  .pchar .pav{ width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--sumi3),var(--sumi2));border:2px solid var(--line2);display:grid;place-items:center;font-size:58px; }
+  .pchar .pname{ text-align:center;font-family:var(--serif);font-weight:800;font-size:16px;margin-top:8px; }
+  .pchar .pmeta{ text-align:center;font-size:11px;color:var(--sub);margin-top:2px; }
+  .pchar.front .pav{ border-color:var(--kin);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 5px rgba(217,172,82,.14); }
+  .pchar.front .pname{ color:var(--kin2); }
+  .pdots{ display:flex;gap:7px;justify-content:center;margin:2px 0 14px; }
+  .pdots i{ width:7px;height:7px;border-radius:50%;background:rgba(244,236,220,.2); }
+  .pdots i.on{ background:var(--kin);width:20px;border-radius:4px; }
+  .pswipe{ text-align:center;font-size:11px;color:var(--faint);letter-spacing:.1em;margin-bottom:6px; }
 </style>
 </head>
 <body>
@@ -345,6 +357,9 @@ const RANKS=[
   {min:75,name:'仙人'},{min:84,name:'覚者'}
 ];
 function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
+// 名前を決めてから最初の3日間は強制的に「門前払い」
+let daysSinceStart=8; // モック：開始からの日数（3未満なら門前払い固定）
+function currentRank(){ return daysSinceStart<3 ? RANKS[0] : rankOf(SUM); }
 
 const EX=[
   {key:'push',  name:'プッシュアップ',       cur:5, sys:'upper'},
@@ -632,6 +647,7 @@ function render(){
   $main.innerHTML=`<div class="scr">${(map[state.view]||viewHome)()}</div>`;
   window.scrollTo(0,0);
   if(state.view==='record') bindLogLongPress();
+  if(state.view==='quest'){ renderParty(); bindPartySwipe(); }
 }
 
 function bindLogLongPress(){
@@ -746,7 +762,7 @@ function viewHome(){
   </div>
 
   ${trainedToday
-    ? `<div class="today-card"><div class="done-today">✓ 今日の修行は済んだ　1歩 進んだ</div></div>`
+    ? `<div class="today-card"><div class="done-today">✓ 今日の修行は済んだ　一歩 進んだ</div></div>`
     : `<div class="today-card">
         <div class="q">今日はどうする？</div>
         <div class="two">
@@ -865,32 +881,69 @@ function viewRecord(){
   }).join('')}</div>`;
 }
 
-/* ══ 試練 ══ */
+/* ══ 試練（道連れ修行） ══ */
+const PARTY=[
+  {name:'ノリ',   em:'🧘', lvxp:50, week:18, me:true},
+  {name:'タカシ', em:'🧙', lvxp:40, week:15, me:false},
+  {name:'翔',     em:'⚔️', lvxp:30, week:12, me:false},
+];
+let partyFront=0;
 function viewQuest(){
-  // 道連れ修行（共闘クエスト・週替わり・最大3名）
-  const party=[
-    {name:'ノリ',   em:'🧘', lvxp:50, week:18, me:true},
-    {name:'タカシ', em:'🧙', lvxp:40, week:15, me:false},
-    {name:'翔',     em:'⚔️', lvxp:30, week:12, me:false},
-  ];
-  const goal=party.reduce((a,p)=>a+p.lvxp*p.week,0);
+  const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const cur=Math.round(goal*0.62);
   const pct=Math.min(100,Math.round(cur/goal*100));
   return `
   ${pageHead('TRIALS · TOGETHER','道連れ修行')}
   <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
+
+  <div class="pswipe">◄ スワイプで同行の士を見る ►</div>
+  <div class="party-stage" id="partyStage"></div>
+  <div class="pdots" id="partyDots"></div>
+
   <div class="mission">
     <div class="t" style="margin:0 0 10px">今週の合力</div>
-    <div class="pr"><span>みんなの経験値</span><span>${cur.toLocaleString()} / ${goal.toLocaleString()}</span></div>
+    <div class="pr"><span>みんなの経験値</span><b>${cur.toLocaleString()} / ${goal.toLocaleString()}</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
   <div class="h">同行の士（最大3名）</div>
-  ${party.map(p=>`<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--glass);border:1px solid ${p.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
-     <div style="font-size:26px">${p.em}</div>
-     <div style="flex:1"><div style="font-size:14px;font-weight:700;color:${p.me?'var(--kin)':'var(--washi)'}">${p.name}${p.me?'（自分）':''}</div>
-       <div style="font-size:12px;color:var(--sub)">今週の目標経験値 ${(p.lvxp*p.week).toLocaleString()}</div></div>
+  ${PARTY.map(p=>`<div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:16px;background:var(--card);border:1px solid ${p.me?'rgba(217,172,82,.5)':'var(--line)'};margin-bottom:9px">
+     <div style="width:48px;height:48px;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:26px;flex:0 0 auto">${p.em}</div>
+     <div style="flex:1"><div style="font-size:15px;font-weight:700;color:${p.me?'var(--kin)':'var(--washi)'}">${p.name}${p.me?'（自分）':''}</div>
+       <div style="font-size:12px;color:var(--sub);margin-top:2px">今週の目標経験値 <b style="color:var(--kin)">${(p.lvxp*p.week).toLocaleString()}</b></div></div>
    </div>`).join('')}
 `;
+}
+
+// カルーセル描画（3体を三角配置。front=正面、他2体は斜め後ろ）
+function renderParty(){
+  const stage=document.getElementById('partyStage'); if(!stage) return;
+  const n=PARTY.length;
+  // 各キャラの相対位置（front基準）：0=正面, 1=右奥, 2=左奥
+  const slots=[
+    {x:0,   y:10,  s:1.0,  z:3, o:1,   blur:0},   // 正面
+    {x:96,  y:-30, s:.62, z:1, o:.55, blur:1.5}, // 右奥
+    {x:-96, y:-30, s:.62, z:1, o:.55, blur:1.5}, // 左奥
+  ];
+  stage.innerHTML=PARTY.map((p,i)=>{
+    const rel=(i-partyFront+n)%n;
+    const sl=slots[rel];
+    return `<div class="pchar ${rel===0?'front':''}" style="z-index:${sl.z};opacity:${sl.o};filter:blur(${sl.blur}px);transform:translate(-50%,-50%) translate(${sl.x}px,${sl.y}px) scale(${sl.s})">
+      <div class="pav">${p.em}</div>
+      ${rel===0?`<div class="pname">${p.name}${p.me?'（自分）':''}</div><div class="pmeta">今週の目標 ${(p.lvxp*p.week).toLocaleString()} 経験値</div>`:''}
+    </div>`;
+  }).join('');
+  const dots=document.getElementById('partyDots');
+  if(dots) dots.innerHTML=PARTY.map((_,i)=>`<i class="${i===partyFront?'on':''}"></i>`).join('');
+}
+function rotateParty(dir){ partyFront=(partyFront+dir+PARTY.length)%PARTY.length; vib(10); renderParty(); }
+function bindPartySwipe(){
+  const stage=document.getElementById('partyStage'); if(!stage) return;
+  let sx=0,active=false;
+  stage.addEventListener('touchstart',e=>{ sx=e.touches[0].clientX; active=true; },{passive:true});
+  stage.addEventListener('touchend',e=>{ if(!active)return; active=false; const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>40) rotateParty(dx<0?1:-1); });
+  let md=false,mx=0;
+  stage.addEventListener('mousedown',e=>{ md=true;mx=e.clientX; });
+  stage.addEventListener('mouseup',e=>{ if(!md)return; md=false; const dx=e.clientX-mx; if(Math.abs(dx)>40) rotateParty(dx<0?1:-1); });
 }
 
 /* ══ 功績 ══ */
@@ -940,12 +993,12 @@ function viewAchieve(){
 /* ══ 掲示板 ══ */
 const BOARD=[
   {who:'ノリ',   me:true, type:'rank', text:'『修行僧』に昇格した', tm:'たった今'},
-  {who:'ノリ・タカシ・翔', me:true, type:'quest', text:'道連れ修行「百八の煩悩退治」を成就した', tm:'30分前'},
-  {who:'タカシ', me:false,type:'streak',text:'20日 連続修行を達成', tm:'1時間前'},
-  {who:'翔',     me:false,type:'step', text:'〈フル・プルアップ〉第8段に到達', tm:'3時間前'},
+  {who:'ノリ・タカシ・翔', me:true, em:'🤝', type:'quest', text:'道連れ修行「百八の煩悩退治」を成就した', tm:'30分前'},
+  {who:'タカシ', me:false,em:'🧙', type:'streak',text:'20日 連続修行を達成', tm:'1時間前'},
+  {who:'翔',     me:false,em:'⚔️', type:'step', text:'〈フル・プルアップ〉第8段に到達', tm:'3時間前'},
   {who:'ノリ',   me:true, type:'step', text:'〈フル・プッシュアップ〉第5段に到達', tm:'今日'},
-  {who:'タカシ', me:false,type:'rank', text:'『鍛錬者』に昇格した', tm:'昨日'},
-  {who:'翔',     me:false,type:'streak',text:'10日 連続修行を達成', tm:'昨日'},
+  {who:'タカシ', me:false,em:'🧙', type:'rank', text:'『鍛錬者』に昇格した', tm:'昨日'},
+  {who:'翔',     me:false,em:'⚔️', type:'streak',text:'10日 連続修行を達成', tm:'昨日'},
   {who:'ノリ',   me:true, type:'streak',text:'10日 連続修行を達成', tm:'2日前'},
 ];
 const BOARD_ICON={ rank:'🎖️', streak:'🔥', step:'⬆️', quest:'🤝' };
@@ -953,12 +1006,14 @@ function viewBoard(){
   return `
   ${pageHead('BOARD','掲示板')}
   ${BOARD.map(b=>{
-    const icon=`<div style="font-size:22px;flex:0 0 auto">${BOARD_ICON[b.type]}</div>`;
-    const body=`<div style="flex:1;${b.me?'text-align:right':''}">
-       <div style="font-size:13px"><span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}</div>
-       <div style="font-size:12px;color:var(--sub);margin-top:3px">${b.tm}</div>
+    const av = b.me ? currentAvatar : (b.em||'🧑');
+    const icon=`<div style="width:64px;height:64px;flex:0 0 auto;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:34px">${av}</div>`;
+    const kindTag=`<span style="font-size:22px">${BOARD_ICON[b.type]}</span>`;
+    const body=`<div style="flex:1;min-width:0;${b.me?'text-align:right':''}">
+       <div style="font-size:15px;line-height:1.5">${b.me?'':kindTag+' '}<span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}${b.me?' '+kindTag:''}</div>
+       <div style="font-size:12px;color:var(--sub);margin-top:6px">${b.tm}</div>
      </div>`;
-    return `<div style="display:flex;gap:11px;padding:13px;border-radius:13px;background:var(--glass);border:1px solid ${b.me?'var(--kin)':'var(--line)'};margin-bottom:9px">
+    return `<div style="display:flex;gap:14px;align-items:center;padding:18px;border-radius:18px;background:var(--card);border:1px solid ${b.me?'rgba(217,172,82,.5)':'var(--line)'};margin-bottom:12px">
       ${b.me? body+icon : icon+body}
     </div>`;
   }).join('')}`;
@@ -991,7 +1046,7 @@ function viewFriends(){
 
 /* ══ プロフィール ══ */
 function viewProfile(){
-  const r=rankOf(SUM);
+  const r=currentRank();
   return `
   <div class="eyebrow" style="margin:2px 2px 12px">SELF · 己</div>
   <div class="prof-top">
@@ -1717,11 +1772,12 @@ function saveAvatar(){
 }
 
 function rankList(){
-  const cur=rankOf(SUM);
-  const rows=RANKS.map((r,i)=>{
+  const cur=currentRank();
+  const rows=RANKS.slice().reverse().map((r,ri)=>{
+    const i=RANKS.length-1-ri; // 元の並びのインデックス
     const next=RANKS[i+1]; const range=next?`${r.min}〜${next.min-1}`:r.min+'〜';
     const isCur=r.name===cur.name;
-    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(200,162,76,.14)':'rgba(255,255,255,.02)'}">
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(217,172,82,.14)':'rgba(255,255,255,.02)'}">
       <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin2)':'var(--sub)'};font-size:15px">${i+1}</div>
       <div style="flex:1;font-family:var(--serif);font-size:16px;color:${isCur?'var(--kin2)':'var(--washi)'}">${r.name}</div>
       <div style="font-size:12px;color:var(--sub)">合計 ${range}</div>
