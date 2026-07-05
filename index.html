@@ -277,6 +277,41 @@
   #clearFx .seal{ width:230px;height:230px;border-radius:50%;border:4px solid var(--shu);display:grid;place-items:center;position:relative;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
   #clearFx .seal .k{ font-family:var(--serif);font-size:88px;font-weight:800;color:var(--shu2); }
   @keyframes sealIn{ 0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;} }
+  /* ── 修行の山道（双六ホーム） ── */
+  .mtn-head{ display:flex;justify-content:space-between;align-items:flex-start;margin:2px 2px 8px; }
+  .mtn-name{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.08em; }
+  .mtn-sub{ font-size:11px;color:var(--sub);letter-spacing:.1em;margin-top:3px;font-weight:500; }
+  .mtn-streak{ display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line2);flex:0 0 auto; }
+  .mtn-streak .f{ font-size:19px; }
+  .mtn-streak .n{ font-family:var(--serif);font-size:20px;font-weight:800; }
+  .mtn-streak .u{ font-size:10px;color:var(--sub);letter-spacing:.1em; }
+  .path{ position:relative;margin:6px 0 12px;padding:14px 0; }
+  .path .peak{ text-align:center;margin-bottom:6px; }
+  .path .torii{ font-size:46px;filter:drop-shadow(0 4px 14px rgba(229,72,46,.4)); }
+  .path .peakl{ font-size:11px;color:var(--kin);letter-spacing:.2em;font-weight:700;margin-top:2px; }
+  .msteps{ display:flex;flex-direction:column-reverse;align-items:center;gap:0; }
+  .mstep{ position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:52px; }
+  .mstep .rail{ position:absolute;top:-6px;bottom:-6px;width:3px;left:50%;transform:translateX(-50%);background:repeating-linear-gradient(var(--line2) 0 6px,transparent 6px 12px); }
+  .mstep .node{ position:relative;z-index:1;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:15px;border:2px solid var(--line2);background:var(--sumi2);color:var(--faint);transition:transform .2s; }
+  .mstep.done .node{ background:linear-gradient(135deg,var(--shu),var(--shu2));border-color:var(--shu2);color:#fff;box-shadow:0 3px 12px rgba(229,72,46,.4); }
+  .mstep.here .node{ width:52px;height:52px;font-size:24px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.16),0 6px 20px rgba(217,172,82,.4);animation:hereBob 2.2s ease-in-out infinite; }
+  @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
+  .mstep .flag{ position:absolute;right:calc(50% + 34px);font-size:11px;color:var(--sub);white-space:nowrap;font-weight:700; }
+  .mstep.here .flag{ color:var(--kin); }
+  .today-card{ position:sticky;bottom:78px;margin-top:6px;padding:16px;border-radius:20px;background:linear-gradient(145deg,var(--card2),var(--card));border:1px solid var(--line2);box-shadow:0 8px 30px rgba(0,0,0,.4); }
+  .today-card .q{ font-family:var(--serif);font-size:17px;font-weight:700;text-align:center;margin-bottom:12px;letter-spacing:.06em; }
+  .today-card .two{ display:flex;gap:10px; }
+  .tbtn{ flex:1;padding:15px 6px;border-radius:14px;border:none;font-family:var(--sans);font-weight:900;font-size:15px;letter-spacing:.14em;cursor:pointer; }
+  .tbtn.go{ background:linear-gradient(135deg,var(--shu),var(--shu2));color:#fff;box-shadow:0 4px 14px rgba(229,72,46,.3); }
+  .tbtn.rest{ background:var(--sumi3);color:var(--washi);border:1px solid var(--line2); }
+  .tbtn:active{ transform:scale(.97); }
+  .done-today{ text-align:center;padding:14px;border-radius:16px;background:rgba(134,181,115,.12);border:1px solid rgba(134,181,115,.35);color:var(--matsu);font-weight:700;font-size:14px; }
+  /* 休息アニメ */
+  #restFx{ position:fixed;inset:0;z-index:88;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:radial-gradient(circle at 50% 40%,#1a2228,#101418 75%);color:var(--washi); }
+  #restFx .moon{ font-size:78px;animation:floaty 4s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);} }
+  #restFx .zzz{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.2em;color:var(--ai); }
+  #restFx .rsub{ font-size:13px;color:var(--sub);max-width:260px;text-align:center;line-height:1.7; }
 </style>
 </head>
 <body>
@@ -292,6 +327,7 @@
     <div class="dbtns" id="dBtns"></div>
   </div>
   <div id="clearFx"></div>
+  <div id="restFx"></div>
   <div class="tabbar" id="tabbar"></div>
 </div>
 <div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
@@ -575,7 +611,7 @@ function pageHead(en,jp){
 }
 
 function renderTabs(){
-  const cur=['home','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
+  const cur=['home','choose','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
     `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);${t.id==='profile'?'openSelfMenu()':`nav('${t.id}')`}">
        <svg viewBox="0 0 24 24">${t.icon}</svg></div>`).join('');
@@ -590,9 +626,9 @@ function openSelfMenu(){
 function render(){
   renderTabs();
   if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
-  const bgMap={home:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
+  const bgMap={home:'t1',choose:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
   setBg(bgMap[state.view]||'t1');
-  const map={home:viewHome,steps:viewSteps,record:viewRecord,quest:viewQuest,board:viewBoard,friends:viewFriends,profile:viewProfile,achieve:viewAchieve};
+  const map={home:viewHome,choose:viewChoose,steps:viewSteps,record:viewRecord,quest:viewQuest,board:viewBoard,friends:viewFriends,profile:viewProfile,achieve:viewAchieve};
   $main.innerHTML=`<div class="scr">${(map[state.view]||viewHome)()}</div>`;
   window.scrollTo(0,0);
   if(state.view==='record') bindLogLongPress();
@@ -663,34 +699,73 @@ function doDeleteLog(idx){
 }
 
 /* ══ ホーム ══ */
+/* ══ 修行の山道（双六ホーム） ══ */
+const MOUNTAINS=['初雪山','氷輪嶽','芽吹山','花霞嶺','新緑峰','雨籠山','翠嵐嶽','灼陽峰','月見山','紅葉嶽','枯野嶺','霜柱山'];
+let trainedToday=false; // モック：今日修行したか
+
 function viewHome(){
-  const weekGoal=4, weekDone=2, streakDays=12;
+  const now=new Date();
+  const mName=MOUNTAINS[now.getMonth()];
+  const total=QLV[questLv].goal;      // 月間目標＝マス数
+  const climbed=Math.min(questDone,total); // 登った数
+  const streakDays=12;
+  const reached=climbed>=total;
+
+  // マスを生成（下=1 .. 上=total）。登った=done、次に登るマス=here、未踏=グレー
+  let steps='';
+  for(let i=1;i<=total;i++){
+    let cls='';
+    if(i<=climbed) cls='done';
+    else if(i===climbed+1 && !reached) cls='here';
+    const flag = (cls==='here') ? `<span class="flag">今ここ・あと${total-climbed}歩</span>`
+               : (i===total ? `<span class="flag">頂の鳥居</span>` : '');
+    const mark = i<=climbed ? '✓' : (cls==='here' ? '⛩' : i);
+    steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node">${mark}</div></div>`;
+  }
+
   return `
-  <div class="brand">
+  <div class="mtn-head">
     <div>
-      <div class="eyebrow">TANRENJI · DOJO</div>
-      <div class="logo"><b>鍛錬寺</b></div>
-      <div class="ver">v0.6.0 prototype</div>
+      <div class="eyebrow">${now.getMonth()+1}月の霊峰</div>
+      <div class="mtn-name">${mName}</div>
+      <div class="mtn-sub">頂の鳥居まで ${total} 歩　／　登頂で「印」を授かる</div>
     </div>
-    <div class="bell" onclick="nav('friends');hasNewReact=false;renderTabs()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4ECDC" stroke-width="2" stroke-linecap="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg>${hasNewReact?'<div class="dot"></div>':''}</div>
-  </div>
-  <div class="hero">
-    <div class="enso">
-      ${ring(weekDone,weekGoal,96,'var(--shu)').replace(`>${weekDone}<`,'><')}
-      <div class="flame">🔥</div>
-    </div>
-    <div class="htxt">
-      <div class="hlabel">STREAK · 連続修行</div>
-      <div class="hdays">${streakDays}<small>日</small></div>
-      <div class="hsub">今週 ${weekDone}/${weekGoal} 回 — あと${weekGoal-weekDone}回で目標達成・休養OK</div>
-      <button class="restbtn" onclick="restConfirm()">今日は休む</button>
+    <div class="mtn-streak">
+      <div class="f">🔥</div>
+      <div><div class="n">${streakDays}</div><div class="u">連続</div></div>
     </div>
   </div>
-  <div class="xp">
+
+  <div class="path">
+    <div class="peak">
+      <div class="torii">${reached?'⛩️':'⛩'}</div>
+      <div class="peakl">${mName}・頂</div>
+    </div>
+    <div class="msteps">${steps}</div>
+    <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--faint);letter-spacing:.1em">— 麓 —</div>
+  </div>
+
+  ${trainedToday
+    ? `<div class="today-card"><div class="done-today">✓ 今日の修行は済んだ　一歩 進んだ</div></div>`
+    : `<div class="today-card">
+        <div class="q">今日はどうする？</div>
+        <div class="two">
+          <button class="tbtn go" onclick="nav('choose')">修行する</button>
+          <button class="tbtn rest" onclick="restToday()">休む</button>
+        </div>
+      </div>`}
+  `;
+}
+
+/* 種目を選ぶ画面（旧ホームの六種の修行） */
+function viewChoose(){
+  return `
+  <div class="top"><div class="back" onclick="history.back()">‹</div>
+    <div class="ttl">修行を選ぶ<small>六種のうち ひとつを選べ</small></div></div>
+  <div class="xp" style="margin-bottom:14px">
     <div class="row"><span>今日の修行 経験値</span><b>30 <span style="font-size:11px;color:var(--sub);font-family:var(--sans)">/ 50</span></b></div>
     <div class="bar"><i style="width:60%"></i></div>
   </div>
-  <div class="h">六種の修行 <span style="font-size:10px;letter-spacing:.3em;color:var(--faint);font-family:var(--sans);font-weight:700;margin-left:2px">SIX DISCIPLINES</span></div>
   <div class="stack">
     ${EX.map(e=>{
       const total=stepCount(e.key);
@@ -702,6 +777,18 @@ function viewHome(){
         <div class="chev">›</div></div>`;
     }).join('')}
   </div>`;
+}
+
+/* 「休む」を選んだ時の休息アニメ */
+function restToday(){
+  const fx=document.getElementById('restFx');
+  fx.style.display='flex';
+  fx.innerHTML=`
+    <div class="moon">🌙</div>
+    <div class="zzz">休 息</div>
+    <div class="rsub">体を癒すのも修行のうち。<br>明日、また山に向かおう。</div>
+    <button class="btnghost" style="width:auto;padding:12px 28px;margin-top:10px" onclick="document.getElementById('restFx').style.display='none'">閉じる</button>`;
+  vib(20);
 }
 
 /* ══ ステップ一覧 ══ */
