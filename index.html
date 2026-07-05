@@ -298,9 +298,9 @@
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   .mstep .flag{ position:absolute;right:calc(50% + 34px);font-size:11px;color:var(--sub);white-space:nowrap;font-weight:700; }
   .mstep.here .flag{ color:var(--kin); }
-  .today-card{ margin:20px 0 8px;padding:16px;border-radius:20px;background:linear-gradient(145deg,var(--card2),var(--card));border:1px solid var(--line2);box-shadow:0 8px 30px rgba(0,0,0,.4); }
-  .today-card .q{ font-family:var(--serif);font-size:17px;font-weight:700;text-align:center;margin-bottom:12px;letter-spacing:.06em; }
-  .today-card .two{ display:flex;gap:10px; }
+  .today-fixed{ position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));width:100%;max-width:460px;display:flex;gap:10px;padding:0 16px;z-index:15;pointer-events:none; }
+  .today-fixed .tbtn,.today-fixed .done-today{ pointer-events:auto; }
+  .today-fixed .done-today{ flex:1; }
   .tbtn{ flex:1;padding:15px 6px;border-radius:14px;border:none;font-family:var(--sans);font-weight:900;font-size:15px;letter-spacing:.14em;cursor:pointer; }
   .tbtn.go{ background:linear-gradient(135deg,var(--shu),var(--shu2));color:#fff;box-shadow:0 4px 14px rgba(229,72,46,.3); }
   .tbtn.rest{ background:var(--sumi3);color:var(--washi);border:1px solid var(--line2); }
@@ -428,7 +428,7 @@ function criteria(key,i){
 const MOCK_LOGS=[
   {date:'05/02',sets:3,reps:5, note:'肘が開いた'},
   {date:'05/06',sets:3,reps:6, note:''},
-  {date:'05/11',sets:3,reps:6, note:'肩幅を意識しよう'},
+  {date:'05/11',sets:3,reps:6, note:'肩幅を意識'},
   {date:'05/15',sets:3,reps:7, note:''},
   {date:'05/20',sets:3,reps:7, note:'フォーム重視'},
   {date:'05/25',sets:3,reps:8, note:''},
@@ -733,7 +733,7 @@ function viewHome(){
     let cls='';
     if(i<=climbed) cls='done';
     else if(i===climbed+1 && !reached) cls='here';
-    const flag = (cls==='here') ? `<span class="flag">今ここ・あと${total-climbed}歩</span>`
+    const flag = (cls==='here') ? `<span class="flag">今ここ・あと${total-climbed}基</span>`
                : (i===total ? `<span class="flag">頂の鳥居</span>` : '');
     const mark = i<=climbed ? '✓' : (cls==='here' ? '⛩' : i);
     steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node">${mark}</div></div>`;
@@ -744,7 +744,7 @@ function viewHome(){
     <div>
       <div class="eyebrow">${now.getMonth()+1}月の霊峰</div>
       <div class="mtn-name">${mName}</div>
-      <div class="mtn-sub">頂の鳥居まで ${total} 歩　／　登頂で「印」を授かる</div>
+      <div class="mtn-sub">頂の鳥居まで ${total} 基　／　登頂で「印」を授かる</div>
     </div>
     <div class="mtn-streak">
       <div class="f">🔥</div>
@@ -762,14 +762,12 @@ function viewHome(){
   </div>
 
   ${trainedToday
-    ? `<div class="today-card"><div class="done-today">✓ 今日の修行は済んだ　一歩 進んだ</div></div>`
-    : `<div class="today-card">
-        <div class="q">今日はどうする？</div>
-        <div class="two">
-          <button class="tbtn go" onclick="nav('choose')">修行する</button>
-          <button class="tbtn rest" onclick="restToday()">休む</button>
-        </div>
+    ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ　一基 進んだ</div></div>`
+    : `<div class="today-fixed">
+        <button class="tbtn go" onclick="nav('choose')">修行する</button>
+        <button class="tbtn rest" onclick="restToday()">休む</button>
       </div>`}
+  <div style="height:80px"></div>
   `;
 }
 
