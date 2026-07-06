@@ -838,15 +838,15 @@ function doDeleteLog(idx){
 const MOUNTAINS=['初雪山','氷輪嶽','芽吹山','花霞嶺','新緑峰','雨籠山','翠嵐嶽','灼陽峰','月見山','紅葉嶽','枯野嶺','霜柱山'];
 let trainedToday=false; // モック：今日修行したか
 
-// 登った基（日）ごとに、その日行ったカテゴリをモックで割り当てる（円グラフ配色に使用）
+// 登った基（日）ごとに、その日行ったカテゴリとXPをモックで割り当てる（円グラフ配色・詳細表示に使用）
 const MOUNTAIN_STEP_CATS=(()=>{
   const total=QLV[questLv].goal, climbed=Math.min(questDone,total);
   const keys=EX.map(e=>e.key);
   const arr=[];
   for(let i=0;i<climbed;i++){
     const n=1+Math.floor(Math.random()*3);
-    const shuffled=keys.slice().sort(()=>Math.random()-0.5);
-    arr.push(shuffled.slice(0,n));
+    const shuffled=keys.slice().sort(()=>Math.random()-0.5).slice(0,n);
+    arr.push(shuffled.map(k=>({key:k,xp:60+Math.floor(Math.random()*40)})));
   }
   return arr;
 })();
@@ -875,18 +875,19 @@ function viewHome(){
     else if(i===climbed+1 && !reached) cls='here';
     const flag = (cls==='here') ? `<span class="flag">今ここ・あと${total-climbed}基</span>`
                : (i===total ? `<span class="flag">頂の鳥居</span>` : '');
-    let nodeInner, nodeStyle='';
+    let nodeInner, nodeStyle='', nodeClick='';
     if(i<=climbed){
       const cats=MOUNTAIN_STEP_CATS[i-1]||[];
-      const colors=cats.length?cats.map(k=>CAT_COLORS[k]):['var(--shu)'];
-      nodeStyle='background:none;border-color:rgba(244,236,220,.25);overflow:hidden;position:relative;box-shadow:none';
+      const colors=cats.length?cats.map(c=>CAT_COLORS[c.key]):['var(--shu)'];
+      nodeStyle='background:none;border-color:rgba(244,236,220,.25);overflow:hidden;position:relative;box-shadow:none;cursor:pointer';
+      nodeClick=` onclick="stepDetail(${i})"`;
       nodeInner=`<div style="position:absolute;inset:0;border-radius:50%">${miniPie(colors)}</div><div style="position:relative;z-index:1;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:15px">✓</div>`;
     } else if(cls==='here'){
       nodeInner='⛩';
     } else {
       nodeInner=i;
     }
-    steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node" style="${nodeStyle}">${nodeInner}</div></div>`;
+    steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node" style="${nodeStyle}"${nodeClick}>${nodeInner}</div></div>`;
   }
 
   return `
@@ -923,6 +924,25 @@ function viewHome(){
 }
 
 /* 種目を選ぶ画面（旧ホームの六種の修行） */
+function stepDetail(i){
+  const cats=MOUNTAIN_STEP_CATS[i-1]||[];
+  if(!cats.length){ toast('記録がありません'); return; }
+  const total=cats.reduce((a,c)=>a+c.xp,0);
+  const rows=cats.map(c=>{
+    const ex=exBy(c.key);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <div style="width:14px;height:14px;border-radius:4px;background:${CAT_COLORS[c.key]};flex:0 0 auto"></div>
+      <div style="flex:1;font-size:14px">${ex.name}</div>
+      <div style="font-size:13px;color:var(--kin2);font-weight:700">+${c.xp}</div>
+    </div>`;
+  }).join('');
+  modal(`<div class="sheet card-c">
+    <h3>${i}基目の修行</h3>
+    ${rows}
+    <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:14px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} 経験値</span></div>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`,true);
+}
 function viewChoose(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
@@ -933,7 +953,7 @@ function viewChoose(){
       const cls=e.cur>=total?'done':'';
       const nm=stepName(e.key,e.cur);
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
-        <div class="ring">${ring(e.cur,total,52,'var(--kin)')}</div>
+        <div class="ring">${ring(e.cur,total,52,CAT_COLORS[e.key])}</div>
         <div class="body"><div class="nm">${e.name}</div><div class="st"><b>第${e.cur}段</b> ／ ${nm}</div></div>
         <div class="chev">›</div></div>`;
     }).join('')}
@@ -955,16 +975,17 @@ function restToday(){
 /* ══ ステップ一覧 ══ */
 function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
+  const col=CAT_COLORS[e.key];
   const n=stepCount(e.key);
   let rows='';
   for(let i=1;i<=n;i++){
     const nm=stepName(e.key,i), ty=stepType(e.key,i), isCur=i===e.cur, isDone=i<e.cur;
-    rows+=`<div class="srow${isCur?' current':''}${isDone?' cleared':''}" onclick="tapStep(this,'${e.key}',${i})">
+    rows+=`<div class="srow${isCur?' current':''}${isDone?' cleared':''}" style="${isCur?`border:1.5px solid ${col};background:linear-gradient(145deg,${col}22,var(--card))`:''}" onclick="tapStep(this,'${e.key}',${i})">
       <div class="txt">
-        <div class="n">${isDone?'✓ ':''}第${i}段${isCur?`<span class="badge">現在</span>`:''} <span style="color:var(--faint);font-weight:500">・${TYPE_LABEL[ty]}</span></div>
+        <div class="n">${isDone?'✓ ':''}第${i}段${isCur?`<span class="badge" style="background:${col}">現在</span>`:''} <span style="color:var(--faint);font-weight:500">・${TYPE_LABEL[ty]}</span></div>
         <div class="nm">${nm}</div>
       </div>
-      <div class="th">${e.key.slice(0,2)}-${i}</div>
+      <div class="th" style="${isCur?`border-color:${col}`:''}">${e.key.slice(0,2)}-${i}</div>
     </div>`;
   }
   return `
@@ -976,6 +997,7 @@ function viewSteps(){
 /* ══ 記録画面 ══ */
 function viewRecord(){
   const e=EX.find(x=>x.key===state.exKey), i=state.step;
+  const col=CAT_COLORS[e.key];
   const nm=stepName(e.key,i), ty=stepType(e.key,i);
   const c=criteria(e.key,i);
   const isTime=(ty==='s');
@@ -984,11 +1006,11 @@ function viewRecord(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
-  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid var(--line);background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
+  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid ${col}55;background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
     <div style="font-size:20px;color:var(--faint)">${e.key.slice(0,2)}-${i}a</div>
-    <div style="position:absolute;bottom:10px;right:12px;font-size:12px;color:var(--kin)">押下で拡大</div>
+    <div style="position:absolute;bottom:10px;right:12px;font-size:12px;color:${col}">押下で拡大</div>
   </div>
-  <div style="text-align:center;font-size:13px;color:var(--kin);margin-bottom:14px">🥋 ${tempoJP}</div>
+  <div style="text-align:center;font-size:13px;color:${col};margin-bottom:14px">🥋 ${tempoJP}</div>
 
   <div style="border:1px solid var(--line2);border-radius:18px;background:var(--card);padding:16px;margin-bottom:14px">
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px">
@@ -1045,7 +1067,9 @@ function viewQuest(){
       <div style="font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.06em">まだ誰とも組んでいない</div>
       <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px">門下生を誘うか、誘われると<br>今週の道連れ修行が始まる（最大3名）</p>
       <button class="btnprime" style="max-width:280px;margin:22px auto 0" onclick="inviteFriend()">門下生を誘う</button>
-    </div>`;
+    </div>
+    <div class="h">マイクロ目標</div>
+    ${microGoalCard()}`;
   }
   // 状態B：パーティー結成済み
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
@@ -1065,6 +1089,8 @@ function viewQuest(){
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
   ${PARTY.length<3?`<button class="btnghost" style="margin-top:4px" onclick="inviteFriend()">＋ 門下生を誘う（あと${3-PARTY.length}名）</button>`:''}
+  <div class="h">マイクロ目標</div>
+  ${microGoalCard()}
 `;
 }
 
@@ -1147,8 +1173,6 @@ function viewAchieve(){
       <div style="font-size:11px;color:var(--sub);margin-top:4px">所有数: ${fudaCount}</div>
     </div>
   </div>
-  <div class="h">マイクロ目標</div>
-  ${microGoalCard()}
   <div class="h">印</div>
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
     ${STAMPS.map(s=>`<div style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};min-width:76px">
@@ -1296,7 +1320,7 @@ function viewProfile(){
 
 /* ══ レーダー ══ */
 const RADAR_LABELS=['プッシュ','プル','スクワット','コア','ブリッジ','ハンド'];
-function radar(setsArr,colors){
+function radar(setsArr,colors,perAxisColors){
   const W=340,H=300,cx=170,cy=150,R=88,MAX=15,N=6;
   const ang=i=>(-90+i*60)*Math.PI/180;
   const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
@@ -1306,13 +1330,13 @@ function radar(setsArr,colors){
     const[x,y]=pt(i,R);
     s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;
     const[lx,ly]=pt(i,R+28);
-    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#C8A24C" font-size="13" text-anchor="middle" font-family="sans-serif">${RADAR_LABELS[i]}</text>`;
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="${perAxisColors?perAxisColors[i]:'#C8A24C'}" font-size="13" text-anchor="middle" font-family="sans-serif">${RADAR_LABELS[i]}</text>`;
   }
   setsArr.forEach((vals,si)=>{
     const col=colors[si];let p='';
     for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}
     s+=`<path d="${p}Z" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="2"/>`;
-    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}"/>`;}
+    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));const dc=perAxisColors&&si===0?perAxisColors[i]:col;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${dc}"/>`;}
   });
   return s+'</svg>';
 }
