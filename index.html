@@ -776,10 +776,6 @@ function viewChoose(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">修行を選ぶ<small>六種のうち ひとつを選べ</small></div></div>
-  <div class="xp" style="margin-bottom:14px">
-    <div class="row"><span>今日の修行 経験値</span><b>30 <span style="font-size:11px;color:var(--sub);font-family:var(--sans)">/ 50</span></b></div>
-    <div class="bar"><i style="width:60%"></i></div>
-  </div>
   <div class="stack">
     ${EX.map(e=>{
       const total=stepCount(e.key);
@@ -886,7 +882,21 @@ const PARTY=[
   {name:'翔',     em:'⚔️', lvxp:30, week:12, me:false},
 ];
 let partyFront=0;
+let hasParty=true; // モック：パーティー結成済みか（falseで未結成状態を確認できる）
+
 function viewQuest(){
+  if(!hasParty){
+    // 状態A：パーティー未結成
+    return `
+    ${pageHead('TRIALS · TOGETHER','道連れ修行')}
+    <div style="text-align:center;padding:50px 20px 30px">
+      <div style="font-size:56px;margin-bottom:14px">🤝</div>
+      <div style="font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.06em">まだ誰とも組んでいない</div>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px">門下生を誘うか、誘われると<br>今週の道連れ修行が始まる（最大3名）</p>
+      <button class="btnprime" style="max-width:280px;margin:22px auto 0" onclick="inviteFriend()">門下生を誘う</button>
+    </div>`;
+  }
+  // 状態B：パーティー結成済み
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const cur=Math.round(goal*0.62);
   const pct=Math.min(100,Math.round(cur/goal*100));
@@ -894,7 +904,7 @@ function viewQuest(){
   ${pageHead('TRIALS · TOGETHER','道連れ修行')}
   <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
 
-  <div class="pswipe">◄ スワイプで同行の士を見る ►</div>
+  <div class="pswipe">◄ スワイプで回す・押下で比較 ►</div>
   <div class="party-stage" id="partyStage"></div>
   <div class="pdots" id="partyDots"></div>
 
@@ -903,35 +913,61 @@ function viewQuest(){
     <div class="pr"><span>みんなの経験値</span><b>${cur.toLocaleString()} / ${goal.toLocaleString()}</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
-  <div class="h">同行の士（最大3名）</div>
-  ${PARTY.map(p=>`<div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:16px;background:var(--card);border:1px solid ${p.me?'rgba(217,172,82,.5)':'var(--line)'};margin-bottom:9px">
-     <div style="width:48px;height:48px;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:26px;flex:0 0 auto">${p.em}</div>
-     <div style="flex:1"><div style="font-size:15px;font-weight:700;color:${p.me?'var(--kin)':'var(--washi)'}">${p.name}${p.me?'（自分）':''}</div>
-       <div style="font-size:12px;color:var(--sub);margin-top:2px">今週の目標経験値 <b style="color:var(--kin)">${(p.lvxp*p.week).toLocaleString()}</b></div></div>
-   </div>`).join('')}
+  ${PARTY.length<3?`<button class="btnghost" style="margin-top:4px" onclick="inviteFriend()">＋ 門下生を誘う（あと${3-PARTY.length}名）</button>`:''}
 `;
+}
+
+/* 招待（門下生リストから選ぶ・呼ばれた側は強制参加、早い者勝ち） */
+function inviteFriend(){
+  const inParty=PARTY.map(p=>p.name);
+  const候補=FRIENDS.filter(f=>!inParty.includes(f.name));
+  modal(`<div class="sheet">
+    <h3>門下生を誘う</h3>
+    <p class="sub">誘われた門下生はそのまま参加する（先に誘った者勝ち）</p>
+    ${候補.length?候補.map(f=>`<div class="friend" onclick="doInvite('${f.name}','${f.em}')">
+      <div class="av">${f.em}</div>
+      <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目</div></div>
+      <div class="chev">›</div>
+    </div>`).join(''):'<p class="sub">誘える門下生がいません</p>'}
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+function doInvite(name,em){
+  if(PARTY.length>=3){ toast('パーティーは満員です'); closeModal(); return; }
+  PARTY.push({name,em,lvxp:35,week:10,me:false});
+  hasParty=true;
+  closeModal(); vib(30); toast(`${name} が加わった！`);
+  nav('quest');
 }
 
 // カルーセル描画（3体を三角配置。front=正面、他2体は斜め後ろ）
 function renderParty(){
   const stage=document.getElementById('partyStage'); if(!stage) return;
   const n=PARTY.length;
-  // 各キャラの相対位置（front基準）：0=正面, 1=右奥, 2=左奥
   const slots=[
-    {x:0,   y:10,  s:1.0,  z:3, o:1,   blur:0},   // 正面
-    {x:96,  y:-30, s:.62, z:1, o:.55, blur:1.5}, // 右奥
-    {x:-96, y:-30, s:.62, z:1, o:.55, blur:1.5}, // 左奥
+    {x:0,   y:10,  s:1.0,  z:3, o:1,   blur:0},
+    {x:96,  y:-30, s:.62, z:1, o:.55, blur:1.5},
+    {x:-96, y:-30, s:.62, z:1, o:.55, blur:1.5},
   ];
   stage.innerHTML=PARTY.map((p,i)=>{
     const rel=(i-partyFront+n)%n;
-    const sl=slots[rel];
-    return `<div class="pchar ${rel===0?'front':''}" style="z-index:${sl.z};opacity:${sl.o};filter:blur(${sl.blur}px);transform:translate(-50%,-50%) translate(${sl.x}px,${sl.y}px) scale(${sl.s})">
+    const sl=slots[Math.min(rel,2)];
+    return `<div class="pchar ${rel===0?'front':''}" onclick="partyTap(${i},${rel})" style="cursor:pointer;z-index:${sl.z};opacity:${sl.o};filter:blur(${sl.blur}px);transform:translate(-50%,-50%) translate(${sl.x}px,${sl.y}px) scale(${sl.s})">
       <div class="pav">${p.em}</div>
       ${rel===0?`<div class="pname">${p.name}${p.me?'（自分）':''}</div><div class="pmeta">今週の目標 ${(p.lvxp*p.week).toLocaleString()} 経験値</div>`:''}
     </div>`;
   }).join('');
   const dots=document.getElementById('partyDots');
   if(dots) dots.innerHTML=PARTY.map((_,i)=>`<i class="${i===partyFront?'on':''}"></i>`).join('');
+}
+// タップ：正面なら比較モーダル、奥ならそのキャラを正面へ回す
+function partyTap(idx,rel){
+  if(rel!==0){ partyFront=idx; vib(10); renderParty(); return; }
+  const p=PARTY[idx];
+  if(p.me){ toast('己は「己」タブで見られる'); return; }
+  const fi=FRIENDS.findIndex(f=>f.name===p.name);
+  if(fi>=0) friendCompare(fi);
+  else toast('この門下生の情報はまだない');
 }
 function rotateParty(dir){ partyFront=(partyFront+dir+PARTY.length)%PARTY.length; vib(10); renderParty(); }
 function bindPartySwipe(){
@@ -946,19 +982,9 @@ function bindPartySwipe(){
 
 /* ══ 功績 ══ */
 function viewAchieve(){
-  const lv=QLV[questLv], pct=Math.min(100,Math.round(questDone/lv.goal*100));
   return `
   ${pageHead('HONORS','功績')}
-  <div class="mission">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="t" style="margin:0">今月の修行目標 — 6月</div>
-      <span style="font-size:12px;color:var(--sub);cursor:pointer" onclick="openSettings()">目標変更は設定から ›</span>
-    </div>
-    <div class="pr"><span>${lv.cond}</span><span>${questDone} / ${lv.goal}</span></div>
-    <div class="bar"><i style="width:${pct}%"></i></div>
-    <p style="font-size:12px;color:var(--sub);margin:10px 0 0">目標達成で「🏵️ 印」を獲得</p>
-  </div>
-  <div class="h" style="display:flex;justify-content:space-between;align-items:center">
+  <div class="h" style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
     <span>徳</span><span style="font-size:13px;color:var(--kin)">現在 <b>28</b> 徳</span>
   </div>
   <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
@@ -999,16 +1025,17 @@ const BOARD=[
   {who:'翔',     me:false,em:'⚔️', type:'streak',text:'10日 連続修行を達成', tm:'昨日'},
   {who:'ノリ',   me:true, type:'streak',text:'10日 連続修行を達成', tm:'2日前'},
 ];
-const BOARD_ICON={ rank:'🎖️', streak:'🔥', step:'⬆️', quest:'🤝' };
 function viewBoard(){
+  // 応援も掲示板に流す（typeが'react'の項目）
+  const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`${r.react}「${r.serif}」を送った`, tm:r.tm}));
+  const feed=[BOARD[0],BOARD[1],reactEntries[0],...BOARD.slice(2,5),...(reactEntries[1]?[reactEntries[1]]:[]),...BOARD.slice(5)];
   return `
   ${pageHead('BOARD','掲示板')}
-  ${BOARD.map(b=>{
+  ${feed.filter(Boolean).map(b=>{
     const av = b.me ? currentAvatar : (b.em||'🧑');
     const icon=`<div style="width:64px;height:64px;flex:0 0 auto;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:34px">${av}</div>`;
-    const kindTag=`<span style="font-size:22px">${BOARD_ICON[b.type]}</span>`;
     const body=`<div style="flex:1;min-width:0;${b.me?'text-align:right':''}">
-       <div style="font-size:15px;line-height:1.5">${b.me?'':kindTag+' '}<span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}${b.me?' '+kindTag:''}</div>
+       <div style="font-size:15px;line-height:1.5"><span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}</div>
        <div style="font-size:12px;color:var(--sub);margin-top:6px">${b.tm}</div>
      </div>`;
     return `<div style="display:flex;gap:14px;align-items:center;padding:18px;border-radius:18px;background:var(--card);border:1px solid ${b.me?'rgba(217,172,82,.5)':'var(--line)'};margin-bottom:12px">
@@ -1028,18 +1055,7 @@ function viewFriends(){
     <div class="av">${f.em}</div>
     <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div></div>
     <div class="chev">›</div>
-  </div>`).join('')}
-  <div class="h">受け取った応援（1週間）</div>
-  <div class="react-hist">
-    ${REACT_HIST.map(r=>`<div class="react-row">
-      <div class="av">${r.em}</div>
-      <div class="info">
-        <div class="who">${r.who} <span style="font-size:12px;color:var(--washi)">${r.react} ${r.label}</span></div>
-        <div style="font-size:12px;color:var(--sub);margin-top:3px;line-height:1.4">「${r.serif}」</div>
-      </div>
-      <div class="tm">${r.tm}</div>
-    </div>`).join('')}
-  </div>`;
+  </div>`).join('')}`;
 }
 
 /* ══ プロフィール ══ */
