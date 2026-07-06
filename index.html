@@ -324,6 +324,33 @@
   .pdots i{ width:7px;height:7px;border-radius:50%;background:rgba(244,236,220,.2); }
   .pdots i.on{ background:var(--kin);width:20px;border-radius:4px; }
   .pswipe{ text-align:center;font-size:11px;color:var(--faint);letter-spacing:.1em;margin-bottom:6px; }
+  /* ── 起動スプラッシュ ── */
+  #splash{ position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 42%,#221a15,#100d0b 70%);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px; }
+  #splash .enso-draw{ width:170px;height:170px; }
+  #splash .enso-draw circle{ fill:none;stroke:var(--shu);stroke-width:7;stroke-linecap:round;stroke-dasharray:490;stroke-dashoffset:490;transform:rotate(-80deg);transform-origin:center;animation:ensoDraw 1.4s .2s cubic-bezier(.4,0,.2,1) forwards; }
+  @keyframes ensoDraw{ to{ stroke-dashoffset:46; } }
+  #splash .sname{ font-family:var(--serif);font-size:40px;font-weight:800;letter-spacing:.32em;margin-left:.32em;opacity:0;animation:splashUp .7s 1.2s ease forwards; }
+  #splash .stag{ font-size:12px;color:var(--sub);letter-spacing:.42em;margin-left:.42em;opacity:0;animation:splashUp .7s 1.55s ease forwards; }
+  @keyframes splashUp{ from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;} }
+  #splash.out{ animation:splashOut .45s ease forwards; }
+  @keyframes splashOut{ to{opacity:0;visibility:hidden;} }
+
+  /* ── 修行波形 ── */
+  .wavewrap{ width:min(92vw,360px);margin-top:4px; }
+  .wavewrap svg{ display:block;width:100%; }
+  .wline{ fill:none;stroke:rgba(244,236,220,.28);stroke-width:2.5;stroke-linecap:round; }
+  .wmid{ stroke:rgba(244,236,220,.08);stroke-width:1;stroke-dasharray:3 6; }
+  .wdot{ filter:drop-shadow(0 0 8px rgba(229,72,46,.8)); }
+
+  /* ── クリア派手演出 ── */
+  .shock{ position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border:3px solid var(--kin2);border-radius:50%;pointer-events:none;animation:shockOut .9s ease-out forwards; }
+  .shock.s2{ border-color:var(--shu2);animation-delay:.15s; }
+  .shock.s3{ animation-delay:.3s; }
+  @keyframes shockOut{ from{transform:scale(.4);opacity:1;}to{transform:scale(6);opacity:0;} }
+  .whiteflash{ position:fixed;inset:0;background:#fff;z-index:91;pointer-events:none;animation:wf .5s ease-out forwards; }
+  @keyframes wf{ from{opacity:.85;}to{opacity:0;} }
+  .confetti{ position:absolute;width:9px;height:9px;border-radius:2px;pointer-events:none;animation:conf 1.3s ease-out forwards; }
+  @keyframes conf{ from{opacity:1;transform:translate(0,0) rotate(0);}to{opacity:0;transform:translate(var(--cx),var(--cy)) rotate(540deg);} }
 </style>
 </head>
 <body>
@@ -340,6 +367,11 @@
   </div>
   <div id="clearFx"></div>
   <div id="restFx"></div>
+  <div id="splash" onclick="hideSplash()">
+    <svg class="enso-draw" viewBox="0 0 170 170"><circle cx="85" cy="85" r="76"/></svg>
+    <div class="sname">鍛錬寺</div>
+    <div class="stag">今日も、一段。</div>
+  </div>
   <div class="tabbar" id="tabbar"></div>
 </div>
 <div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
@@ -1226,7 +1258,7 @@ function startWorkout(key,step){
   countdownThenGo();
 }
 
-function clearWKTimers(){ if(WK&&WK.timer){ clearTimeout(WK.timer); clearInterval(WK.timer); WK.timer=null; } }
+function clearWKTimers(){ if(WK){ if(WK.timer){ clearTimeout(WK.timer); clearInterval(WK.timer); WK.timer=null; } if(WK.raf){ cancelAnimationFrame(WK.raf); WK.raf=null; } WK.cycleStart=null; } }
 
 function countdownThenGo(){
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
@@ -1243,58 +1275,101 @@ function countdownThenGo(){
   tick();
 }
 
-/* 動的・ネガティブ：フェーズ表示のループ */
+/* ══ 波形グラフ（横=時間・縦=高さ、線に沿って丸が動く） ══ */
+function buildWave(yFn, cycleDur){
+  const W=340,H=130,pl=14,pr=14,pt=14,pb=14;
+  const usableW=W-pl-pr, usableH=H-pt-pb;
+  const toX=t=>pl+(t/cycleDur)*usableW;
+  const toY=v=>pt+(1-v)*usableH;
+  let d='';
+  const N=140;
+  for(let k=0;k<=N;k++){ const t=cycleDur*k/N; const x=toX(t),y=toY(yFn(t)); d+=(k?'L':'M')+x.toFixed(1)+','+y.toFixed(1); }
+  return {W,H,toX,toY,path:d};
+}
+function startWaveRAF(yFn,cycleDur,geo){
+  WK.cycleStart=performance.now();
+  const loop=()=>{
+    if(!WK||!WK.cycleStart) return;
+    const t=((performance.now()-WK.cycleStart)/1000)%cycleDur;
+    const dot=document.getElementById('wDot');
+    if(dot){ dot.setAttribute('cx',geo.toX(t).toFixed(1)); dot.setAttribute('cy',geo.toY(yFn(t)).toFixed(1)); }
+    WK.raf=requestAnimationFrame(loop);
+  };
+  WK.raf=requestAnimationFrame(loop);
+}
+
+/* 動的・ネガティブ：カウント上・波形＋動く丸 */
 function dynamicSet(){
   const stage=document.getElementById('dStage');
   const isNeg=WK.ty==='n';
-  // フェーズ定義（秒）
   const phases = isNeg
-    ? [['下げる',5,'var(--ai)'],['戻す',1,'var(--washi)']]
+    ? [['下げる',5,'var(--ai)'],['戻す',1,'var(--shu2)']]
     : [['上げる',1,'var(--shu2)'],['下げる',2,'var(--ai)'],['キープ',1,'var(--kin2)']];
+  const cycleDur=phases.reduce((a,p)=>a+p[1],0);
+  // 高さ関数：上げ=上昇、下げ=下降、キープ=底で静止
+  const yFn = isNeg
+    ? t=> t<5 ? 1-t/5 : (t-5)
+    : t=> t<1 ? t : (t<3 ? 1-(t-1)/2 : 0);
+  const geo=buildWave(yFn,cycleDur);
   let rep=1, pi=0;
   const goal=WK.goalReps;
-  const showRep=()=>{
-    stage.innerHTML=`
-      <div class="dpulse pulsing" id="dPulse"></div>
-      <div class="dphase" id="dPhase"></div>
-      <div class="dcount" id="dCount">${rep}</div>
-      <div class="dtarget">目標 ${goal} 回　—　${WK.curSet}/${WK.goalSets}組</div>`;
-    stepPhase();
-  };
+  stage.innerHTML=`
+    <div class="dpulse" id="dPulse" style="animation:phasePulse ${cycleDur}s ease-in-out infinite"></div>
+    <div class="dcount" id="dCount" style="font-size:min(26vw,110px)">${rep}</div>
+    <div class="dphase" id="dPhase" style="font-size:min(9vw,38px)"></div>
+    <div class="wavewrap">
+      <svg viewBox="0 0 ${geo.W} ${geo.H}">
+        <line class="wmid" x1="14" y1="${geo.H/2}" x2="${geo.W-14}" y2="${geo.H/2}"/>
+        <path class="wline" d="${geo.path}"/>
+        <circle id="wDot" class="wdot" r="9" fill="var(--shu2)" cx="14" cy="${geo.H-14}"/>
+      </svg>
+    </div>
+    <div class="dtarget">目標 ${goal} 回　—　${WK.curSet}/${WK.goalSets}組</div>`;
+  startWaveRAF(yFn,cycleDur,geo);
   const stepPhase=()=>{
     const [label,sec,color]=phases[pi];
     const ph=document.getElementById('dPhase'); if(!ph) return;
     ph.textContent=label; ph.style.color=color;
-    const pulse=document.getElementById('dPulse');
-    if(pulse){ pulse.style.setProperty('--pdur',sec+'s'); pulse.classList.remove('pulsing'); void pulse.offsetWidth; pulse.classList.add('pulsing'); }
     vib(label==='上げる'||label==='戻す'?30:12); playTaiko();
     WK.timer=setTimeout(()=>{
       pi++;
       if(pi>=phases.length){ pi=0; rep++;
         if(rep>goal){ endSetPrompt(); return; }
         const c=document.getElementById('dCount'); if(c) c.textContent=rep;
+        WK.cycleStart=performance.now(); // 波形の丸をレップ頭に同期
       }
       stepPhase();
     }, sec*1000);
   };
-  showRep();
+  stepPhase();
   renderStopBtn();
 }
 
-/* 静的：秒数カウントダウン */
+/* 静的：カウントダウン上・呼吸の波 */
 function holdSet(){
   const stage=document.getElementById('dStage');
   let left=WK.goalReps;
+  const cycleDur=4; // 呼吸4秒（吸う2秒・吐く2秒）
+  const yFn=t=>0.5+0.45*Math.sin((t/cycleDur)*Math.PI*2 - Math.PI/2);
+  const geo=buildWave(yFn,cycleDur);
   stage.innerHTML=`
-    <div class="dpulse" style="animation:phasePulse 2s ease-in-out infinite"></div>
-    <div class="dphase" style="color:var(--kin2)">キープ</div>
-    <div class="dcount" id="dCount">${left}</div>
+    <div class="dpulse" style="animation:phasePulse ${cycleDur}s ease-in-out infinite"></div>
+    <div class="dcount" id="dCount" style="font-size:min(26vw,110px)">${left}</div>
+    <div class="dphase" style="color:var(--kin2);font-size:min(9vw,38px)">キープ　<span style="font-size:14px;color:var(--sub)">呼吸を合わせよ</span></div>
+    <div class="wavewrap">
+      <svg viewBox="0 0 ${geo.W} ${geo.H}">
+        <line class="wmid" x1="14" y1="${geo.H/2}" x2="${geo.W-14}" y2="${geo.H/2}"/>
+        <path class="wline" d="${geo.path}"/>
+        <circle id="wDot" class="wdot" r="9" fill="var(--kin2)" cx="14" cy="${geo.H/2}"/>
+      </svg>
+    </div>
     <div class="dtarget">秒キープ　—　${WK.curSet}/${WK.goalSets}組</div>`;
+  startWaveRAF(yFn,cycleDur,geo);
   playTaiko(); vib(20);
   WK.timer=setInterval(()=>{
     left--;
     const c=document.getElementById('dCount'); if(c) c.textContent=Math.max(0,left);
-    if(left%1===0) playTaiko();
+    playTaiko();
     if(left<=0){ clearWKTimers(); endSetPrompt(); }
   },1000);
   renderStopBtn();
@@ -1407,15 +1482,27 @@ function showXPBurst(){
   setTimeout(()=>{ pop.style.display='none'; },1600);
 }
 
-/* 段クリアの大演出（朱印） */
+/* 段クリアの大演出（朱印＋衝撃波＋紙吹雪） */
 function bigClear(key,step){
   const n=stepCount(key);
   const fx=document.getElementById('clearFx');
   const nextName = step<n ? stepName(key,step+1) : null;
   const nc = step<n ? criteria(key,step+1) : null;
   const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
+  // 画面フラッシュ
+  const wf=document.createElement('div'); wf.className='whiteflash'; document.body.appendChild(wf);
+  setTimeout(()=>wf.remove(),600);
   fx.style.display='flex';
-  fx.innerHTML=`<div style="text-align:center;padding:0 30px">
+  // 紙吹雪（金と朱）
+  let conf='';
+  const cols=['#F2CF7E','#D9AC52','#E5482E','#fff'];
+  for(let k=0;k<26;k++){
+    const ang=Math.random()*Math.PI*2, dist=90+Math.random()*160;
+    conf+=`<div class="confetti" style="left:50%;top:38%;background:${cols[k%4]};--cx:${Math.cos(ang)*dist}px;--cy:${Math.sin(ang)*dist+60}px;animation-delay:${Math.random()*.25}s"></div>`;
+  }
+  fx.innerHTML=`<div style="text-align:center;padding:0 30px;position:relative">
+    <div class="shock"></div><div class="shock s2"></div><div class="shock s3"></div>
+    ${conf}
     <div class="seal"><div class="k">成</div></div>
     <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:24px;letter-spacing:.1em">第${step}段 クリア</div>
     ${nextName?`<div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-top:20px;text-align:left;display:flex;gap:12px;align-items:flex-start">
@@ -1426,7 +1513,7 @@ function bigClear(key,step){
     <button class="btnghost" onclick="afterBigClear('${key}',${step})">まだこの段で鍛える</button>`
     : `<div style="font-size:14px;color:var(--sub);margin-top:16px">この修行を極めた！</div><button class="btnprime" onclick="afterBigClear('${key}',${step})">戻る</button>`}
   </div>`;
-  vib([60,40,60,40,120]);
+  vib([60,40,60,40,140]);
 }
 function afterBigClear(key,step){ document.getElementById('clearFx').style.display='none'; nav('record',{exKey:key,step:step}); }
 
@@ -1895,6 +1982,25 @@ function toast(msg){
 /* ══ 起動 ══ */
 history.replaceState({view:'home'},'');
 render();
+
+/* 毎日はじめの起動スプラッシュ（約3秒・タップで省略） */
+let splashTimer=null;
+function maybeSplash(){
+  try{
+    const k='tanren_splash_day', today=new Date().toDateString();
+    if(localStorage.getItem(k)===today) return;
+    localStorage.setItem(k,today);
+  }catch(e){}
+  const sp=document.getElementById('splash');
+  sp.style.display='flex';
+  splashTimer=setTimeout(hideSplash,3000);
+}
+function hideSplash(){
+  if(splashTimer){clearTimeout(splashTimer);splashTimer=null;}
+  const sp=document.getElementById('splash');
+  if(sp&&sp.style.display!=='none'){ sp.classList.add('out'); setTimeout(()=>{sp.style.display='none';sp.classList.remove('out');},450); }
+}
+maybeSplash();
 
 /* PWA: service worker 登録 */
 if('serviceWorker' in navigator){
