@@ -559,7 +559,29 @@ let toku=28;       // 現在の徳
 let fudaCount=0;   // 御札の所有数
 const PREV_MONTH_XP=410, TOTAL_XP=1240;
 let weeklyGoalDays=4;      // 週の目標日数（設定で変更可）
-let restedYesterday=true;  // モック：昨日が休養日だったか
+let missedYesterday=true;  // モック：昨日は修行しなかった
+let freezeUsedToday=false; // 御札で連続記録を守ったか
+let freezePromptShown=false; // すでに確認ダイアログを出したか
+function checkStreakFreeze(){
+  if(!missedYesterday || freezeUsedToday || freezePromptShown) return;
+  freezePromptShown=true;
+  if(fudaCount>0){
+    modal(`<div class="sheet card-c" style="text-align:center">
+      <div style="font-size:40px">🪧</div>
+      <h3>御札を使いますか？</h3>
+      <p class="sub" style="text-align:center">昨日は修行していないようです。御札を使うと連続記録の途切れを防げます。<br>手持ちの御札：${fudaCount}枚</p>
+      <button class="btnprime" onclick="useFudaForFreeze()">はい（御札を使う）</button>
+      <button class="btnghost" onclick="closeModal()">いいえ</button>
+    </div>`,true);
+  }
+}
+function useFudaForFreeze(){
+  fudaCount--; freezeUsedToday=true;
+  vib([20,20,40]);
+  closeModal();
+  toast('御札を使い、連続記録の途切れを防いだ');
+  nav('home');
+}
 
 /* ══ マイクロ目標（2日で達成できる簡単な目標）══
    ・好きなタイミングで挑戦を開始できる（常時進行ではない）
@@ -575,11 +597,18 @@ const MICRO_GOAL_DEFS=[
 ];
 function pickNewMicroGoalCandidate(){
   const pick=MICRO_GOAL_DEFS[Math.floor(Math.random()*MICRO_GOAL_DEFS.length)];
-  return {defId:pick.id, cur:0, target:pick.target(), active:false, startedAt:null, deadline:null, done:false, failed:false};
+  return {defId:pick.id, cur:0, target:pick.target(), active:false, startedAt:null, deadline:null, done:false, failed:false, lastProgressDate:null};
 }
 let microGoal=pickNewMicroGoalCandidate();
 function microGoalDef(){ return MICRO_GOAL_DEFS.find(d=>d.id===microGoal.defId); }
 function eligibleForMicroGoal(){ return weeklyGoalDays>=2; }
+function todayStr(d){ d=d||new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function isConsecutiveDay(prevStr,curStr){
+  if(!prevStr) return false;
+  const[py,pm,pd]=prevStr.split('-').map(Number), prev=new Date(py,pm-1,pd);
+  const[cy,cm,cd]=curStr.split('-').map(Number), cur=new Date(cy,cm-1,cd);
+  return Math.round((cur-prev)/(24*60*60*1000))===1;
+}
 function checkMicroGoalExpiry(){
   if(microGoal.active && !microGoal.done && microGoal.deadline && Date.now()>microGoal.deadline){
     microGoal.failed=true; microGoal.active=false;
@@ -587,21 +616,31 @@ function checkMicroGoalExpiry(){
 }
 function startMicroGoal(){
   if(!eligibleForMicroGoal()) return;
-  microGoal.active=true; microGoal.cur=0; microGoal.done=false; microGoal.failed=false;
+  microGoal.active=true; microGoal.cur=0; microGoal.done=false; microGoal.failed=false; microGoal.lastProgressDate=null;
   microGoal.startedAt=Date.now();
-  microGoal.deadline=Date.now()+7*24*60*60*1000; // 1週間以内
+  microGoal.deadline=Date.now()+7*24*60*60*1000; // 起算日から1週間
   vib(20); toast('マイクロ目標に挑戦を開始した！1週間以内に達成しよう');
   if(state.view==='quest') nav('quest');
 }
-function rerollMicroGoal(){
+// 連続が途切れた場合の再挑戦：起算日・期限はそのまま、進捗だけリセット
+function retryMicroGoal(){
+  microGoal.cur=0; microGoal.failed=false; microGoal.active=true; microGoal.lastProgressDate=null;
+  vib(20); toast('再挑戦を開始した（期限はそのまま）');
+  if(state.view==='quest') nav('quest');
+}
+// 起算日から1週間の期限が過ぎた場合：新しい起算日でやり直す
+function startFreshMicroGoal(){
   microGoal=pickNewMicroGoalCandidate();
+  microGoal.active=true; microGoal.startedAt=Date.now(); microGoal.deadline=Date.now()+7*24*60*60*1000;
+  vib(20); toast('新しい挑戦を開始した！');
   if(state.view==='quest') nav('quest');
 }
 function completeMicroGoal(){
   if(!microGoal||!microGoal.active||microGoal.done) return;
   microGoal.done=true; microGoal.active=false;
+  toku+=2;
   vib([30,20,60]);
-  toast('マイクロ目標 達成！');
+  toast('マイクロ目標 達成！徳+2');
   setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); if(state.view==='quest') nav('quest'); },1200);
 }
 // kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
@@ -609,10 +648,16 @@ function microGoalProgress(kind, amount){
   checkMicroGoalExpiry();
   if(!microGoal||!microGoal.active||microGoal.done||microGoal.failed) return;
   const def=microGoalDef();
-  const matches = (kind==='streak' && def.id==='streak2')
-    || (kind==='xp' && (def.id==='xp300'||def.id==='xp100prev'))
-    || (kind==='memo' && def.id==='memo1');
+  const matches = (kind==='streak' && def.id==='streak2');
   if(!matches) return;
+  const t=todayStr();
+  if(microGoal.lastProgressDate===t) return; // 今日の分はすでに加算済み
+  if(microGoal.lastProgressDate && !isConsecutiveDay(microGoal.lastProgressDate,t)){
+    // 連続が途切れた→非クリア（起算日から1週間以内ならまだ再挑戦できる）
+    microGoal.failed=true; microGoal.active=false;
+    return;
+  }
+  microGoal.lastProgressDate=t;
   microGoal.cur=Math.min(microGoal.target, microGoal.cur+amount);
   if(microGoal.cur>=microGoal.target) completeMicroGoal();
 }
@@ -626,21 +671,20 @@ function microGoalCard(){
   }
   const def=microGoalDef();
   if(microGoal.failed){
+    const withinWindow = microGoal.deadline && Date.now() < microGoal.deadline;
     return `<div class="mission" style="padding:16px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:26px">${def.icon}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
-          <div style="font-size:11px;color:var(--shu2);margin-top:2px">1週間以内に達成できず、非クリアとなった</div>
+          <div style="font-size:11px;color:${withinWindow?'var(--kin)':'var(--shu2)'};margin-top:2px">${withinWindow?'連続が途切れ、非クリアとなった（起算日から1週間以内はまだ再挑戦できます）':'1週間以内に達成できず、非クリアとなった'}</div>
         </div>
       </div>
-      <button class="btnprime" style="margin-top:12px" onclick="rerollMicroGoal()">別の目標で再挑戦する</button>
+      <button class="btnprime" style="margin-top:12px" onclick="${withinWindow?'retryMicroGoal()':'startFreshMicroGoal()'}">${withinWindow?'再挑戦する':'新しく挑戦する'}</button>
     </div>`;
   }
   if(!microGoal.active){
-    const suggest = restedYesterday && !trainedToday;
     return `<div class="mission" style="padding:16px;margin-bottom:14px">
-      ${suggest?`<div style="font-size:12px;color:var(--kin);font-weight:700;margin-bottom:8px">🌙 昨日は休んだ、絶好の機会です</div>`:''}
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:26px">${def.icon}</div>
         <div style="flex:1">
@@ -648,18 +692,18 @@ function microGoalCard(){
           <div style="font-size:11px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--sub);margin-top:10px">好きなタイミングで開始できます。開始から1週間以内に達成しよう（達成しても徳の付与はありません）</div>
+      <div style="font-size:11px;color:var(--sub);margin-top:10px">好きなタイミングで開始できます。開始から1週間以内に達成しよう（達成で徳+2）</div>
       <button class="btnprime" style="margin-top:12px" onclick="startMicroGoal()">この目標に挑戦する</button>
     </div>`;
   }
   const pct=Math.min(100,Math.round(microGoal.cur/microGoal.target*100));
-  const daysLeft=Math.max(0,Math.ceil((microGoal.deadline-Date.now())/(24*60*60*1000)));
+  const hoursLeft=Math.max(0,Math.ceil((microGoal.deadline-Date.now())/(60*60*1000)));
   return `<div class="mission" style="padding:16px;margin-bottom:14px">
     <div style="display:flex;align-items:center;gap:10px">
       <div style="font-size:26px">${def.icon}</div>
       <div style="flex:1">
         <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px">残り${daysLeft}日</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">残り${hoursLeft}時間</div>
       </div>
     </div>
     <div class="pr" style="margin-top:12px"><span>進捗</span><b>${microGoal.cur} / ${microGoal.target}${def.unit}</b></div>
@@ -920,6 +964,7 @@ function miniPie(colors){
 }
 
 function viewHome(){
+  checkStreakFreeze();
   const now=new Date();
   const mName=MOUNTAINS[now.getMonth()];
   const total=QLV[questLv].goal;      // 月間目標＝マス数
@@ -951,6 +996,8 @@ function viewHome(){
   }
 
   return `
+  ${freezeUsedToday?`<div style="text-align:center;font-size:12px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">🪧 御札を使い、連続記録を繋いだ</div>`:''}
+  ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:12px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ 昨日は修行しておらず、御札もありません（押下で功績画面へ）</div>`:''}
   <div class="mtn-head">
     <div>
       <div class="eyebrow">${now.getMonth()+1}月の霊峰</div>
@@ -1116,6 +1163,7 @@ const PARTY=[
 ];
 let partyFront=0;
 let hasParty=true; // モック：パーティー結成済みか（falseで未結成状態を確認できる）
+let partyGoalAwarded=false; // 今週の合力ゴール達成で徳+3を付与済みか
 
 function viewQuest(){
   if(!hasParty){
@@ -1135,6 +1183,7 @@ function viewQuest(){
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const cur=Math.round(goal*0.62);
   const pct=Math.min(100,Math.round(cur/goal*100));
+  if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; toku+=3; vib([30,20,60]); toast('道連れ修行 成就！徳+3'); }
   return `
   ${pageHead('TRIALS · TOGETHER','道連れ修行')}
   <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
@@ -1771,6 +1820,7 @@ function finishWorkout(){
   MOCK_LOGS.push({date:md,sets:sets,reps:avg,note:''});
   microGoalProgress('streak',1);
   microGoalProgress('xp',xp);
+  toku+=1;
   const key=WK.key, step=WK.step;
   // 終了画面
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
@@ -1921,6 +1971,7 @@ function quickRecord(key,step){
   const qxp=sets*reps*per;
   microGoalProgress('streak',1);
   microGoalProgress('xp',qxp);
+  toku+=1;
   closeModal();
   const cleared=sets>=3&&reps>=c.goal;
   showXPBurst();
