@@ -857,7 +857,7 @@ function openSelfMenu(){
     <button class="btnprime" style="margin-top:10px" onclick="closeSelfMenu();nav('achieve')">功績</button>
   </div>`;
   d.onclick=e=>{ if(e.target===d) closeSelfMenu(); };
-  document.body.appendChild(d);
+  document.getElementById('app').appendChild(d);
 }
 function closeSelfMenu(){ const d=document.getElementById('selfMenuOvl'); if(d) d.remove(); }
 
