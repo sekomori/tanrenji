@@ -568,16 +568,10 @@ let restedYesterday=true;  // モック：昨日が休養日だったか
    ・週の目標日数が1日の人は参加不可（2日以上で参加可）
    ・休養日の翌日は「絶好の機会」として提案表示
 */
-const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（xp100prevの算出に使用）
+const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（将来の目標追加用に保持）
 const MICRO_GOAL_DEFS=[
   {id:'streak2',  icon:'🔥', label:'2日連続修行',   unit:'日',   target:()=>2,
     desc:'2日つづけて道場に立て'},
-  {id:'xp300',    icon:'⚡', label:'2日で300経験値', unit:'経験値', target:()=>300,
-    desc:'2日間の合計で経験値300を積め'},
-  {id:'xp100prev',icon:'📈', label:'前回超え',       unit:'経験値', target:()=>PREV_2DAY_XP,
-    desc:`前回2日間の実績（${PREV_2DAY_XP}）以上を、2日で積み上げよ`},
-  {id:'memo1',    icon:'📝', label:'覚書を残せ',     unit:'回',   target:()=>1,
-    desc:'記録画面に覚書を1回書き記せ'},
 ];
 function pickNewMicroGoalCandidate(){
   const pick=MICRO_GOAL_DEFS[Math.floor(Math.random()*MICRO_GOAL_DEFS.length)];
