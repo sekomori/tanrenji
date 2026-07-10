@@ -804,11 +804,18 @@ function renderTabs(){
        <svg viewBox="0 0 24 24">${t.icon}</svg></div>`).join('');
 }
 function openSelfMenu(){
-  modal(`<div class="sheet">
-    <button class="btnprime" onclick="closeModal();nav('profile')">己</button>
-    <button class="btnprime" style="margin-top:10px" onclick="closeModal();nav('achieve')">功績</button>
-  </div>`);
+  closeSelfMenu();
+  const d=document.createElement('div');
+  d.className='ovl'; d.id='selfMenuOvl';
+  d.style.zIndex='18'; // タブバー(z-index:20)より下＝タブの裏から出てくる見た目に
+  d.innerHTML=`<div class="sheet" style="padding-bottom:calc(96px + env(safe-area-inset-bottom))">
+    <button class="btnprime" onclick="closeSelfMenu();nav('profile')">己</button>
+    <button class="btnprime" style="margin-top:10px" onclick="closeSelfMenu();nav('achieve')">功績</button>
+  </div>`;
+  d.onclick=e=>{ if(e.target===d) closeSelfMenu(); };
+  document.body.appendChild(d);
 }
+function closeSelfMenu(){ const d=document.getElementById('selfMenuOvl'); if(d) d.remove(); }
 
 function render(){
   renderTabs();
