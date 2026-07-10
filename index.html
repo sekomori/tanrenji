@@ -558,66 +558,125 @@ let questLv=1, questDone=8;
 let toku=28;       // 現在の徳
 let fudaCount=0;   // 御札の所有数
 const PREV_MONTH_XP=410, TOTAL_XP=1240;
+let weeklyGoalDays=4;      // 週の目標日数（設定で変更可）
+let restedYesterday=true;  // モック：昨日が休養日だったか
 
-/* ══ マイクロ目標（2日で達成できる簡単な目標・徳+2） ══ */
-const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（xp80prevの算出に使用）
+/* ══ マイクロ目標（2日で達成できる簡単な目標）══
+   ・好きなタイミングで挑戦を開始できる（常時進行ではない）
+   ・開始から1週間以内に達成しないと非クリア
+   ・達成しても徳の付与はなし
+   ・週の目標日数が1日の人は参加不可（2日以上で参加可）
+   ・休養日の翌日は「絶好の機会」として提案表示
+*/
+const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（xp100prevの算出に使用）
 const MICRO_GOAL_DEFS=[
   {id:'streak2',  icon:'🔥', label:'2日連続修行',   unit:'日',   target:()=>2,
     desc:'2日つづけて道場に立て'},
   {id:'xp300',    icon:'⚡', label:'2日で300経験値', unit:'経験値', target:()=>300,
     desc:'2日間の合計で経験値300を積め'},
-  {id:'xp80prev', icon:'📈', label:'前回超え',       unit:'経験値', target:()=>Math.round(PREV_2DAY_XP*0.8),
-    desc:`前回2日間の実績（${PREV_2DAY_XP}）の8割、${Math.round(PREV_2DAY_XP*0.8)}経験値を2日で超えよ`},
+  {id:'xp100prev',icon:'📈', label:'前回超え',       unit:'経験値', target:()=>PREV_2DAY_XP,
+    desc:`前回2日間の実績（${PREV_2DAY_XP}）以上を、2日で積み上げよ`},
   {id:'memo1',    icon:'📝', label:'覚書を残せ',     unit:'回',   target:()=>1,
     desc:'記録画面に覚書を1回書き記せ'},
 ];
-let microGoal=null;
-function microGoalDef(){ return MICRO_GOAL_DEFS.find(d=>d.id===microGoal.defId); }
-function ensureMicroGoal(){
-  if(microGoal && !microGoal.done) return;
+function pickNewMicroGoalCandidate(){
   const pick=MICRO_GOAL_DEFS[Math.floor(Math.random()*MICRO_GOAL_DEFS.length)];
-  microGoal={defId:pick.id, cur:0, target:pick.target(), done:false, startedAt:Date.now()};
+  return {defId:pick.id, cur:0, target:pick.target(), active:false, startedAt:null, deadline:null, done:false, failed:false};
 }
-ensureMicroGoal();
-function microGoalCard(){
-  const def=microGoalDef();
-  const pct=Math.min(100,Math.round(microGoal.cur/microGoal.target*100));
-  return `<div class="mission" style="padding:16px;margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:26px">${def.icon}</div>
-      <div style="flex:1">
-        <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
-      </div>
-      <div style="font-size:11px;color:var(--kin);font-weight:700;white-space:nowrap">徳+2</div>
-    </div>
-    <div class="pr" style="margin-top:12px"><span>2日間の目標</span><b>${microGoal.cur} / ${microGoal.target}${def.unit}</b></div>
-    <div class="bar"><i style="width:${pct}%"></i></div>
-  </div>`;
+let microGoal=pickNewMicroGoalCandidate();
+function microGoalDef(){ return MICRO_GOAL_DEFS.find(d=>d.id===microGoal.defId); }
+function eligibleForMicroGoal(){ return weeklyGoalDays>=2; }
+function checkMicroGoalExpiry(){
+  if(microGoal.active && !microGoal.done && microGoal.deadline && Date.now()>microGoal.deadline){
+    microGoal.failed=true; microGoal.active=false;
+  }
+}
+function startMicroGoal(){
+  if(!eligibleForMicroGoal()) return;
+  microGoal.active=true; microGoal.cur=0; microGoal.done=false; microGoal.failed=false;
+  microGoal.startedAt=Date.now();
+  microGoal.deadline=Date.now()+7*24*60*60*1000; // 1週間以内
+  vib(20); toast('マイクロ目標に挑戦を開始した！1週間以内に達成しよう');
+  if(state.view==='quest') nav('quest');
+}
+function rerollMicroGoal(){
+  microGoal=pickNewMicroGoalCandidate();
+  if(state.view==='quest') nav('quest');
 }
 function completeMicroGoal(){
-  if(!microGoal||microGoal.done) return;
-  microGoal.done=true;
+  if(!microGoal||!microGoal.active||microGoal.done) return;
+  microGoal.done=true; microGoal.active=false;
   vib([30,20,60]);
-  toast('マイクロ目標 達成！徳+2');
-  setTimeout(()=>{ ensureMicroGoal(); if(state.view==='achieve') nav('achieve'); },1200);
+  toast('マイクロ目標 達成！');
+  setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); if(state.view==='quest') nav('quest'); },1200);
 }
-// kind: 'streak'|'xp'|'memo' — 種類が一致する時だけ進捗を積む
+// kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
 function microGoalProgress(kind, amount){
-  if(!microGoal||microGoal.done) return;
+  checkMicroGoalExpiry();
+  if(!microGoal||!microGoal.active||microGoal.done||microGoal.failed) return;
   const def=microGoalDef();
   const matches = (kind==='streak' && def.id==='streak2')
-    || (kind==='xp' && (def.id==='xp300'||def.id==='xp80prev'))
+    || (kind==='xp' && (def.id==='xp300'||def.id==='xp100prev'))
     || (kind==='memo' && def.id==='memo1');
   if(!matches) return;
   microGoal.cur=Math.min(microGoal.target, microGoal.cur+amount);
   if(microGoal.cur>=microGoal.target) completeMicroGoal();
 }
+function microGoalCard(){
+  checkMicroGoalExpiry();
+  if(!eligibleForMicroGoal()){
+    return `<div class="mission" style="padding:16px;margin-bottom:14px;opacity:.75">
+      <div style="font-size:13px;color:var(--sub);line-height:1.6">週の目標日数が少ないため、マイクロ目標には挑戦できません。<br>設定で週2日以上に変更すると挑戦できるようになります。</div>
+      <button class="btnghost" style="margin-top:10px" onclick="openSettings()">設定を開く</button>
+    </div>`;
+  }
+  const def=microGoalDef();
+  if(microGoal.failed){
+    return `<div class="mission" style="padding:16px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:26px">${def.icon}</div>
+        <div style="flex:1">
+          <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
+          <div style="font-size:11px;color:var(--shu2);margin-top:2px">1週間以内に達成できず、非クリアとなった</div>
+        </div>
+      </div>
+      <button class="btnprime" style="margin-top:12px" onclick="rerollMicroGoal()">別の目標で再挑戦する</button>
+    </div>`;
+  }
+  if(!microGoal.active){
+    const suggest = restedYesterday && !trainedToday;
+    return `<div class="mission" style="padding:16px;margin-bottom:14px">
+      ${suggest?`<div style="font-size:12px;color:var(--kin);font-weight:700;margin-bottom:8px">🌙 昨日は休んだ、絶好の機会です</div>`:''}
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:26px">${def.icon}</div>
+        <div style="flex:1">
+          <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:10px">好きなタイミングで開始できます。開始から1週間以内に達成しよう（達成しても徳の付与はありません）</div>
+      <button class="btnprime" style="margin-top:12px" onclick="startMicroGoal()">この目標に挑戦する</button>
+    </div>`;
+  }
+  const pct=Math.min(100,Math.round(microGoal.cur/microGoal.target*100));
+  const daysLeft=Math.max(0,Math.ceil((microGoal.deadline-Date.now())/(24*60*60*1000)));
+  return `<div class="mission" style="padding:16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:26px">${def.icon}</div>
+      <div style="flex:1">
+        <div style="font-family:var(--serif);font-size:15px;font-weight:700">${def.label}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">残り${daysLeft}日</div>
+      </div>
+    </div>
+    <div class="pr" style="margin-top:12px"><span>進捗</span><b>${microGoal.cur} / ${microGoal.target}${def.unit}</b></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>
+  </div>`;
+}
 
 let currentAvatar='🧘';
 const APP_VERSION='v0.11.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
-const CAT_COLORS={ push:'#E5482E', pull:'#D9AC52', squat:'#82A7BC', core:'#86B573', bridge:'#C084C7', hand:'#4FB8B0' };
+const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 const SUM=EX.reduce((a,e)=>a+e.cur,0);
 
 /* ══ 背景切り替え ══ */
@@ -2256,8 +2315,9 @@ function openSettings(){
       <h3 style="margin:0">設定</h3>
       <span style="font-size:13px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">指南 ›</span>
     </div>
-    <label>週の目標日数：<span id="goalv">4</span> 日</label>
-    <input type="range" min="2" max="7" value="4" oninput="document.getElementById('goalv').textContent=this.value">
+    <label>週の目標日数：<span id="goalv">${weeklyGoalDays}</span> 日</label>
+    <input type="range" min="1" max="7" id="weeklyGoalInput" value="${weeklyGoalDays}" oninput="document.getElementById('goalv').textContent=this.value">
+    <p style="font-size:11px;color:var(--sub);margin-top:4px">週2日以上でマイクロ目標に挑戦できます</p>
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
     <label>ユーザー名</label>
@@ -2266,7 +2326,12 @@ function openSettings(){
   </div>`);
 }
 function settingLv(el,i){el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');questLv=i;}
-function saveSettings(){closeModal();toast('保存しました');}
+function saveSettings(){
+  const v=document.getElementById('weeklyGoalInput');
+  if(v) weeklyGoalDays=parseInt(v.value)||weeklyGoalDays;
+  closeModal();toast('保存しました');
+  if(state.view==='quest') nav('quest');
+}
 
 /* ══ 指南 ══ */
 const TUT=[
