@@ -712,7 +712,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.11.0';
+const APP_VERSION='v0.12.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 const SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -862,6 +862,7 @@ function openSelfMenu(){
 function closeSelfMenu(){ const d=document.getElementById('selfMenuOvl'); if(d) d.remove(); }
 
 function render(){
+  closeSelfMenu();
   renderTabs();
   if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
   const bgMap={home:'t1',choose:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
