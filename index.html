@@ -302,6 +302,22 @@
   .mstep.done .node{ background:linear-gradient(135deg,var(--shu),var(--shu2));border-color:var(--shu2);color:#fff;box-shadow:0 3px 12px rgba(229,72,46,.4); }
   .mstep.here .node{ width:52px;height:52px;font-size:24px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.16),0 6px 20px rgba(217,172,82,.4);animation:hereBob 2.2s ease-in-out infinite; }
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
+  /* 山の絵（絵の山道の上にマスを並べる） */
+  .mart{ position:relative;margin:-18px -16px 0;aspect-ratio:2/3;overflow:hidden;background:var(--sumi); }
+  /* 絵を少し拡大して山を大きく見せる。マスの座標は元の絵に対する%のまま使える */
+  .mart-in{ position:absolute;width:135%;left:-17.5%;top:-14%;aspect-ratio:2/3;background-size:100% 100%; }
+  .mart::after{ content:"";position:absolute;inset:auto 0 0 0;height:12%;background:linear-gradient(transparent,var(--sumi));pointer-events:none; }
+  .mart-head{ position:absolute;left:16px;right:16px;top:18px;z-index:3; }
+  .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
+  .mnode{ position:absolute;z-index:2;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:13px;border:2px solid rgba(244,236,220,.4);background:rgba(20,17,16,.78);color:rgba(244,236,220,.7);box-shadow:0 2px 8px rgba(0,0,0,.6); }
+  .mnode.done{ border-color:rgba(244,236,220,.6);cursor:pointer; }
+  .mnode.here{ width:46px;height:46px;font-size:21px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.2),0 6px 20px rgba(217,172,82,.5);animation:hereBob2 2.2s ease-in-out infinite; }
+  @keyframes hereBob2{ 0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(-50%,calc(-50% - 4px));} }
+  .mflag{ position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--kin2);background:rgba(20,17,16,.82);border:1px solid rgba(217,172,82,.35);padding:4px 9px;border-radius:9px; }
+  .mflag.l{ right:calc(100% + 8px); } .mflag.r{ left:calc(100% + 8px); }
+  .mlabel{ position:absolute;z-index:2;transform:translate(-50%,-50%);white-space:nowrap;font-size:11px;letter-spacing:.15em;color:var(--sub);text-shadow:0 1px 4px #000;font-weight:700; }
+  .mlabel.peak{ color:var(--kin2); }
+  .mlabel.peak.reached{ background:linear-gradient(135deg,var(--shu),var(--shu2));color:#fff;padding:5px 12px;border-radius:12px;letter-spacing:.08em;cursor:pointer;text-shadow:none; }
   .mstep .flag{ position:absolute;right:calc(50% + 34px);font-size:11px;color:var(--sub);white-space:nowrap;font-weight:700; }
   .mstep.here .flag{ color:var(--kin); }
   .today-fixed{ position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));display:flex;gap:26px;justify-content:center;align-items:center;padding:14px 26px;z-index:15;background:rgba(20,17,16,.88);backdrop-filter:blur(14px);border-radius:50px;border:1px solid var(--line2);box-shadow:0 8px 24px rgba(0,0,0,.35); }
@@ -509,7 +525,8 @@ let FB=null;        // Firebase操作（下の module スクリプトから注�
 let USER=null;      // users/{uid} の内容
 let LOGS=[];        // 記録（古い順）
 let READY=false;    // 読み込み完了して画面を出せる状態か
-let myName='', streakDays=0, maxStreak=0, totalDays=0, monthXP=0, PREV_MONTH_XP=0, TOTAL_XP=0, tokuEarned=0, questLvMonth=0;
+let myName='', streakDays=0, maxStreak=0, totalDays=0, monthXP=0, PREV_MONTH_XP=0, TOTAL_XP=0, tokuEarned=0;
+let MTN={mk:'',total:0,climbed:0,weekDone:0,weekGoal:0,weekCleared:false}; // 今月の山の状態
 
 function parseDay(k){ const[y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
 function addDays(k,n){ const d=parseDay(k); d.setDate(d.getDate()+n); return todayStr(d); }
@@ -525,15 +542,45 @@ function logMD(g){ const d=parseDay(g.date); return `${String(d.getMonth()+1).pa
 function stepRecords(key,step){
   return LOGS.filter(g=>g.ex===key&&g.step===step).map(g=>({id:g.id,date:logMD(g),sets:g.sets.length,reps:logAvg(g),note:g.note||''}));
 }
-function monthGoalLv(mk){ const mg=(USER&&USER.monthGoals)||{}; return mg[mk]!=null ? mg[mk] : questLv; }
+/* 山道：1マス＝1週間（月曜始まり）。その週に「週の目標日数」修行すれば1マス登る。届かなければ同じマスにとどまる。
+   月をまたぐ週は日数が多い方の月（＝その週の木曜日がある月）のマスになる */
+function mondayOf(k){ const d=parseDay(k); return addDays(k,-((d.getDay()+6)%7)); }
+function weekMonth(mon){ return monthKey(parseDay(addDays(mon,3))); }
+function weeksOfMonth(mk){
+  const[y,m]=mk.split('-').map(Number), last=todayStr(new Date(y,m,0));
+  const arr=[];
+  for(let mon=mondayOf(`${y}-${m}-1`); dayDiff(mon,last)>=0; mon=addDays(mon,7)) if(weekMonth(mon)===mk) arr.push(mon);
+  return arr;
+}
+// 週の目標日数は変更した翌週の月曜から反映（weeklyGoals: {月曜日: 日数}）
+function goalForWeek(mon){
+  const wg=(USER&&USER.weeklyGoals)||{};
+  let best=null;
+  Object.keys(wg).forEach(k=>{ if(dayDiff(k,mon)>=0 && (!best||dayDiff(best,k)>0)) best=k; });
+  return best?wg[best]:((USER&&USER.weeklyGoalDays)||4);
+}
+function trainedDaysInWeek(mon){ let n=0; for(let i=0;i<7;i++) if(DAY_LOG[addDays(mon,i)]) n++; return n; }
+function mountainOf(mk){
+  const start=(USER&&USER.startDate)||todayStr(), thisMon=mondayOf(todayStr());
+  const weeks=weeksOfMonth(mk).filter(w=>dayDiff(start,addDays(w,6))>=0); // 始めた週から
+  let climbed=0; const cats=[];
+  for(const w of weeks){
+    if(dayDiff(w,thisMon)<0) break; // まだ来ていない週
+    if(trainedDaysInWeek(w)>=goalForWeek(w)){
+      climbed++;
+      const by={};
+      for(let i=0;i<7;i++) (DAY_LOG[addDays(w,i)]||[]).forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; });
+      cats.push(Object.keys(by).map(key=>({key,xp:by[key]})));
+    }
+  }
+  return {total:weeks.length,climbed,cats};
+}
 
 function recompute(){
   const u=USER||{};
   const today=todayStr();
   const start=u.startDate||today;
   myName=u.name||'';
-  weeklyGoalDays=u.weeklyGoalDays||4;
-  questLv=u.questLv!=null?u.questLv:0;
   daysSinceStart=Math.max(0,dayDiff(start,today));
   // 段位：開始段と、クリアした記録の「次の段」の大きい方
   EX.forEach(e=>{
@@ -577,20 +624,20 @@ function recompute(){
   const inMonth=(k,m)=>{ const[y,mo]=k.split('-'); return `${y}-${mo}`===m; };
   monthXP=0; PREV_MONTH_XP=0; TOTAL_XP=0;
   LOGS.forEach(g=>{ const x=logXP(g); TOTAL_XP+=x; if(inMonth(g.date,mk)) monthXP+=x; if(inMonth(g.date,pmk)) PREV_MONTH_XP+=x; });
-  questLvMonth=monthGoalLv(mk);
-  const monthDays=Object.keys(DAY_LOG).filter(k=>inMonth(k,mk)).sort((a,b)=>dayDiff(b,a));
-  questDone=monthDays.length;
-  // 山道の各基：その日やった種目（種目ごとにXP合算）
-  MOUNTAIN_STEP_CATS=monthDays.map(k=>{
-    const by={}; DAY_LOG[k].forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; });
-    return Object.keys(by).map(key=>({key,xp:by[key]}));
-  });
-  // 印：開始月から今月まで
+  // 山道（今週が属する月の山）
+  const thisMon=mondayOf(today);
+  weeklyGoalDays=goalForWeek(thisMon);
+  const mt=mountainOf(weekMonth(thisMon));
+  MOUNTAIN_STEP_CATS=mt.cats;
+  MTN={mk:weekMonth(thisMon),total:mt.total,climbed:Math.min(mt.climbed,mt.total),
+    weekDone:trainedDaysInWeek(thisMon),weekGoal:weeklyGoalDays,weekCleared:trainedDaysInWeek(thisMon)>=weeklyGoalDays};
+  // 印：始めた週の月から今月の山まで。頂上に着いた月だけ
   STAMPS=[];
-  const sd=parseDay(start);
-  for(let d=new Date(sd.getFullYear(),sd.getMonth(),1); d<=now; d=new Date(d.getFullYear(),d.getMonth()+1,1)){
-    const m=monthKey(d), days=Object.keys(DAY_LOG).filter(k=>inMonth(k,m)).length;
-    STAMPS.push({month:(d.getFullYear()===now.getFullYear()?'':d.getFullYear()+'年')+(d.getMonth()+1)+'月',mtn:MOUNTAINS[d.getMonth()],got:days>=QLV[monthGoalLv(m)].goal});
+  const firstMk=weekMonth(mondayOf(start));
+  const[fy,fm]=firstMk.split('-').map(Number), [ly,lm]=MTN.mk.split('-').map(Number);
+  for(let d=new Date(fy,fm-1,1); d<=new Date(ly,lm-1,1); d=new Date(d.getFullYear(),d.getMonth()+1,1)){
+    const m=monthKey(d), r=mountainOf(m);
+    STAMPS.push({month:(d.getFullYear()===now.getFullYear()?'':d.getFullYear()+'年')+(d.getMonth()+1)+'月',mtn:MOUNTAINS[d.getMonth()],got:r.total>0&&r.climbed>=r.total});
   }
   // 巻物
   const keysDone=new Set(LOGS.map(g=>g.ex));
@@ -668,16 +715,10 @@ const SCROLLS=[
   {em:'🗝️',l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
 ];
 
-const QLV=[
-  {name:'初伝', cond:'月に4回 修行する',  goal:4},
-  {name:'中伝', cond:'月に15回 修行する', goal:15},
-  {name:'極意', cond:'月に28回 修行する', goal:28},
-];
 // 以下は recompute() が記録から計算して入れる
-let questLv=0, questDone=0; // questLv＝月間目標の設定（下げた場合は翌月から）
 let toku=0;        // 現在の徳
 let fudaCount=0;   // 御札の所有数
-let weeklyGoalDays=4;      // 週の目標日数（設定で変更可）
+let weeklyGoalDays=4;      // 今週の目標日数（設定の変更は翌週から）
 let missedYesterday=false; // 昨日修行せず連続記録が途切れそうか
 let freezeUsedToday=false; // 御札で連続記録を守ったか
 let freezePromptShown=false; // すでに確認ダイアログを出したか
@@ -839,7 +880,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.13.0';
+const APP_VERSION='v0.14.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1058,6 +1099,24 @@ function escHtml(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 const MOUNTAINS=['初雪山','氷輪嶽','芽吹山','花霞嶺','新緑峰','雨籠山','翠嵐嶽','灼陽峰','月見山','紅葉嶽','枯野嶺','霜柱山'];
 let trainedToday=false; // 今日修行したか（recompute()で計算）
 
+/* 山の絵（月→画像と山道の座標）。座標は画像の幅・高さに対する%で、麓→頂の順。
+   12枚とも同じ構図で描く前提なので、道の座標は共通の MTN_PATH を使う */
+const MTN_PATH=[[54.7,70.6],[53.2,67.7],[45.9,62.5],[37.1,57.3],[43,52.1],[54.7,50.5],[62,49.5],[68.4,47.9],[70.8,46.2],[69.3,44.6],[66.4,43.3],[61,42.3],[57.6,40.7],[56.6,39.1],[55.2,37.1],[52.2,34.8],[51.3,33.8]];
+const MTN_ART={};
+for(let m=1;m<=12;m++) MTN_ART[m]={img:`images/mtn-${String(m).padStart(2,'0')}.jpg`,path:MTN_PATH};
+// 山道の折れ線上で、麓からの道のり t（0〜1）にある点を返す（%座標）
+function pathPoint(pts,t){
+  // 画像は縦長(2:3)なので、長さは実寸比で測る
+  const L=(a,b)=>Math.hypot((b[0]-a[0])*2,(b[1]-a[1])*3);
+  let total=0; for(let i=1;i<pts.length;i++) total+=L(pts[i-1],pts[i]);
+  let d=Math.max(0,Math.min(1,t))*total;
+  for(let i=1;i<pts.length;i++){
+    const seg=L(pts[i-1],pts[i]);
+    if(d<=seg||i===pts.length-1){ const r=seg?Math.min(1,d/seg):0; return [+(pts[i-1][0]+(pts[i][0]-pts[i-1][0])*r).toFixed(2),+(pts[i-1][1]+(pts[i][1]-pts[i-1][1])*r).toFixed(2)]; }
+    d-=seg;
+  }
+  return pts[pts.length-1];
+}
 // 登った基（日）ごとに、その日行った種目とXP（recompute()が今月の記録から作る）
 let MOUNTAIN_STEP_CATS=[];
 // 単色 or 均等分割の円（やった種目数ぶんに色分け）
@@ -1071,11 +1130,12 @@ function miniPie(colors){
 
 function viewHome(){
   checkStreakFreeze();
-  const now=new Date();
-  const mName=MOUNTAINS[now.getMonth()];
-  const total=QLV[questLvMonth].goal; // 今月の目標＝マス数
-  const climbed=Math.min(questDone,total); // 登った数
-  const reached=climbed>=total;
+  const mMonth=Number(MTN.mk.split('-')[1]);   // 今週が属する月
+  const mName=MOUNTAINS[mMonth-1];
+  const total=MTN.total;      // その月の週の数＝マス数
+  const climbed=MTN.climbed;  // 登った数
+  const reached=total>0 && climbed>=total;
+  const weekTxt=MTN.weekCleared?'今週の一基は登った':`今週 ${MTN.weekDone}/${MTN.weekGoal}日`;
 
   // マスを生成（下=1 .. 上=total）。登った=円グラフ（その日のカテゴリ配色）、次に登るマス=here、未踏=グレー
   let steps='';
@@ -1083,7 +1143,7 @@ function viewHome(){
     let cls='';
     if(i<=climbed) cls='done';
     else if(i===climbed+1 && !reached) cls='here';
-    const flag = (cls==='here') ? `<span class="flag">今ここ・あと${total-climbed}基</span>`
+    const flag = (cls==='here') ? `<span class="flag">${weekTxt}・あと${total-climbed}基</span>`
                : (i===total ? `<span class="flag">頂の鳥居</span>` : '');
     let nodeInner, nodeStyle='', nodeClick='';
     if(i<=climbed){
@@ -1100,21 +1160,62 @@ function viewHome(){
     steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node" style="${nodeStyle}"${nodeClick}>${nodeInner}</div></div>`;
   }
 
-  return `
-  ${freezeUsedToday?`<div style="text-align:center;font-size:12px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">🪧 御札を使い、連続記録を繋いだ</div>`:''}
-  ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:12px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ 昨日は修行しておらず、御札もありません（押下で功績画面へ）</div>`:''}
-  <div class="mtn-head">
+  const banners=`${freezeUsedToday?`<div style="text-align:center;font-size:12px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">🪧 御札を使い、連続記録を繋いだ</div>`:''}
+  ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:12px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ 昨日は修行しておらず、御札もありません（押下で功績画面へ）</div>`:''}`;
+  const todayBtns=trainedToday
+    ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ</div></div>`
+    : `<div class="today-fixed">
+        <button class="tbtn rest" onclick="restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>
+        <button class="tbtn go" onclick="nav('choose')"><span class="ic">⚡</span><span class="lb">修行</span></button>
+      </div>`;
+  const head=`<div class="mtn-head">
     <div>
-      <div class="eyebrow">${now.getMonth()+1}月の霊峰</div>
+      <div class="eyebrow">${mMonth}月の霊峰</div>
       <div class="mtn-name">${mName}</div>
-      <div class="mtn-sub">頂の鳥居まで ${total} 基　／　登頂で「印」を授かる</div>
+      <div class="mtn-sub">頂の鳥居まで ${total} 基（1週に1基）<br>登頂で「印」を授かる</div>
       <div class="ver">${APP_VERSION}</div>
     </div>
     <div class="mtn-streak">
       <div class="f">🔥</div>
       <div><div class="n">${streakDays}</div><div class="u">連続</div></div>
     </div>
-  </div>
+  </div>`;
+  // 山の絵がある月は、絵の山道の上にマスを並べる
+  const art=MTN_ART[mMonth];
+  if(art){
+    let nodes='';
+    for(let i=1;i<=total;i++){
+      const [x,y]=pathPoint(art.path,i/total);
+      let cls='', inner=i, click='';
+      if(i<=climbed){
+        cls='done';
+        const cats=MOUNTAIN_STEP_CATS[i-1]||[];
+        const colors=cats.length?cats.map(c=>CAT_COLORS[c.key]):['var(--shu)'];
+        inner=`<div style="position:absolute;inset:0;border-radius:50%;overflow:hidden">${miniPie(colors)}</div><div style="position:relative;z-index:1;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:14px">✓</div>`;
+        click=` onclick="stepDetail(${i})"`;
+      } else if(i===climbed+1){ cls='here'; inner='⛩'; }
+      const side=x>55?'l':'r';
+      const flag=cls==='here'?`<span class="mflag ${side}">${weekTxt}・あと${total-climbed}基</span>`:'';
+      nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
+    }
+    const [fx,fy]=pathPoint(art.path,0), [tx,ty]=pathPoint(art.path,1);
+    return `
+    <div class="mart">
+      <div class="mart-in" style="background-image:url('${art.img}')">
+        <div class="mlabel" style="left:${fx}%;top:${fy+2.4}%">— 麓 —</div>
+        <div class="mlabel peak${reached?' reached':''}" style="left:${tx}%;top:${ty-7}%" ${reached?'onclick="onPeakReached()"':''}>${reached?'⛩ 登頂！分かち合う':'頂の鳥居'}</div>
+        ${nodes}
+      </div>
+      <div class="mart-head">${head}</div>
+    </div>
+    ${banners}
+    ${todayBtns}
+    <div style="height:80px"></div>`;
+  }
+
+  return `
+  ${banners}
+  ${head}
 
   <div class="path">
     <div class="peak">
@@ -1125,12 +1226,7 @@ function viewHome(){
     <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--faint);letter-spacing:.1em">— 麓 —</div>
   </div>
 
-  ${trainedToday
-    ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ　一基 進んだ</div></div>`
-    : `<div class="today-fixed">
-        <button class="tbtn rest" onclick="restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>
-        <button class="tbtn go" onclick="nav('choose')"><span class="ic">⚡</span><span class="lb">修行</span></button>
-      </div>`}
+  ${todayBtns}
   <div style="height:80px"></div>
   `;
 }
@@ -2025,7 +2121,7 @@ function openShareSunrise(text){
   buildShareCard('sunrise', short, '積み重ねた歩みに、光が射す');
 }
 function onPeakReached(){
-  buildShareCard('sunrise', `${MOUNTAINS[new Date().getMonth()]}・登頂`, '頂の鳥居にて「印」を授かった');
+  buildShareCard('sunrise', `${MOUNTAINS[Number(MTN.mk.split('-')[1])-1]}・登頂`, '頂の鳥居にて「印」を授かった');
 }
 function buildShareCard(kind,title,sub){
   let fx=document.getElementById('shareFx');
@@ -2214,7 +2310,7 @@ function closeModal(){ const m=document.getElementById('modal'); if(m)m.remove()
 function restConfirm(){
   modal(`<div class="sheet">
     <h3>今日はどうしますか？</h3>
-    <p class="sub">休養日にすると今週の残り回数が1回減ります。あとで記すと自動で取り消されます。</p>
+    <p class="sub">休養日にしても連続記録は途切れません。あとで記すと修行日になります。</p>
     <button class="btnprime" onclick="closeModal();toast('今日もトレーニング開始！')">トレーニングする</button>
     <button class="btnghost" onclick="closeModal();toast('休養日にしました')">休む</button>
   </div>`);
@@ -2238,7 +2334,7 @@ function stampInfo(month, got){
     <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${got?1:.4}">🏵️</div>
     <h3 style="text-align:center">${month}の印</h3>
     <p style="text-align:center;font-size:13px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ 達成・獲得済み':'未達成'}</p>
-    <p style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px">月次の課業を達成すると獲得</p>
+    <p style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px">その月の山の頂に着くと獲得</p>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`,true);
 }
@@ -2483,27 +2579,21 @@ function imgPopup(key,i){
 }
 function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
-function goalBtns(sel,fn){
-  return `<div style="display:flex;gap:8px;margin-top:6px">${QLV.map((q,i)=>`<button onclick="${fn}(this,${i})" class="lvbtn" style="flex:1;padding:10px 4px;border-radius:12px;border:1px solid ${i===sel?'var(--kin)':'var(--line2)'};background:${i===sel?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${i===sel?'var(--kin2)':'var(--washi)'};font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans)">${q.name}<div style="font-size:10px;color:var(--sub);font-weight:500;margin-top:2px">月${q.goal}日</div></button>`).join('')}</div>`;
-}
 function markGoalBtn(el){
   el.parentNode.querySelectorAll('button').forEach(b=>{ b.style.borderColor='var(--line2)'; b.style.background='var(--sumi3)'; b.style.color='var(--washi)'; });
   el.style.borderColor='var(--kin)'; el.style.background='rgba(217,172,82,.16)'; el.style.color='var(--kin2)';
 }
-let settingsLv=0;
+function nextMonday(){ return addDays(mondayOf(todayStr()),7); }
 function openSettings(){
-  settingsLv=questLv;
+  const nextGoal=goalForWeek(nextMonday());
   modal(`<div class="sheet" style="border-radius:18px 18px 0 0;max-height:100vh;height:90vh">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0">設定</h3>
       <span style="font-size:13px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">指南 ›</span>
     </div>
-    <label>週の目標日数：<span id="goalv">${weeklyGoalDays}</span> 日</label>
-    <input type="range" min="1" max="7" id="weeklyGoalInput" value="${weeklyGoalDays}" oninput="document.getElementById('goalv').textContent=this.value">
-    <p style="font-size:11px;color:var(--sub);margin-top:4px">週2日以上でマイクロ目標に挑戦できます</p>
-    <label>月間の修行目標</label>
-    ${goalBtns(questLv,'settingLv')}
-    <p style="font-size:11px;color:var(--sub);margin-top:4px">上げると今月から、下げると来月から反映されます</p>
+    <label>週の目標日数：<span id="goalv">${nextGoal}</span> 日</label>
+    <input type="range" min="1" max="7" id="weeklyGoalInput" value="${nextGoal}" oninput="document.getElementById('goalv').textContent=this.value">
+    <p style="font-size:11px;color:var(--sub);margin-top:4px">山を1基登るのに必要な、週の修行日数です。変更は来週の月曜から反映されます（今週は${weeklyGoalDays}日）。週2日以上でマイクロ目標に挑戦できます。</p>
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
     <label>修行名</label>
@@ -2514,21 +2604,15 @@ function openSettings(){
     <div style="text-align:center;font-size:11px;color:var(--faint);margin-top:12px">${APP_VERSION}</div>
   </div>`);
 }
-function settingLv(el,i){ markGoalBtn(el); settingsLv=i; }
 function saveSettings(){
   const p={};
   const v=document.getElementById('weeklyGoalInput');
-  if(v) p.weeklyGoalDays=parseInt(v.value)||weeklyGoalDays;
+  const n=v?parseInt(v.value):0;
+  if(n && n!==goalForWeek(nextMonday())){ p.weeklyGoalDays=n; p.weeklyGoals={[nextMonday()]:n}; }
   const nm=(document.getElementById('unameInput')?.value||'').trim();
   if(nm && nm!==myName) p.name=nm.slice(0,12);
-  if(settingsLv!==questLv){
-    p.questLv=settingsLv;
-    // D案：上げは今月から（山が伸びる）、下げは来月から
-    if(settingsLv>questLvMonth) p.monthGoals={[monthKey()]:settingsLv};
-    else p.monthGoals={[monthKey()]:questLvMonth};
-  }
   if(Object.keys(p).length) saveUser(p);
-  closeModal();toast('保存しました');
+  closeModal();toast(p.weeklyGoals?'保存しました（週の目標は来週から）':'保存しました');
 }
 function confirmSignOut(){
   modal(`<div class="sheet card-c" style="text-align:center">
@@ -2561,7 +2645,12 @@ function sendFeedback(){
   const btn=document.getElementById('fbSend'); if(btn){ btn.disabled=true; btn.textContent='送信中…'; }
   FB.sendFeedback({type:fbType,text:text.slice(0,1000),name:myName||'',version:APP_VERSION})
     .then(()=>{ closeModal(); toast('届けました。ありがとう！'); })
-    .catch(e=>{ console.warn(e); if(btn){ btn.disabled=false; btn.textContent='送る'; } toast('送信できませんでした。電波を確認してください'); });
+    .catch(e=>{
+      console.warn(e);
+      if(btn){ btn.disabled=false; btn.textContent='送る'; }
+      const code=(e&&e.code)||'';
+      toast(code==='permission-denied'?'送信が許可されていません（'+code+'）':code==='unavailable'?'電波がありません。つながる場所でもう一度':'送信できませんでした（'+(code||'不明なエラー')+'）');
+    });
 }
 
 /* ══ 指南 ══ */
@@ -2573,19 +2662,19 @@ const TUT=[
   {big:'👤', tt:'まず名前を決めろ',
    speech:'お前の修行名を決めろ。<br>あとから設定で変えられる。', uname:true},
   {big:'📅', tt:'週の目標を決めろ',
-   speech:'週に何日 道場へ来るか。<br>2日でも構わん。続けることが全てだ。', slider:true},
-  {big:'📜', tt:'今月の修行目標',
-   speech:'毎月、修行目標が課される。<br>初伝（月4日）・中伝（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。', goal:true},
+   speech:'週に何日 道場へ来るか。<br>1日でも構わん。続けることが全てだ。<br>目標は設定から変えられる。', slider:true},
+  {big:'⛩', tt:'毎月の山を登れ',
+   speech:'毎月、新しい山が現れる。<br>1週間に1基。週の目標日数だけ修行すれば一基登れる。<br>頂の鳥居に着けば「印」を授かる。'},
   {big:'⛰️', tt:'己の段を選べ',
    speech:'六種それぞれ、どの段から始めるか選べ。<br>迷ったら第1段からでよい。', steps:true},
   {big:'🔥', tt:'始める時が来た',
    speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
 ];
 let tutI=0, tutOnboard=false;
-let ONB={name:'',weekly:4,questLv:0,steps:{}};
+let ONB={name:'',weekly:4,steps:{}};
 function openTut(onboard){
   tutI=0; tutOnboard=!!onboard;
-  if(tutOnboard){ ONB={name:'',weekly:4,questLv:0,steps:{}}; EX.forEach(e=>ONB.steps[e.key]=1); }
+  if(tutOnboard){ ONB={name:'',weekly:4,steps:{}}; EX.forEach(e=>ONB.steps[e.key]=1); }
   document.querySelector('#tut .skip').style.display=tutOnboard?'none':'';
   document.getElementById('tut').style.display='flex';renderTut();
 }
@@ -2600,7 +2689,6 @@ function renderTut(){
   // 入力欄は初回（入門時）だけ出す。設定から開いた時は説明のみ
   if(tutOnboard && t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" id="tutName" maxlength="12" value="${escHtml(ONB.name)}" placeholder="修行名を入力" oninput="ONB.name=this.value" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center;box-sizing:border-box"></div>`;
   if(tutOnboard && t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="1" max="7" value="${ONB.weekly}" style="width:100%;accent-color:#C8A24C" oninput="ONB.weekly=+this.value;document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px">週 <span id="tg">${ONB.weekly}</span> 日</div></div>`;
-  if(tutOnboard && t.goal) extra=`<div style="width:290px">${goalBtns(ONB.questLv,'tutGoal')}</div>`;
   if(tutOnboard && t.steps) extra=`<div style="width:100%;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:10px">${EX.map(e=>{
       const c=criteria(e.key,ONB.steps[e.key]);
       return `<div style="background:var(--card);border:1px solid var(--line2);border-left:4px solid ${CAT_COLORS[e.key]};border-radius:12px;padding:9px 12px">
@@ -2619,7 +2707,6 @@ function renderTut(){
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
   document.getElementById('tutNext').textContent=tutI===TUT.length-1?(tutOnboard?'入門する':'道場へ入る'):'進む';
 }
-function tutGoal(el,i){ markGoalBtn(el); ONB.questLv=i; }
 function tutStep(key,i){ ONB.steps[key]=i; const el=document.getElementById('tutCrit_'+key); if(el) el.textContent='クリア基準 '+criteria(key,i).clearTxt; }
 function tutNext(){
   if(tutOnboard && TUT[tutI].uname && !ONB.name.trim()){ toast('修行名を入力してください'); return; }
@@ -2657,7 +2744,7 @@ function doSignIn(){
 function createUser(){
   const today=todayStr();
   const data={name:ONB.name.trim().slice(0,12),startDate:today,startSteps:Object.assign({},ONB.steps),
-    weeklyGoalDays:ONB.weekly,questLv:ONB.questLv,monthGoals:{[monthKey()]:ONB.questLv},
+    weeklyGoalDays:ONB.weekly,weeklyGoals:{[mondayOf(today)]:ONB.weekly},
     rests:[],fudaUsed:[],ledger:[],createdAt:Date.now(),appVersion:APP_VERSION};
   FB.saveUser(data).catch(e=>{ console.warn(e); toast('保存に失敗しました'); });
   startSync();
@@ -2671,7 +2758,6 @@ function startSync(){
     recompute();
     if(!READY){
       READY=true;
-      if(USER && !(USER.monthGoals&&USER.monthGoals[monthKey()]!=null)) saveUser({monthGoals:{[monthKey()]:questLv}});
       nav('home');
     } else safeRender();
     publishProfile();
