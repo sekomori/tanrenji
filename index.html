@@ -223,6 +223,12 @@
   .react-btns button:active{ background:rgba(229,72,46,.2);transform:scale(.96); }
 
   /* 指南 */
+  #login{ position:fixed;inset:0;z-index:79;background:linear-gradient(180deg,var(--sumi),#1B1410);display:none;flex-direction:column;padding:34px 24px calc(30px + env(safe-area-inset-bottom)); }
+  #login .lstage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px; }
+  #login .ltt{ font-family:var(--serif);font-size:34px;font-weight:800;letter-spacing:.2em; }
+  #login .lspeech{ background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px 18px;font-size:14px;line-height:1.8;max-width:310px; }
+  #login .lnote{ text-align:center;font-size:11px;color:var(--sub);margin-top:12px; }
+  #login .lerr{ text-align:center;font-size:12px;color:var(--shu2);margin-top:8px;min-height:16px; }
   #tut{ position:fixed;inset:0;z-index:80;background:linear-gradient(180deg,var(--sumi),#1B1410);display:none;flex-direction:column;padding:34px 24px calc(26px + env(safe-area-inset-bottom)); }
   #tut .skip{ position:absolute;top:20px;right:20px;color:var(--faint);font-size:13px;cursor:pointer;font-weight:700; }
   #tut .stage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px; }
@@ -299,7 +305,7 @@
   .mstep .flag{ position:absolute;right:calc(50% + 34px);font-size:11px;color:var(--sub);white-space:nowrap;font-weight:700; }
   .mstep.here .flag{ color:var(--kin); }
   .today-fixed{ position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));display:flex;gap:26px;justify-content:center;align-items:center;padding:14px 26px;z-index:15;background:rgba(20,17,16,.88);backdrop-filter:blur(14px);border-radius:50px;border:1px solid var(--line2);box-shadow:0 8px 24px rgba(0,0,0,.35); }
-  .today-fixed .done-today{ padding:14px 22px; }
+  .today-fixed .done-today{ padding:14px 22px;white-space:nowrap; }
   .tbtn{ flex:0 0 auto;width:76px;height:76px;border-radius:50%;border:none;font-family:var(--sans);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px; }
   .tbtn .ic{ font-size:22px;line-height:1; }
   .tbtn .lb{ font-size:11px;font-weight:900;letter-spacing:.04em; }
@@ -402,6 +408,16 @@
   <div class="tabbar" id="tabbar"></div>
 </div>
 <div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
+<div id="login">
+  <div class="lstage">
+    <div style="font-size:64px">🧑‍🏫</div>
+    <div class="ltt">鍛錬寺</div>
+    <div class="lspeech">修行を志す者よ、門を叩け。<br>お前の歩みは、ここにすべて記される。</div>
+  </div>
+  <button class="btnprime" id="loginBtn" onclick="doSignIn()">Googleで入門する</button>
+  <div class="lnote">記録はGoogleアカウントに保存され、機種変更しても引き継げます</div>
+  <div class="lerr" id="loginErr"></div>
+</div>
 <div id="tut">
   <div class="skip" onclick="closeTut()">省略</div>
   <div class="stage" id="tutStage"></div>
@@ -483,14 +499,121 @@ function criteria(key,i){
   return {goal:15, start:8, unit:'回', rest:105, tempo:'1-0-2-1', clearTxt:'3組×15回'};
 }
 
-const MOCK_LOGS=[
-  {date:'05/02',sets:3,reps:5, note:'肘が開いた'},
-  {date:'05/06',sets:3,reps:6, note:''},
-  {date:'05/11',sets:3,reps:6, note:'肩幅を意識'},
-  {date:'05/15',sets:3,reps:7, note:''},
-  {date:'05/20',sets:3,reps:7, note:'フォーム重視'},
-  {date:'05/25',sets:3,reps:8, note:''},
-];
+/* ══ 保存データ（Firebase）══
+   記録（LOGS）を正とし、段位・ストリーク・暦・経験値・徳・印・巻物はすべて記録から計算する。
+   users/{uid}           … 名前・開始日・開始段・目標・休養日・御札使用日・徳の出入り（ledger）など
+   users/{uid}/logs/{id} … 1回の修行 {date:'YYYY-M-D', ts, ex, step, sets:[各組の回数/秒], note}
+   profiles/{uid}        … 門下生・ランキング向けの公開プロフィール（記録から計算して上書き）
+*/
+let FB=null;        // Firebase操作（下の module スクリプトから注入）
+let USER=null;      // users/{uid} の内容
+let LOGS=[];        // 記録（古い順）
+let READY=false;    // 読み込み完了して画面を出せる状態か
+let myName='', streakDays=0, maxStreak=0, totalDays=0, monthXP=0, PREV_MONTH_XP=0, TOTAL_XP=0, tokuEarned=0, questLvMonth=0;
+
+function parseDay(k){ const[y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); }
+function addDays(k,n){ const d=parseDay(k); d.setDate(d.getDate()+n); return todayStr(d); }
+function monthKey(d){ d=d||new Date(); return `${d.getFullYear()}-${d.getMonth()+1}`; }
+function dayDiff(a,b){ return Math.round((parseDay(b)-parseDay(a))/(24*60*60*1000)); }
+function logPer(g){ const ty=stepType(g.ex,g.step); return ty==='s'?3 : ty==='n'?20 : 10; }
+function logTotal(g){ return g.sets.reduce((a,b)=>a+b,0); }
+function logXP(g){ return logTotal(g)*logPer(g); }
+function logAvg(g){ return g.sets.length?Math.round(logTotal(g)/g.sets.length):0; }
+function logCleared(g){ const c=criteria(g.ex,g.step); return g.sets.length>=3 && g.sets.every(v=>v>=c.goal); }
+function logMD(g){ const d=parseDay(g.date); return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; }
+// 記録画面のグラフ・足跡用（その段の記録だけ）
+function stepRecords(key,step){
+  return LOGS.filter(g=>g.ex===key&&g.step===step).map(g=>({id:g.id,date:logMD(g),sets:g.sets.length,reps:logAvg(g),note:g.note||''}));
+}
+function monthGoalLv(mk){ const mg=(USER&&USER.monthGoals)||{}; return mg[mk]!=null ? mg[mk] : questLv; }
+
+function recompute(){
+  const u=USER||{};
+  const today=todayStr();
+  const start=u.startDate||today;
+  myName=u.name||'';
+  weeklyGoalDays=u.weeklyGoalDays||4;
+  questLv=u.questLv!=null?u.questLv:0;
+  daysSinceStart=Math.max(0,dayDiff(start,today));
+  // 段位：開始段と、クリアした記録の「次の段」の大きい方
+  EX.forEach(e=>{
+    let cur=(u.startSteps&&u.startSteps[e.key])||1;
+    LOGS.forEach(g=>{ if(g.ex===e.key && logCleared(g)) cur=Math.max(cur,Math.min(stepCount(e.key),g.step+1)); });
+    e.cur=cur;
+  });
+  SUM=EX.reduce((a,e)=>a+e.cur,0);
+  // 日ごとの状態
+  CAL_DATA={}; DAY_LOG={};
+  (u.rests||[]).forEach(k=>{ CAL_DATA[k]='rest'; });
+  LOGS.forEach(g=>{
+    CAL_DATA[g.date]='done';
+    (DAY_LOG[g.date]=DAY_LOG[g.date]||[]).push({key:g.ex,ex:exBy(g.ex).name,step:g.step,
+      detail:`${g.sets.length}×${logAvg(g)}${stepType(g.ex,g.step)==='s'?'秒':''}`,xp:logXP(g)});
+  });
+  totalDays=Object.keys(DAY_LOG).length;
+  trainedToday=!!DAY_LOG[today];
+  // ストリーク：修行した日を数える。休養日と御札を使った日は途切れない（日数には入らない）
+  const fudaDays=new Set(u.fudaUsed||[]);
+  const isDone=k=>!!DAY_LOG[k];
+  const isBridge=k=>CAL_DATA[k]==='rest'||fudaDays.has(k);
+  const streakAt=end=>{ let n=0; for(let k=end; dayDiff(start,k)>=0; k=addDays(k,-1)){ if(isDone(k)) n++; else if(!isBridge(k)) break; } return n; };
+  streakDays=streakAt((isDone(today)||isBridge(today))?today:addDays(today,-1));
+  maxStreak=0; { let run=0; for(let k=start; dayDiff(k,today)>=0; k=addDays(k,1)){ if(isDone(k)) run++; else if(!isBridge(k) && k!==today) run=0; maxStreak=Math.max(maxStreak,run); } }
+  const yest=addDays(today,-1);
+  missedYesterday=dayDiff(start,yest)>=0 && !isDone(yest) && !isBridge(yest) && streakAt(addDays(today,-2))>0;
+  freezeUsedToday=fudaDays.has(yest);
+  // 徳：修行した日ごとに+1、ledger（交換・褒美）を加減
+  const ledger=u.ledger||[];
+  toku=totalDays+ledger.reduce((a,l)=>a+(l.amt||0),0);
+  tokuEarned=totalDays+ledger.reduce((a,l)=>a+Math.max(0,l.amt||0),0);
+  fudaCount=ledger.filter(l=>l.k==='fuda').length-ledger.filter(l=>l.k==='fudaGift').length-fudaDays.size;
+  // アバター
+  avatarSel=Object.assign({hair:0,eye:0,nose:0,mouth:0,skin:0},u.avatarSel||{});
+  avatarUnlocked={hair:[0,1],eye:[0,1],nose:[0,1],mouth:[0,1],skin:[0,1]};
+  ledger.filter(l=>l.k==='avatar').forEach(l=>{ if(avatarUnlocked[l.part]&&!avatarUnlocked[l.part].includes(l.idx)) avatarUnlocked[l.part].push(l.idx); });
+  currentAvatar=u.avatarSel?getAvatarEmoji():'🧘';
+  // 今月・前月・累計
+  const now=new Date(), mk=monthKey(now), pmk=monthKey(new Date(now.getFullYear(),now.getMonth()-1,1));
+  const inMonth=(k,m)=>{ const[y,mo]=k.split('-'); return `${y}-${mo}`===m; };
+  monthXP=0; PREV_MONTH_XP=0; TOTAL_XP=0;
+  LOGS.forEach(g=>{ const x=logXP(g); TOTAL_XP+=x; if(inMonth(g.date,mk)) monthXP+=x; if(inMonth(g.date,pmk)) PREV_MONTH_XP+=x; });
+  questLvMonth=monthGoalLv(mk);
+  const monthDays=Object.keys(DAY_LOG).filter(k=>inMonth(k,mk)).sort((a,b)=>dayDiff(b,a));
+  questDone=monthDays.length;
+  // 山道の各基：その日やった種目（種目ごとにXP合算）
+  MOUNTAIN_STEP_CATS=monthDays.map(k=>{
+    const by={}; DAY_LOG[k].forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; });
+    return Object.keys(by).map(key=>({key,xp:by[key]}));
+  });
+  // 印：開始月から今月まで
+  STAMPS=[];
+  const sd=parseDay(start);
+  for(let d=new Date(sd.getFullYear(),sd.getMonth(),1); d<=now; d=new Date(d.getFullYear(),d.getMonth()+1,1)){
+    const m=monthKey(d), days=Object.keys(DAY_LOG).filter(k=>inMonth(k,m)).length;
+    STAMPS.push({month:(d.getFullYear()===now.getFullYear()?'':d.getFullYear()+'年')+(d.getMonth()+1)+'月',mtn:MOUNTAINS[d.getMonth()],got:days>=QLV[monthGoalLv(m)].goal});
+  }
+  // 巻物
+  const keysDone=new Set(LOGS.map(g=>g.ex));
+  SCROLLS[0].got=LOGS.length>0;
+  SCROLLS[1].got=totalDays>=100;
+  SCROLLS[2].got=maxStreak>=7;
+  SCROLLS[3].got=EX.every(e=>keysDone.has(e.key));
+  SCROLLS[4].got=maxStreak>=30;
+  SCROLLS[5].got=tokuEarned>=10000;
+  // マイクロ目標
+  microGoal=u.microGoal?Object.assign({},u.microGoal):(microGoal||pickNewMicroGoalCandidate());
+}
+
+/* 書き込み（Firestoreの画面反映は onSnapshot 経由。電波がなくても端末に保存され、戻ったら送られる） */
+function saveUser(partial){ if(!FB) return; FB.saveUser(partial).catch(e=>{ console.warn(e); toast('保存に失敗しました'); }); }
+function addLedger(entry){ saveUser({ledger:FB.union(Object.assign({at:Date.now()},entry))}); }
+function saveMicroGoal(){ saveUser({microGoal:Object.assign({},microGoal)}); }
+function addLog(key,step,sets){
+  const memoEl=document.getElementById('memoInput');
+  const note=memoEl?memoEl.value.trim():'';
+  if(note) microGoalProgress('memo',1);
+  FB.addLog({date:todayStr(),ts:Date.now(),ex:key,step,sets,note}).catch(e=>{ console.warn(e); toast('記録の保存に失敗しました'); });
+}
 
 const FRIENDS=[
   {name:'タカシ',em:'🧙',vals:[6,5,4,7,3,4],streak:18,monthXP:520,totalXP:2100,trained:true},
@@ -533,15 +656,11 @@ const REACT_HIST=[
 ];
 let hasNewReact=true; // 未確認の通知があるか
 
-// 印：月別（アプリ開始月から自動追加、クリアしたらカラー）
-const STAMPS=[
-  {month:'4月',mtn:'花霞嶺',got:true},
-  {month:'5月',mtn:'新緑峰',got:true},
-  {month:'6月',mtn:'雨籠山',got:false}, // 今月・未達成
-];
+// 印：月別（アプリ開始月から自動追加、クリアしたらカラー）※recompute()で記録から作る
+let STAMPS=[];
 // 巻物：取得分だけ表示、条件は最初から見える
 const SCROLLS=[
-  {em:'📜',l:'初学の巻',  got:true,  cond:'はじめて記録した'},
+  {em:'📜',l:'初学の巻',  got:false, cond:'はじめて記録した'},
   {em:'📜',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
   {em:'📜',l:'継続の巻',  got:false, cond:'7日連続で修行した'},
   {em:'📜',l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
@@ -554,12 +673,12 @@ const QLV=[
   {name:'中伝', cond:'月に15回 修行する', goal:15},
   {name:'極意', cond:'月に28回 修行する', goal:28},
 ];
-let questLv=1, questDone=8;
-let toku=28;       // 現在の徳
+// 以下は recompute() が記録から計算して入れる
+let questLv=0, questDone=0; // questLv＝月間目標の設定（下げた場合は翌月から）
+let toku=0;        // 現在の徳
 let fudaCount=0;   // 御札の所有数
-const PREV_MONTH_XP=410, TOTAL_XP=1240;
 let weeklyGoalDays=4;      // 週の目標日数（設定で変更可）
-let missedYesterday=true;  // モック：昨日は修行しなかった
+let missedYesterday=false; // 昨日修行せず連続記録が途切れそうか
 let freezeUsedToday=false; // 御札で連続記録を守ったか
 let freezePromptShown=false; // すでに確認ダイアログを出したか
 function checkStreakFreeze(){
@@ -576,7 +695,8 @@ function checkStreakFreeze(){
   }
 }
 function useFudaForFreeze(){
-  fudaCount--; freezeUsedToday=true;
+  if(fudaCount<=0){ closeModal(); return; }
+  saveUser({fudaUsed:FB.union(addDays(todayStr(),-1))});
   vib([20,20,40]);
   closeModal();
   toast('御札を使い、連続記録の途切れを防いだ');
@@ -612,6 +732,7 @@ function isConsecutiveDay(prevStr,curStr){
 function checkMicroGoalExpiry(){
   if(microGoal.active && !microGoal.done && microGoal.deadline && Date.now()>microGoal.deadline){
     microGoal.failed=true; microGoal.active=false;
+    saveMicroGoal();
   }
 }
 function startMicroGoal(){
@@ -619,12 +740,14 @@ function startMicroGoal(){
   microGoal.active=true; microGoal.cur=0; microGoal.done=false; microGoal.failed=false; microGoal.lastProgressDate=null;
   microGoal.startedAt=Date.now();
   microGoal.deadline=Date.now()+7*24*60*60*1000; // 起算日から1週間
+  saveMicroGoal();
   vib(20); toast('マイクロ目標に挑戦を開始した！1週間以内に達成しよう');
   if(state.view==='quest') nav('quest');
 }
 // 連続が途切れた場合の再挑戦：起算日・期限はそのまま、進捗だけリセット
 function retryMicroGoal(){
   microGoal.cur=0; microGoal.failed=false; microGoal.active=true; microGoal.lastProgressDate=null;
+  saveMicroGoal();
   vib(20); toast('再挑戦を開始した（期限はそのまま）');
   if(state.view==='quest') nav('quest');
 }
@@ -632,16 +755,18 @@ function retryMicroGoal(){
 function startFreshMicroGoal(){
   microGoal=pickNewMicroGoalCandidate();
   microGoal.active=true; microGoal.startedAt=Date.now(); microGoal.deadline=Date.now()+7*24*60*60*1000;
+  saveMicroGoal();
   vib(20); toast('新しい挑戦を開始した！');
   if(state.view==='quest') nav('quest');
 }
 function completeMicroGoal(){
   if(!microGoal||!microGoal.active||microGoal.done) return;
   microGoal.done=true; microGoal.active=false;
-  toku+=2;
+  saveMicroGoal();
+  addLedger({k:'micro',amt:2});
   vib([30,20,60]);
   toast('マイクロ目標 達成！徳+2');
-  setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); if(state.view==='quest') nav('quest'); },1200);
+  setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
 }
 // kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
 function microGoalProgress(kind, amount){
@@ -655,11 +780,13 @@ function microGoalProgress(kind, amount){
   if(microGoal.lastProgressDate && !isConsecutiveDay(microGoal.lastProgressDate,t)){
     // 連続が途切れた→非クリア（起算日から1週間以内ならまだ再挑戦できる）
     microGoal.failed=true; microGoal.active=false;
+    saveMicroGoal();
     return;
   }
   microGoal.lastProgressDate=t;
   microGoal.cur=Math.min(microGoal.target, microGoal.cur+amount);
   if(microGoal.cur>=microGoal.target) completeMicroGoal();
+  else saveMicroGoal();
 }
 function microGoalCard(){
   checkMicroGoalExpiry();
@@ -712,10 +839,10 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.12.0';
+const APP_VERSION='v0.13.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
-const SUM=EX.reduce((a,e)=>a+e.cur,0);
+let SUM=EX.reduce((a,e)=>a+e.cur,0);
 
 /* ══ 背景切り替え ══ */
 function setBg(cls){
@@ -752,31 +879,10 @@ function buildWeekCal(){
   return h;
 }
 
-// モックデータ：日付 → 'done'|'rest'|'none'
-const CAL_DATA={
-  '2026-6-1':'done','2026-6-2':'done','2026-6-3':'rest','2026-6-4':'done',
-  '2026-6-5':'done','2026-6-6':'none','2026-6-7':'done','2026-6-8':'done',
-  '2026-6-9':'rest','2026-6-10':'done','2026-6-11':'done','2026-6-12':'done',
-  '2026-6-13':'none','2026-6-14':'done','2026-6-15':'done','2026-6-16':'done',
-  '2026-6-17':'rest','2026-6-18':'done','2026-6-19':'done','2026-6-20':'none',
-  '2026-6-21':'done','2026-6-22':'done','2026-6-23':'done','2026-6-24':'done',
-};
-// その日の修行内容モック（種目・ステップ・セット×回数・XP）
-const DAY_LOG={
-  '2026-6-24':[
-    {ex:'プッシュアップ',step:5,detail:'3×8',xp:80},
-    {ex:'スクワット',step:4,detail:'3×8',xp:80},
-    {ex:'プルアップ',step:3,detail:'3×6',xp:60},
-  ],
-  '2026-6-23':[
-    {ex:'ブリッジ',step:2,detail:'3×30秒',xp:90},
-    {ex:'ハンドスタンド',step:3,detail:'3×8',xp:80},
-  ],
-  '2026-6-22':[
-    {ex:'レッグレイズ',step:6,detail:'3×8',xp:80},
-    {ex:'プッシュアップ',step:5,detail:'2×10',xp:100},
-  ],
-};
+// 日付 → 'done'|'rest'（recompute()が記録から作る。無い日は未修行）
+let CAL_DATA={};
+// その日の修行内容（種目・ステップ・セット×回数・XP）
+let DAY_LOG={};
 function dayDetail(key){
   const st=CAL_DATA[key]||'none';
   const [y,m,d]=key.split('-');
@@ -788,7 +894,7 @@ function dayDetail(key){
   } else if(st==='none'){
     body=`<div style="text-align:center;padding:20px;color:var(--sub);font-size:15px">記録なし</div>`;
   } else {
-    const logs=DAY_LOG[key]||[{ex:'プッシュアップ',step:5,detail:'3×8',xp:80}];
+    const logs=DAY_LOG[key]||[];
     const total=logs.reduce((a,l)=>a+l.xp,0);
     body=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)">
         <div><div style="font-size:14px;font-weight:600">${l.ex}</div><div style="font-size:12px;color:var(--kin)">第${l.step}段 ／ ${l.detail}</div></div>
@@ -855,6 +961,7 @@ function openSelfMenu(){
   d.innerHTML=`<div class="sheet" style="padding-bottom:calc(96px + env(safe-area-inset-bottom))">
     <button class="btnprime" onclick="closeSelfMenu();nav('profile')">己</button>
     <button class="btnprime" style="margin-top:10px" onclick="closeSelfMenu();nav('achieve')">功績</button>
+    <button class="btnghost" style="margin-top:10px" onclick="closeSelfMenu();openFeedback()">✉ 開発者へ意見を送る</button>
   </div>`;
   d.onclick=e=>{ if(e.target===d) closeSelfMenu(); };
   document.getElementById('app').appendChild(d);
@@ -863,6 +970,9 @@ function closeSelfMenu(){ const d=document.getElementById('selfMenuOvl'); if(d) 
 
 function render(){
   closeSelfMenu();
+  const tb=document.getElementById('tabbar');
+  if(!READY){ tb.style.display='none'; $main.innerHTML=`<div style="min-height:70vh;display:grid;place-items:center;color:var(--sub);font-size:13px;letter-spacing:.2em">読み込み中…</div>`; return; }
+  tb.style.display='';
   renderTabs();
   if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
   const bgMap={home:'t1',choose:'t1',steps:'t1',quest:'t1',friends:'t1',profile:'t1',record:'t3'};
@@ -878,7 +988,7 @@ function bindLogLongPress(){
   const logs=document.querySelectorAll('#logList .log');
   logs.forEach(el=>{
     let timer=null;
-    const start=()=>{ timer=setTimeout(()=>{ vib(30); logMenu(Number(el.dataset.idx)); },500); };
+    const start=()=>{ timer=setTimeout(()=>{ vib(30); logMenu(el.dataset.id); },500); };
     const cancel=()=>{ if(timer){clearTimeout(timer);timer=null;} };
     el.addEventListener('touchstart',start,{passive:true});
     el.addEventListener('touchend',cancel);
@@ -889,72 +999,67 @@ function bindLogLongPress(){
   });
 }
 
-function logMenu(idx){
-  const g=MOCK_LOGS[idx];
+function logById(id){ return LOGS.find(g=>g.id===id); }
+function logMenu(id){
+  const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
     <h3>記録の操作</h3>
-    <p class="sub">${g.date}・${g.sets}×${g.reps}</p>
-    <button class="btnprime" onclick="closeModal();editLog(${idx})">編集</button>
-    <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog(${idx})">削除</button>
+    <p class="sub">${logMD(g)}・${g.sets.length}×${logAvg(g)}</p>
+    <button class="btnprime" onclick="closeModal();editLog('${id}')">編集</button>
+    <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog('${id}')">削除</button>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
 }
 
-function editLog(idx){
-  const g=MOCK_LOGS[idx];
+function editLog(id){
+  const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
     <h3>記録を編集</h3>
     <div style="display:flex;gap:10px;margin-top:12px">
-      <div style="flex:1"><label>組数</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets}"></div>
-      <div style="flex:1"><label>回数 / 秒</label><input type="number" id="eReps" inputmode="numeric" value="${g.reps}"></div>
+      <div style="flex:1"><label>組数</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets.length}"></div>
+      <div style="flex:1"><label>回数 / 秒</label><input type="number" id="eReps" inputmode="numeric" value="${logAvg(g)}"></div>
     </div>
-    <label>覚書</label><input type="text" id="eMemo" value="${g.note||''}">
-    <button class="btnprime" onclick="saveEditLog(${idx})">保存する</button>
+    <label>覚書</label><input type="text" id="eMemo" value="${escHtml(g.note||'')}">
+    <button class="btnprime" onclick="saveEditLog('${id}')">保存する</button>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
 }
 
-function saveEditLog(idx){
+function saveEditLog(id){
+  const g=logById(id); if(!g) return;
   const sets=parseInt(document.getElementById('eSets').value)||1;
   const reps=parseInt(document.getElementById('eReps').value)||0;
-  const note=document.getElementById('eMemo').value;
+  const note=document.getElementById('eMemo').value.trim();
   if(reps<=0){ toast('回数を入力してください'); return; }
-  MOCK_LOGS[idx].sets=sets; MOCK_LOGS[idx].reps=reps; MOCK_LOGS[idx].note=note;
-  closeModal(); nav('record',{exKey:state.exKey,step:state.step}); toast('更新しました');
+  // 組数か平均回数が変わった時だけ、各組を同じ回数として書き直す
+  const newSets=(sets===g.sets.length && reps===logAvg(g)) ? g.sets : Array(Math.min(sets,20)).fill(reps);
+  FB.updateLog(id,{sets:newSets,note}).catch(e=>{ console.warn(e); toast('保存に失敗しました'); });
+  closeModal(); toast('更新しました');
 }
 
-function confirmDeleteLog(idx){
-  const g=MOCK_LOGS[idx];
+function confirmDeleteLog(id){
+  const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
     <h3>削除しますか？</h3>
-    <p class="sub">${g.date}・${g.sets}×${g.reps} を削除します。元に戻せません。</p>
-    <button class="btnprime btndanger" onclick="doDeleteLog(${idx})" style="background:var(--shu);border-color:var(--shu)">削除する</button>
+    <p class="sub">${logMD(g)}・${g.sets.length}×${logAvg(g)} を削除します。元に戻せません。</p>
+    <button class="btnprime btndanger" onclick="doDeleteLog('${id}')" style="background:var(--shu);border-color:var(--shu)">削除する</button>
     <button class="btnghost" onclick="closeModal()">やめる</button>
   </div>`);
 }
 
-function doDeleteLog(idx){
-  MOCK_LOGS.splice(idx,1);
-  closeModal(); nav('record',{exKey:state.exKey,step:state.step}); toast('削除しました');
+function doDeleteLog(id){
+  FB.deleteLog(id).catch(e=>{ console.warn(e); toast('削除に失敗しました'); });
+  closeModal(); toast('削除しました');
 }
+function escHtml(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ══ ホーム ══ */
 /* ══ 修行の山道（双六ホーム） ══ */
 const MOUNTAINS=['初雪山','氷輪嶽','芽吹山','花霞嶺','新緑峰','雨籠山','翠嵐嶽','灼陽峰','月見山','紅葉嶽','枯野嶺','霜柱山'];
-let trainedToday=false; // モック：今日修行したか
+let trainedToday=false; // 今日修行したか（recompute()で計算）
 
-// 登った基（日）ごとに、その日行ったカテゴリとXPをモックで割り当てる（円グラフ配色・詳細表示に使用）
-const MOUNTAIN_STEP_CATS=(()=>{
-  const total=QLV[questLv].goal, climbed=Math.min(questDone,total);
-  const keys=EX.map(e=>e.key);
-  const arr=[];
-  for(let i=0;i<climbed;i++){
-    const n=1+Math.floor(Math.random()*3);
-    const shuffled=keys.slice().sort(()=>Math.random()-0.5).slice(0,n);
-    arr.push(shuffled.map(k=>({key:k,xp:60+Math.floor(Math.random()*40)})));
-  }
-  return arr;
-})();
+// 登った基（日）ごとに、その日行った種目とXP（recompute()が今月の記録から作る）
+let MOUNTAIN_STEP_CATS=[];
 // 単色 or 均等分割の円（やった種目数ぶんに色分け）
 function miniPie(colors){
   if(colors.length<=1) return `<div style="width:100%;height:100%;border-radius:50%;background:${colors[0]||'var(--shu)'}"></div>`;
@@ -968,9 +1073,8 @@ function viewHome(){
   checkStreakFreeze();
   const now=new Date();
   const mName=MOUNTAINS[now.getMonth()];
-  const total=QLV[questLv].goal;      // 月間目標＝マス数
+  const total=QLV[questLvMonth].goal; // 今月の目標＝マス数
   const climbed=Math.min(questDone,total); // 登った数
-  const streakDays=12;
   const reached=climbed>=total;
 
   // マスを生成（下=1 .. 上=total）。登った=円グラフ（その日のカテゴリ配色）、次に登るマス=here、未踏=グレー
@@ -1070,6 +1174,7 @@ function viewChoose(){
 
 /* 「休む」を選んだ時の休息アニメ */
 function restToday(){
+  if(CAL_DATA[todayStr()]!=='rest') saveUser({rests:FB.union(todayStr())});
   const fx=document.getElementById('restFx');
   fx.style.display='flex';
   fx.innerHTML=`
@@ -1111,6 +1216,8 @@ function viewRecord(){
   const isTime=(ty==='s');
   const unitLabel=isTime?'秒数':'回数';
   const tempoJP = ty==='n' ? '下げ5秒かけてゆっくり' : (ty==='s' ? 'キープ姿勢を保つ' : '上げ1秒・下げ2秒・キープ1秒');
+  const recs=stepRecords(e.key,i);
+  const prevMemo=(recs.slice().reverse().find(r=>r.note)||{}).note||'';
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
@@ -1131,29 +1238,28 @@ function viewRecord(){
     <div style="text-align:center;margin-top:10px"><span onclick="quickRecordSheet('${e.key}',${i})" style="font-size:12px;color:var(--sub);cursor:pointer;font-weight:500">実演なしで記録する ›</span></div>
   </div>
 
-  <div class="memo-prev">
+  ${prevMemo?`<div class="memo-prev">
     <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
-    <div class="bd" id="memoBody">「肩幅を意識する。肘が開かないように」</div>
-  </div>
+    <div class="bd" id="memoBody">「${escHtml(prevMemo)}」</div>
+  </div>`:''}
   <div class="memrow">
-    <input type="text" placeholder="覚書（次回のヒントに）" onchange="if(this.value.trim()){microGoalProgress('memo',1);}">
+    <input type="text" id="memoInput" placeholder="覚書（次の記録と一緒に残る）">
     <button class="histbtn" onclick="memoHistory()">📋</button>
   </div>
   <div class="divider"></div>
   <div class="h">練度推移</div>
-  <div class="chartbox">${lineChart(MOCK_LOGS)}</div>
+  <div class="chartbox">${lineChart(recs)}</div>
   <div class="h">過去の足跡 <span style="font-size:12px;color:var(--sub);font-family:var(--sans)">（長押しで編集・削除）</span></div>
-  <div id="logList">${MOCK_LOGS.slice().reverse().map((g,idx)=>{
-    const realIdx=MOCK_LOGS.length-1-idx;
+  <div id="logList">${recs.length?recs.slice().reverse().map(g=>{
     const score=+(loadScore(state.step||1,g.sets,g.reps)).toFixed(1);
-    return `<div class="log" data-idx="${realIdx}" onclick="toggleLog(this)" oncontextmenu="return false">
+    return `<div class="log" data-id="${g.id}" onclick="toggleLog(this)" oncontextmenu="return false">
       <div class="lr">
         <span class="d">${g.date}<span class="itag" style="background:var(--kin);color:#1a1407">負荷 ${score}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
         <span class="r">${g.sets}×${g.reps}</span>
       </div>
-      ${g.note?`<div class="ln">📝 ${g.note}</div>`:''}
+      ${g.note?`<div class="ln">📝 ${escHtml(g.note)}</div>`:''}
     </div>`;
-  }).join('')}</div>`;
+  }).join(''):'<div style="text-align:center;color:var(--sub);padding:14px;font-size:12px">まだ足跡はない。最初の一歩を刻め</div>'}</div>`;
 }
 
 /* ══ 試練（道連れ修行） ══ */
@@ -1184,7 +1290,8 @@ function viewQuest(){
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const cur=Math.round(goal*0.62);
   const pct=Math.min(100,Math.round(cur/goal*100));
-  if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; toku+=3; vib([30,20,60]); toast('道連れ修行 成就！徳+3'); }
+  if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; addLedger({k:'party',amt:3}); vib([30,20,60]); toast('道連れ修行 成就！徳+3'); }
+  PARTY[0].name=myName||'己'; PARTY[0].em=currentAvatar;
   return `
   ${pageHead('TRIALS · TOGETHER','道連れ修行')}
   <p style="font-size:12px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
@@ -1310,13 +1417,14 @@ function openFudaExchange(){
 }
 function doFudaExchange(){
   if(toku<30){ toast('徳が足りません'); closeModal(); nav('achieve'); return; }
-  toku-=30; fudaCount++;
+  const n=fudaCount+1;
+  addLedger({k:'fuda',amt:-30});
   vib([30,20,60]);
   closeModal();
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:44px">🧑‍🏫</div>
     <h3>師匠より御札を授かった</h3>
-    <p class="sub" style="text-align:center">所有数: ${fudaCount}</p>
+    <p class="sub" style="text-align:center">所有数: ${n}</p>
     <button class="btnprime" onclick="closeModal();nav('achieve')">閉じる</button>
   </div>`,true);
 }
@@ -1387,12 +1495,11 @@ function sendFuda(idx,src){
   const f=FRIENDS[idx];
   if(src==='stock'){
     if(fudaCount<=0){ toast('御札の手持ちがありません'); closeModal(); return; }
-    fudaCount--;
+    addLedger({k:'fudaGift',amt:10,to:f.name});
   } else {
     if(toku<30){ toast('徳が足りません'); closeModal(); return; }
-    toku-=30;
+    addLedger({k:'fudaGiftNew',amt:-20,to:f.name}); // 30徳で交換して送り、徳+10
   }
-  toku+=10;
   vib([30,20,60]);
   closeModal();
   toast(`${f.name} に御札を送りました（徳+10）`);
@@ -1407,17 +1514,17 @@ function viewProfile(){
   <div class="prof-top">
     <div class="avatar" onclick="openAvatarSelect()">${currentAvatar}</div>
     <div class="prof-info">
-      <div class="pname">ノリ</div>
-      <div class="pid">@nori_tanren</div>
+      <div class="pname">${escHtml(myName||'修行者')}</div>
+      <div class="pid">修行${daysSinceStart+1}日目</div>
     </div>
     <div style="flex:1;display:flex;justify-content:center;align-items:center">
-      <span onclick="rankList()" style="cursor:pointer;font-size:16px;font-weight:800;font-family:var(--serif);color:#1a1206;background:linear-gradient(135deg,var(--kin),var(--kin2));padding:7px 16px;border-radius:12px;letter-spacing:.08em;box-shadow:0 3px 10px rgba(217,172,82,.3)">${r.name}</span>
+      <span onclick="rankList()" style="cursor:pointer;font-size:16px;font-weight:800;font-family:var(--serif);color:#1a1206;background:linear-gradient(135deg,var(--kin),var(--kin2));padding:7px 16px;border-radius:12px;letter-spacing:.08em;white-space:nowrap;box-shadow:0 3px 10px rgba(217,172,82,.3)">${r.name}</span>
     </div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
   <div class="stat3">
-    <div class="stat"><b>47</b><small>全期間修行日数</small></div>
-    <div class="stat"><b>340</b><small>今月の経験値</small></div>
+    <div class="stat"><b>${totalDays}</b><small>全期間修行日数</small></div>
+    <div class="stat"><b>${monthXP}</b><small>今月の経験値</small></div>
     <div class="stat" onclick="showTotalXP()" style="cursor:pointer"><b>${PREV_MONTH_XP}</b><small>前月の経験値</small></div>
   </div>
   <div class="h">鍛錬の形</div>
@@ -1425,7 +1532,8 @@ function viewProfile(){
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
   <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦 <span style="font-size:12px;color:var(--sub)">（月表示）</span></div>
-  <div class="cal" id="calBox">${buildWeekCal()}</div>`;
+  <div class="cal" id="calBox">${buildWeekCal()}</div>
+  <button class="btnghost" style="margin-top:16px" onclick="openFeedback()">✉ 開発者へ意見を送る</button>`;
 }
 
 /* ══ レーダー ══ */
@@ -1452,21 +1560,27 @@ function radar(setsArr,colors,perAxisColors){
 }
 
 let calGrowthPeriod='m1';
-const MONTHLY_XP_MOCK=[180,240,300,410,380,340,0,0,0,0,0,0]; // 1月〜12月（モック・今年6月まで実績あり）
+function xpOnDay(k){ return (DAY_LOG[k]||[]).reduce((a,l)=>a+l.xp,0); }
 function currentMonthDailyXP(){
-  const y=2026,m=6, last=new Date(y,m,0).getDate();
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1, last=now.getDate();
   const arr=[];
-  for(let d=1;d<=last;d++){
-    const key=`${y}-${m}-${d}`, st=CAL_DATA[key]||'none';
-    arr.push(st==='done' ? 60+Math.round(Math.random()*40) : 0);
-  }
+  for(let d=1;d<=last;d++) arr.push(xpOnDay(`${y}-${m}-${d}`));
   return arr;
 }
-function weeklyXPFor3Months(){ return [160,180,150,200,220,190,240,260,230,270,300,280]; }
+function weeklyXPFor3Months(){
+  const arr=[], today=todayStr();
+  for(let w=12;w>=0;w--){ let sum=0; for(let i=0;i<7;i++) sum+=xpOnDay(addDays(today,-(w*7+i))); arr.push(sum); }
+  return arr;
+}
+function monthlyXPThisYear(){
+  const now=new Date(), y=now.getFullYear(), arr=Array(now.getMonth()+1).fill(0);
+  LOGS.forEach(g=>{ const d=parseDay(g.date); if(d.getFullYear()===y) arr[d.getMonth()]+=logXP(g); });
+  return arr;
+}
 function growthChartData(period){
   if(period==='m1'){ const d=currentMonthDailyXP(); return {values:d, title:'今月の推移（日次）'}; }
   if(period==='m3'){ const w=weeklyXPFor3Months(); return {values:w, title:'直近3ヶ月の推移（週次）'}; }
-  return {values:MONTHLY_XP_MOCK, title:'年間の推移（月次）'};
+  return {values:monthlyXPThisYear(), title:'今年の推移（月次）'};
 }
 function growthChartSVG(period){
   const {values}=growthChartData(period);
@@ -1513,8 +1627,11 @@ function showTotalXP(){
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`,true);
 }
-function showMonthCal(){
-  const y=2026, m=6;
+let calMonthOffset=0;
+function showMonthCal(off){
+  calMonthOffset=off||0;
+  const base=new Date(); base.setDate(1); base.setMonth(base.getMonth()+calMonthOffset);
+  const y=base.getFullYear(), m=base.getMonth()+1;
   const DAYS=['日','月','火','水','木','金','土'];
   const first=new Date(y,m-1,1).getDay();
   const last=new Date(y,m,0).getDate();
@@ -1532,8 +1649,12 @@ function showMonthCal(){
   }
   grid+=`</div>`;
   modal(`<div class="sheet">
-    <h3>${y}年 ${m}月</h3>
     ${growthChartBlock()}
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span onclick="showMonthCal(${calMonthOffset-1})" style="cursor:pointer;padding:6px 12px;color:var(--kin);font-size:18px">‹</span>
+      <h3 style="margin:0">${y}年 ${m}月</h3>
+      <span onclick="${calMonthOffset<0?`showMonthCal(${calMonthOffset+1})`:''}" style="cursor:pointer;padding:6px 12px;color:var(--kin);font-size:18px;opacity:${calMonthOffset<0?1:.25}">›</span>
+    </div>
     ${grid}
     <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;font-size:12px;color:var(--sub)">
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>修行済み</span>
@@ -1587,7 +1708,7 @@ function lineChart(records){
 
 function showLoadTip(score,step,sets,reps,date){
   const coeff=STEP_COEFF[step]||1.0;
-  const isPR=score===Math.max(...MOCK_LOGS.map(r=>loadScore(step,r.sets,r.reps)));
+  const isPR=score===Math.max(...stepRecords(state.exKey,step).map(r=>+(loadScore(step,r.sets,r.reps)).toFixed(1)));
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:12px;color:var(--sub)">${date}</div>
     <div style="font-size:32px;font-weight:700;color:var(--kin);margin:8px 0">${score}</div>
@@ -1816,13 +1937,13 @@ function finishWorkout(){
   const xp = total*per;
   // クリア判定：全組が閾値以上
   const cleared = sets>=3 && WK.tally.every(v=>v>=c.goal);
-  // ログに追加（当日）
-  const today=new Date(); const md=`${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
-  MOCK_LOGS.push({date:md,sets:sets,reps:avg,note:''});
-  microGoalProgress('streak',1);
-  microGoalProgress('xp',xp);
-  toku+=1;
   const key=WK.key, step=WK.step;
+  // 記録を保存（当日）
+  if(sets>0){
+    addLog(key,step,WK.tally.slice());
+    microGoalProgress('streak',1);
+    microGoalProgress('xp',xp);
+  }
   // 終了画面
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
   stage.innerHTML=`
@@ -1967,12 +2088,10 @@ function quickRecord(key,step){
   if(sets<=0||reps<=0){ toast('組数と回数を入力してください'); return; }
   const ty=stepType(key,step), c=criteria(key,step);
   const per=ty==='s'?3:ty==='n'?20:10;
-  const today=new Date(); const md=`${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
-  MOCK_LOGS.push({date:md,sets,reps,note:''});
+  addLog(key,step,Array(Math.min(sets,20)).fill(reps));
   const qxp=sets*reps*per;
   microGoalProgress('streak',1);
   microGoalProgress('xp',qxp);
-  toku+=1;
   closeModal();
   const cleared=sets>=3&&reps>=c.goal;
   showXPBurst();
@@ -2139,7 +2258,7 @@ function scrollInfo(idx){
 }
 
 function friendCompare(idx){
-  const f=FRIENDS[idx], me={streak:12,monthXP:340,totalXP:1240,vals:EX.map(e=>e.cur)};
+  const f=FRIENDS[idx], me={streak:streakDays,monthXP:monthXP,totalXP:TOTAL_XP,vals:EX.map(e=>e.cur)};
   const trained=f.trained;
   const reactBtns = trained
     ? `<button onclick="sendReact('🔥','${f.name}')">🔥 熱い</button>
@@ -2149,7 +2268,7 @@ function friendCompare(idx){
   modal(`<div class="sheet">
     <div style="display:grid;place-items:center;padding:6px 0">${radar([me.vals,f.vals],['#C8A24C','#6E93A6'])}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;padding:0 4px">
-      <span style="font-size:15px;font-weight:700;color:var(--kin)">ノリ <span style="font-size:12px">●</span></span>
+      <span style="font-size:15px;font-weight:700;color:var(--kin)">${escHtml(myName||'己')} <span style="font-size:12px">●</span></span>
       <span style="font-size:12px;color:var(--sub)">vs</span>
       <span style="font-size:15px;font-weight:700;color:#6E93A6"><span style="font-size:12px">●</span> ${f.name}</span>
     </div>
@@ -2287,7 +2406,8 @@ function selectAvPart(i){
 }
 function confirmAvatarPurchase(tab,i){
   if(toku<20){ toast('徳が足りません'); closeModal(); return; }
-  toku-=20; avatarUnlocked[tab].push(i);
+  addLedger({k:'avatar',amt:-20,part:tab,idx:i});
+  avatarUnlocked[tab].push(i);
   closeModal();
   toast('師匠より授かりました');
   const grid=document.getElementById('avGrid'); if(grid) grid.innerHTML=renderAvGrid();
@@ -2310,6 +2430,7 @@ function switchAvTab(tab){
 }
 function saveAvatar(){
   currentAvatar=getAvatarEmoji();
+  saveUser({avatarSel:Object.assign({},avatarSel)});
   closeAvatarEditor(); render(); toast('アバターを保存しました');
 }
 
@@ -2335,11 +2456,11 @@ function rankList(){
 }
 
 function memoHistory(){
-  const items=MOCK_LOGS.filter(l=>l.note).slice().reverse();
+  const items=stepRecords(state.exKey,state.step).filter(l=>l.note).reverse();
   modal(`<div class="sheet">
     <h3>覚書履歴</h3>
     <p class="sub">このステップに残した過去のメモ</p>
-    ${items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln" style="display:block">📝 ${m.note}</div></div>`).join('')}
+    ${items.length?items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln" style="display:block">📝 ${escHtml(m.note)}</div></div>`).join(''):'<p class="sub">まだ覚書はない</p>'}
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
 }
@@ -2362,7 +2483,16 @@ function imgPopup(key,i){
 }
 function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
+function goalBtns(sel,fn){
+  return `<div style="display:flex;gap:8px;margin-top:6px">${QLV.map((q,i)=>`<button onclick="${fn}(this,${i})" class="lvbtn" style="flex:1;padding:10px 4px;border-radius:12px;border:1px solid ${i===sel?'var(--kin)':'var(--line2)'};background:${i===sel?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${i===sel?'var(--kin2)':'var(--washi)'};font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans)">${q.name}<div style="font-size:10px;color:var(--sub);font-weight:500;margin-top:2px">月${q.goal}日</div></button>`).join('')}</div>`;
+}
+function markGoalBtn(el){
+  el.parentNode.querySelectorAll('button').forEach(b=>{ b.style.borderColor='var(--line2)'; b.style.background='var(--sumi3)'; b.style.color='var(--washi)'; });
+  el.style.borderColor='var(--kin)'; el.style.background='rgba(217,172,82,.16)'; el.style.color='var(--kin2)';
+}
+let settingsLv=0;
 function openSettings(){
+  settingsLv=questLv;
   modal(`<div class="sheet" style="border-radius:18px 18px 0 0;max-height:100vh;height:90vh">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0">設定</h3>
@@ -2371,19 +2501,67 @@ function openSettings(){
     <label>週の目標日数：<span id="goalv">${weeklyGoalDays}</span> 日</label>
     <input type="range" min="1" max="7" id="weeklyGoalInput" value="${weeklyGoalDays}" oninput="document.getElementById('goalv').textContent=this.value">
     <p style="font-size:11px;color:var(--sub);margin-top:4px">週2日以上でマイクロ目標に挑戦できます</p>
+    <label>月間の修行目標</label>
+    ${goalBtns(questLv,'settingLv')}
+    <p style="font-size:11px;color:var(--sub);margin-top:4px">上げると今月から、下げると来月から反映されます</p>
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
-    <label>ユーザー名</label>
-    <input type="text" value="ノリ" id="unameInput">
+    <label>修行名</label>
+    <input type="text" value="${escHtml(myName)}" id="unameInput" maxlength="12">
     <button class="btnprime" onclick="saveSettings()">保存する</button>
+    <button class="btnghost" onclick="openFeedback()">✉ 開発者へ意見を送る</button>
+    <button class="btnghost" style="margin-top:22px;color:var(--sub)" onclick="confirmSignOut()">ログアウト</button>
+    <div style="text-align:center;font-size:11px;color:var(--faint);margin-top:12px">${APP_VERSION}</div>
   </div>`);
 }
-function settingLv(el,i){el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');questLv=i;}
+function settingLv(el,i){ markGoalBtn(el); settingsLv=i; }
 function saveSettings(){
+  const p={};
   const v=document.getElementById('weeklyGoalInput');
-  if(v) weeklyGoalDays=parseInt(v.value)||weeklyGoalDays;
+  if(v) p.weeklyGoalDays=parseInt(v.value)||weeklyGoalDays;
+  const nm=(document.getElementById('unameInput')?.value||'').trim();
+  if(nm && nm!==myName) p.name=nm.slice(0,12);
+  if(settingsLv!==questLv){
+    p.questLv=settingsLv;
+    // D案：上げは今月から（山が伸びる）、下げは来月から
+    if(settingsLv>questLvMonth) p.monthGoals={[monthKey()]:settingsLv};
+    else p.monthGoals={[monthKey()]:questLvMonth};
+  }
+  if(Object.keys(p).length) saveUser(p);
   closeModal();toast('保存しました');
-  if(state.view==='quest') nav('quest');
+}
+function confirmSignOut(){
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <h3>ログアウトしますか？</h3>
+    <p class="sub" style="text-align:center">記録はGoogleアカウントに保存されています。<br>もう一度ログインすれば続きから修行できます。</p>
+    <button class="btnprime" onclick="closeModal();FB.signOut()">ログアウトする</button>
+    <button class="btnghost" onclick="closeModal()">やめる</button>
+  </div>`,true);
+}
+
+/* ══ 開発者へ意見を送る ══ */
+let fbType='要望';
+function openFeedback(){
+  fbType='要望';
+  modal(`<div class="sheet">
+    <h3>開発者へ意見を送る</h3>
+    <p class="sub">不具合や「こうしてほしい」を気軽に送ってください。送った内容は開発者だけが読みます。</p>
+    <label>種類</label>
+    <div style="display:flex;gap:8px;margin-top:6px">${['不具合','要望','その他'].map(t=>`<button onclick="markGoalBtn(this);fbType='${t}'" style="flex:1;padding:10px 4px;border-radius:12px;border:1px solid ${t===fbType?'var(--kin)':'var(--line2)'};background:${t===fbType?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${t===fbType?'var(--kin2)':'var(--washi)'};font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans)">${t}</button>`).join('')}</div>
+    <label>内容</label>
+    <textarea id="fbText" maxlength="1000" rows="6" placeholder="例：記録画面で〇〇を押すと〇〇になる" oninput="document.getElementById('fbCount').textContent=this.value.length" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:15px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea>
+    <div style="text-align:right;font-size:11px;color:var(--sub)"><span id="fbCount">0</span> / 1000</div>
+    <button class="btnprime" id="fbSend" onclick="sendFeedback()">送る</button>
+    <button class="btnghost" onclick="closeModal()">閉じる</button>
+  </div>`);
+}
+function sendFeedback(){
+  const text=(document.getElementById('fbText')?.value||'').trim();
+  if(!text){ toast('内容を入力してください'); return; }
+  const btn=document.getElementById('fbSend'); if(btn){ btn.disabled=true; btn.textContent='送信中…'; }
+  FB.sendFeedback({type:fbType,text:text.slice(0,1000),name:myName||'',version:APP_VERSION})
+    .then(()=>{ closeModal(); toast('届けました。ありがとう！'); })
+    .catch(e=>{ console.warn(e); if(btn){ btn.disabled=false; btn.textContent='送る'; } toast('送信できませんでした。電波を確認してください'); });
 }
 
 /* ══ 指南 ══ */
@@ -2393,40 +2571,151 @@ const TUT=[
   {big:'🥋', tt:'六種の修行',
    speech:'修行は6種目。それぞれ13〜15の段がある。<br>やさしい段から始まり、<br>片手・倒立などの極みへ至る道のりだ。'},
   {big:'👤', tt:'まず名前を決めろ',
-   speech:'お前の修行名を決めろ。<br>2回目まで変えられる。<br>3度目以降は1年間変更できん。慎重に。', uname:true},
+   speech:'お前の修行名を決めろ。<br>あとから設定で変えられる。', uname:true},
   {big:'📅', tt:'週の目標を決めろ',
    speech:'週に何日 道場へ来るか。<br>2日でも構わん。続けることが全てだ。', slider:true},
   {big:'📜', tt:'今月の修行目標',
-   speech:'毎月、修行目標が課される。<br>初伝（月4日）・中伝（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。'},
+   speech:'毎月、修行目標が課される。<br>初伝（月4日）・中伝（月15日）・極意（月28日）。<br>クリアすれば印がもらえる。目標は設定から変えられる。', goal:true},
+  {big:'⛰️', tt:'己の段を選べ',
+   speech:'六種それぞれ、どの段から始めるか選べ。<br>迷ったら第1段からでよい。', steps:true},
   {big:'🔥', tt:'始める時が来た',
    speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
 ];
-let tutI=0;
-function openTut(){tutI=0;document.getElementById('tut').style.display='flex';renderTut();}
+let tutI=0, tutOnboard=false;
+let ONB={name:'',weekly:4,questLv:0,steps:{}};
+function openTut(onboard){
+  tutI=0; tutOnboard=!!onboard;
+  if(tutOnboard){ ONB={name:'',weekly:4,questLv:0,steps:{}}; EX.forEach(e=>ONB.steps[e.key]=1); }
+  document.querySelector('#tut .skip').style.display=tutOnboard?'none':'';
+  document.getElementById('tut').style.display='flex';renderTut();
+}
 function closeTut(){document.getElementById('tut').style.display='none';}
+function stepOptionsHtml(key,sel){
+  let h='';
+  for(let i=1;i<=stepCount(key);i++) h+=`<option value="${i}"${i===sel?' selected':''}>第${i}段 ${stepName(key,i)}</option>`;
+  return h;
+}
 function renderTut(){
   const t=TUT[tutI]; let extra='';
-  if(t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" placeholder="修行名を入力" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center"></div>`;
-  if(t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="2" max="7" value="4" style="width:100%;accent-color:#C8A24C" oninput="document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px">週 <span id="tg">4</span> 日</div></div>`;
-  document.getElementById('tutStage').innerHTML=`
-    <div class="big">${t.big}</div>
+  // 入力欄は初回（入門時）だけ出す。設定から開いた時は説明のみ
+  if(tutOnboard && t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" id="tutName" maxlength="12" value="${escHtml(ONB.name)}" placeholder="修行名を入力" oninput="ONB.name=this.value" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center;box-sizing:border-box"></div>`;
+  if(tutOnboard && t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="1" max="7" value="${ONB.weekly}" style="width:100%;accent-color:#C8A24C" oninput="ONB.weekly=+this.value;document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px">週 <span id="tg">${ONB.weekly}</span> 日</div></div>`;
+  if(tutOnboard && t.goal) extra=`<div style="width:290px">${goalBtns(ONB.questLv,'tutGoal')}</div>`;
+  if(tutOnboard && t.steps) extra=`<div style="width:100%;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:10px">${EX.map(e=>{
+      const c=criteria(e.key,ONB.steps[e.key]);
+      return `<div style="background:var(--card);border:1px solid var(--line2);border-left:4px solid ${CAT_COLORS[e.key]};border-radius:12px;padding:9px 12px">
+        <div style="font-size:12px;color:var(--sub);font-weight:700">${e.name}</div>
+        <select onchange="tutStep('${e.key}',+this.value)" style="width:100%;margin-top:4px;background:var(--sumi3);border:1px solid var(--line2);border-radius:8px;color:var(--washi);padding:8px;font-size:14px;font-family:var(--sans)">${stepOptionsHtml(e.key,ONB.steps[e.key])}</select>
+        <div id="tutCrit_${e.key}" style="font-size:11px;color:var(--kin);margin-top:4px">クリア基準 ${c.clearTxt}</div>
+      </div>`;}).join('')}</div>`;
+  const stage=document.getElementById('tutStage');
+  stage.style.justifyContent=(tutOnboard&&t.steps)?'flex-start':'';
+  stage.style.overflowY=(tutOnboard&&t.steps)?'auto':'';
+  stage.innerHTML=`
+    <div class="big"${(tutOnboard&&t.steps)?' style="font-size:44px"':''}>${t.big}</div>
     <div class="tt">${t.tt}</div>
     <div class="speech" style="margin-top:12px">${t.speech}</div>
     ${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
-  document.getElementById('tutNext').textContent=tutI===TUT.length-1?'道場へ入る':'進む';
+  document.getElementById('tutNext').textContent=tutI===TUT.length-1?(tutOnboard?'入門する':'道場へ入る'):'進む';
 }
-function tutNext(){if(tutI<TUT.length-1){tutI++;renderTut();}else{closeTut();nav('home');}}
+function tutGoal(el,i){ markGoalBtn(el); ONB.questLv=i; }
+function tutStep(key,i){ ONB.steps[key]=i; const el=document.getElementById('tutCrit_'+key); if(el) el.textContent='クリア基準 '+criteria(key,i).clearTxt; }
+function tutNext(){
+  if(tutOnboard && TUT[tutI].uname && !ONB.name.trim()){ toast('修行名を入力してください'); return; }
+  if(tutI<TUT.length-1){tutI++;renderTut();return;}
+  closeTut();
+  if(tutOnboard){ tutOnboard=false; createUser(); return; }
+  nav('home');
+}
 
 /* ══ トースト ══ */
 let tt;
 function toast(msg){
   let t=document.getElementById('toast');
-  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';document.body.appendChild(t);}
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='pointer-events:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(tt);tt=setTimeout(()=>t.style.opacity='0',1500);
 }
 
-/* ══ 起動 ══ */
+/* ══ 起動・ログイン・データ同期 ══ */
+function showLogin(msg){
+  const el=document.getElementById('login');
+  el.style.display='flex';
+  document.getElementById('loginErr').textContent=msg||'';
+  const b=document.getElementById('loginBtn'); b.disabled=false; b.textContent='Googleで入門する';
+}
+function hideLogin(){ document.getElementById('login').style.display='none'; }
+function doSignIn(){
+  const b=document.getElementById('loginBtn'); b.disabled=true; b.textContent='門を開いています…';
+  document.getElementById('loginErr').textContent='';
+  FB.signIn().catch(e=>{
+    console.warn(e);
+    const code=(e&&e.code)||'';
+    showLogin(code.includes('network')?'電波がありません。つながる場所でもう一度。':code.includes('cancelled')||code.includes('closed')?'':'ログインできませんでした。もう一度お試しください。');
+  });
+}
+function createUser(){
+  const today=todayStr();
+  const data={name:ONB.name.trim().slice(0,12),startDate:today,startSteps:Object.assign({},ONB.steps),
+    weeklyGoalDays:ONB.weekly,questLv:ONB.questLv,monthGoals:{[monthKey()]:ONB.questLv},
+    rests:[],fudaUsed:[],ledger:[],createdAt:Date.now(),appVersion:APP_VERSION};
+  FB.saveUser(data).catch(e=>{ console.warn(e); toast('保存に失敗しました'); });
+  startSync();
+}
+let syncStarted=false;
+function startSync(){
+  if(syncStarted) return; syncStarted=true;
+  let gotUser=false, gotLogs=false;
+  const ready=()=>{
+    if(!gotUser||!gotLogs) return;
+    recompute();
+    if(!READY){
+      READY=true;
+      if(USER && !(USER.monthGoals&&USER.monthGoals[monthKey()]!=null)) saveUser({monthGoals:{[monthKey()]:questLv}});
+      nav('home');
+    } else safeRender();
+    publishProfile();
+  };
+  FB.listen(
+    u=>{ USER=u; gotUser=true; ready(); },
+    logs=>{ LOGS=logs; gotLogs=true; ready(); }
+  );
+}
+function stopSync(){ if(FB) FB.unlisten(); syncStarted=false; READY=false; USER=null; LOGS=[]; }
+// 修行中・入力中は描き直さない（入力が消えないように）
+function safeRender(){
+  if(document.getElementById('dojo').style.display==='flex') return;
+  const a=document.activeElement;
+  if(a && (a.tagName==='INPUT'||a.tagName==='TEXTAREA') && $main.contains(a)) return;
+  render();
+}
+// 公開プロフィール（門下生・ランキング用）。変わった時だけ書き込む
+let lastPublic='';
+function publishProfile(){
+  if(!FB||!USER) return;
+  const p={name:myName,avatar:currentAvatar,rank:currentRank().name,sum:SUM,vals:EX.map(e=>e.cur),
+    streak:streakDays,monthXP,totalXP:TOTAL_XP,lastTrained:Object.keys(DAY_LOG).sort((a,b)=>dayDiff(b,a))[0]||null};
+  const js=JSON.stringify(p);
+  if(js===lastPublic) return;
+  lastPublic=js;
+  FB.savePublic(p).catch(e=>console.warn('profile',e));
+}
+// Firebaseの準備ができたら module スクリプトから呼ばれる
+window.appBoot=function(api){
+  FB=api;
+  FB.onAuth(async user=>{
+    if(!user){ stopSync(); render(); showLogin(); return; }
+    hideLogin();
+    try{
+      const exists=await FB.userExists();
+      if(exists) startSync();
+      else openTut(true);
+    }catch(e){
+      console.warn(e);
+      showLogin('読み込みに失敗しました。電波を確認してもう一度。');
+    }
+  });
+};
 history.replaceState({view:'home'},'');
 render();
 
@@ -2453,6 +2742,57 @@ maybeSplash();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
+</script>
+<!-- Firebase（認証・保存）。設定値は公開されても問題ない値で、データはFirestoreのルールで守る -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8B3sgMzABOS7cyIQ_ybYs8A4wp2rgabE",
+  authDomain: "tanrenji-f3290.firebaseapp.com",
+  projectId: "tanrenji-f3290",
+  storageBucket: "tanrenji-f3290.firebasestorage.app",
+  messagingSenderId: "253236776842",
+  appId: "1:253236776842:web:313e3a8107cb54693f8273"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+// 端末にも保存（電波がなくても記録でき、戻ったら自動で送られる）
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+let uid = null, unsubs = [];
+const userRef = () => doc(db, 'users', uid);
+const logsCol = () => collection(db, 'users', uid, 'logs');
+getRedirectResult(auth).catch(e => console.warn('redirect', e));
+
+window.appBoot({
+  onAuth(cb){ onAuthStateChanged(auth, u => { uid = u ? u.uid : null; cb(u); }); },
+  async signIn(){
+    const provider = new GoogleAuthProvider();
+    try { await signInWithPopup(auth, provider); }
+    catch(e){
+      // ポップアップが使えない環境ではページ移動で認証する
+      if (['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code)) await signInWithRedirect(auth, provider);
+      else throw e;
+    }
+  },
+  signOut(){ return signOut(auth); },
+  async userExists(){ return (await getDoc(userRef())).exists(); },
+  listen(onUser, onLogs){
+    unsubs.forEach(f => f()); unsubs = [];
+    unsubs.push(onSnapshot(userRef(), s => onUser(s.exists() ? s.data() : null), e => console.warn('user', e)));
+    unsubs.push(onSnapshot(query(logsCol(), orderBy('ts')), s => onLogs(s.docs.map(d => ({ id: d.id, ...d.data() }))), e => console.warn('logs', e)));
+  },
+  unlisten(){ unsubs.forEach(f => f()); unsubs = []; },
+  saveUser(partial){ return setDoc(userRef(), partial, { merge: true }); },
+  union(...items){ return arrayUnion(...items); },
+  addLog(data){ return setDoc(doc(logsCol()), data); },
+  updateLog(id, partial){ return updateDoc(doc(logsCol(), id), partial); },
+  deleteLog(id){ return deleteDoc(doc(logsCol(), id)); },
+  savePublic(p){ return setDoc(doc(db, 'profiles', uid), { ...p, updatedAt: serverTimestamp() }); },
+  sendFeedback(f){ return addDoc(collection(db, 'feedback'), { ...f, uid, createdAt: serverTimestamp() }); },
+});
 </script>
 </body>
 </html>
