@@ -880,7 +880,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.14.0';
+const APP_VERSION='v0.14.1';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1131,7 +1131,6 @@ function miniPie(colors){
 function viewHome(){
   checkStreakFreeze();
   const mMonth=Number(MTN.mk.split('-')[1]);   // 今週が属する月
-  const mName=MOUNTAINS[mMonth-1];
   const total=MTN.total;      // その月の週の数＝マス数
   const climbed=MTN.climbed;  // 登った数
   const reached=total>0 && climbed>=total;
@@ -1170,8 +1169,7 @@ function viewHome(){
       </div>`;
   const head=`<div class="mtn-head">
     <div>
-      <div class="eyebrow">${mMonth}月の霊峰</div>
-      <div class="mtn-name">${mName}</div>
+      <div class="mtn-name">${mMonth}月</div>
       <div class="mtn-sub">頂の鳥居まで ${total} 基（1週に1基）<br>登頂で「印」を授かる</div>
       <div class="ver">${APP_VERSION}</div>
     </div>
@@ -1220,7 +1218,7 @@ function viewHome(){
   <div class="path">
     <div class="peak">
       <div class="torii" onclick="${reached?'onPeakReached()':''}" style="${reached?'cursor:pointer':''}">${reached?'⛩️':'⛩'}</div>
-      <div class="peakl">${mName}・頂</div>
+      <div class="peakl">頂</div>
     </div>
     <div class="msteps">${steps}</div>
     <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--faint);letter-spacing:.1em">— 麓 —</div>
@@ -1491,7 +1489,6 @@ function viewAchieve(){
     ${STAMPS.map(s=>`<div style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};min-width:76px">
       <div style="font-size:11px;color:${s.got?'var(--kin)':'var(--sub)'};font-weight:700">${s.month}</div>
       <div style="font-size:26px;margin-top:2px">🏵️</div>
-      <div style="font-size:11px;color:${s.got?'var(--washi)':'var(--sub)'};margin-top:2px">${s.mtn}</div>
     </div>`).join('')}
   </div>
   <div class="h">巻物</div>
@@ -2121,7 +2118,7 @@ function openShareSunrise(text){
   buildShareCard('sunrise', short, '積み重ねた歩みに、光が射す');
 }
 function onPeakReached(){
-  buildShareCard('sunrise', `${MOUNTAINS[Number(MTN.mk.split('-')[1])-1]}・登頂`, '頂の鳥居にて「印」を授かった');
+  buildShareCard('sunrise', `${Number(MTN.mk.split('-')[1])}月・登頂`, '頂の鳥居にて「印」を授かった');
 }
 function buildShareCard(kind,title,sub){
   let fx=document.getElementById('shareFx');
