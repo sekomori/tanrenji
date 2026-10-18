@@ -926,7 +926,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.9';
+const APP_VERSION='v0.16.10';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1321,6 +1321,9 @@ function restToday(){
 }
 
 /* ══ ステップ一覧 ══ */
+// 段ごとの見本の絵。STEP_ART に入れた段だけ images/step-種目-段-a|b.webp を使い、それ以外は種目の絵を出す
+const STEP_ART=new Set([]);   // 例：'push-1'
+function stepImg(key,i,ab){ return STEP_ART.has(key+'-'+i)?`images/step-${key}-${i}-${ab||'a'}.webp`:`images/ex-${key}.webp`; }
 function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
   const col=CAT_COLORS[e.key];
@@ -1333,7 +1336,7 @@ function viewSteps(){
         <div class="n">${isDone?'✓ ':''}第${i}段${isCur?`<span class="badge" style="background:${col}">現在</span>`:''} <span style="color:var(--faint);font-weight:500">・${TYPE_LABEL[ty]}</span></div>
         <div class="nm">${nm}</div>
       </div>
-      <div class="th" style="${isCur?`border-color:${col}`:''}">${e.key.slice(0,2)}-${i}</div>
+      <div class="th" style="${isCur?`border-color:${col}`:''}"><img src="${stepImg(e.key,i)}" alt="" style="width:86%;height:86%;object-fit:contain"></div>
     </div>`;
   }
   return `
@@ -1357,7 +1360,7 @@ function viewRecord(){
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
   <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid ${col}55;background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
-    <div style="font-size:20px;color:var(--faint)">${e.key.slice(0,2)}-${i}a</div>
+    <img src="${stepImg(e.key,i)}" alt="${nm}" style="position:absolute;inset:8%;width:84%;height:84%;object-fit:contain">
     <div style="position:absolute;bottom:10px;right:12px;font-size:14px;color:${col}">押下で拡大</div>
   </div>
   <div style="text-align:center;font-size:15px;color:${col};margin-bottom:14px">🥋 ${tempoJP}</div>
@@ -2614,7 +2617,8 @@ function imgPopup(key,i){
   document.body.appendChild(d);
   const img=d.querySelector('#ifimg'), cap=d.querySelector('#ifcap');
   imgState='a';
-  function show(){img.textContent=imgState==='a'?'①':'②';cap.textContent=(imgState==='a'?'開始ポジション':'動作の終点')+'　'+key.slice(0,1)+'-'+i+imgState;}
+  const two=STEP_ART.has(key+'-'+i);
+  function show(){img.innerHTML=`<img src="${stepImg(key,i,imgState)}" alt="" style="width:90%;height:90%;object-fit:contain">`;cap.textContent=`第${i}段 ${stepName(key,i)}`+(two?'　'+(imgState==='a'?'開始ポジション':'動作の終点'):'');}
   show();
   flipTimer=setInterval(()=>{imgState=imgState==='a'?'b':'a';show();},900);
 }
