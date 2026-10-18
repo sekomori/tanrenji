@@ -310,10 +310,10 @@
   .mstep.here .node{ width:52px;height:52px;font-size:24px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.16),0 6px 20px rgba(217,172,82,.4);animation:hereBob 2.2s ease-in-out infinite; }
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   /* 山の絵（絵の山道の上にマスを並べる） */
-  .mart{ position:relative;margin:-18px -16px 0;aspect-ratio:2/3;overflow:hidden;background:var(--sumi); }
+  .mart{ position:relative;margin:-18px -16px -130px;height:calc(100vh - 64px - env(safe-area-inset-bottom));height:calc(100dvh - 64px - env(safe-area-inset-bottom));min-height:560px;overflow:hidden;background:var(--sumi);container-type:size; }
   /* 絵を少し拡大して山を大きく見せる。マスの座標は元の絵に対する%のまま使える */
-  .mart-in{ position:absolute;width:135%;left:-17.5%;top:-14%;aspect-ratio:2/3;background-size:100% 100%; }
-  .mart::after{ content:"";position:absolute;inset:auto 0 0 0;height:12%;background:linear-gradient(transparent,var(--sumi));pointer-events:none; }
+  .mart-in{ position:absolute;width:135%;left:-17.5%;top:-21%;top:max(calc(100cqh - 202.5cqw), -21cqw);aspect-ratio:2/3;background-size:100% 100%; }
+   .mart::after{ content:"";position:absolute;z-index:1;inset:auto 0 0 0;height:12%;background:linear-gradient(transparent,var(--sumi));pointer-events:none; }
   .mart-head{ position:absolute;left:16px;right:16px;top:18px;z-index:3; }
   .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
   .mnode{ position:absolute;z-index:2;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:13px;border:2px solid rgba(244,236,220,.4);background:rgba(20,17,16,.78);color:rgba(244,236,220,.7);box-shadow:0 2px 8px rgba(0,0,0,.6); }
@@ -325,10 +325,10 @@
   .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,200,90,1)); }
   .mnode.lan.go{ width:48px;height:48px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
   @keyframes goPulse{ 0%,100%{box-shadow:0 0 0 4px rgba(217,172,82,.25),0 6px 20px rgba(217,172,82,.4);} 50%{box-shadow:0 0 0 9px rgba(217,172,82,.08),0 6px 26px rgba(217,172,82,.7);} }
-  .mnode.lan .av{ position:absolute;top:50%;margin-top:-16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:18px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border:2px solid var(--kin2);box-shadow:0 4px 14px rgba(0,0,0,.6);animation:avBob 2.2s ease-in-out infinite; }
-  @keyframes avBob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
-  .mnode.lan .av.l{ right:calc(100% + 6px); } .mnode.lan .av.r{ left:calc(100% + 6px); }
-  .mtemple{ position:absolute;z-index:1;transform:translate(-50%,-8%);width:64%;pointer-events:none; }
+  .mrest{ position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(20,17,16,.88);color:var(--washi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.6); }
+  .mrest .ic{ font-size:16px;line-height:1; } .mrest .lb{ font-size:9px;font-weight:900; }
+  .mrest.l{ right:calc(100% + 10px); } .mrest.r{ left:calc(100% + 10px); }
+  .mtemple{ position:absolute;z-index:2;left:50%;bottom:0;transform:translateX(-50%);width:100%;pointer-events:none; }
   .mtemple img{ width:100%;display:block; }
   .mnode.here{ width:46px;height:46px;font-size:21px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.2),0 6px 20px rgba(217,172,82,.5);animation:hereBob2 2.2s ease-in-out infinite; }
   @keyframes hereBob2{ 0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(-50%,calc(-50% - 4px));} }
@@ -902,7 +902,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.1';
+const APP_VERSION='v0.16.2';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1211,7 +1211,8 @@ function viewHome(){
       // 自分が立つ灯籠をタップすると修行開始（今日済んでいても再度できる）
       const cls='lan '+(lit?'on':'off')+(me?' go':'');
       const side=x>55?'l':'r';
-      const inner=`<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${me?`<div class="av ${side==='l'?'r':'l'}">${currentAvatar}</div>`:''}`;
+      const canRest=me && !trainedToday && CAL_DATA[todayStr()]!=='rest';
+      const inner=`<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${side==='l'?'r':'l'}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
       const flag=here?`<span class="mflag ${side}">${weekTxt}</span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
@@ -1220,17 +1221,12 @@ function viewHome(){
     return `
     <div class="mart">
       <div class="mart-in" style="background-image:url('${art.img}')">
-        <div class="mtemple" style="left:${fx}%;top:${fy}%"><img src="images/temple.webp" alt="鍛錬寺"></div>
         <div class="mlabel peak${reached?' reached':''}" style="left:${tx}%;top:${ty-7}%" ${reached?'onclick="onPeakReached()"':''}>${reached?'⛩ 登頂！分かち合う':'頂の鳥居'}</div>
         ${nodes}
       </div>
-      <div class="mart-head">${head}</div>
-    </div>
-    ${banners}
-    ${trainedToday
-      ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ</div></div>`
-      : `<div class="today-fixed"><button class="tbtn rest" onclick="restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button></div>`}
-    <div style="height:80px"></div>`;
+      <div class="mtemple"><img src="images/temple.webp" alt="鍛錬寺"></div>
+      <div class="mart-head">${head}${banners}</div>
+    </div>`;
   }
 
   return `
