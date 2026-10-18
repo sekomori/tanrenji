@@ -327,7 +327,7 @@
   .mnode.lan.off img{ filter:brightness(.6) saturate(.6); }
   .mnode.lan.on{ border-color:var(--kin2);background:radial-gradient(circle at 50% 45%,rgba(120,80,20,.9),rgba(20,17,16,.9));box-shadow:0 0 0 3px rgba(217,172,82,.18),0 0 14px rgba(255,180,70,.55);cursor:pointer; }
   .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,200,90,1)); }
-  .mnode.lan.go{ width:72px;height:72px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
+  .mnode.lan.go{ z-index:3;width:72px;height:72px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
   @keyframes goPulse{ 0%,100%{box-shadow:0 0 0 4px rgba(217,172,82,.25),0 6px 20px rgba(217,172,82,.4);} 50%{box-shadow:0 0 0 9px rgba(217,172,82,.08),0 6px 26px rgba(217,172,82,.7);} }
   .mrest{ position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(20,17,16,.88);color:var(--washi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.6); }
   .mrest .ic{ font-size:16px;line-height:1; } .mrest .lb{ font-size:11px;font-weight:900; }
@@ -931,7 +931,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.18';
+const APP_VERSION='v0.16.19';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1245,15 +1245,17 @@ function viewHome(){
   if(art){
     let nodes='';
     for(let i=1;i<=total;i++){
-      const [x,y]=pathPoint(art.path,i/total);
+      const [x,y]=pathPoint(art.path,i/total*0.86); // 最後の灯籠は頂の鳥居の手前に置く
       // 石灯籠：登った週は灯がともり、まだの週は消えたまま。今の週の灯籠には自分が立つ
       const lit=i<=climbed, here=!reached && i===climbed+1, me=here || (reached && i===total);
       // 自分が立つ灯籠をタップすると修行開始（今日済んでいても再度できる）
       const cls='lan '+(lit?'on':'off')+(me?' go':'');
       const side=x>55?'l':'r';
       const canRest=me && !trainedToday && CAL_DATA[todayStr()]!=='rest';
+      // 休むボタンは一つ下の灯籠と反対側に出して重ならないようにする
+      const px=i>1?pathPoint(art.path,(i-1)/total*0.86)[0]:(x>55?100:0), restSide=px<x?'r':'l';
       const rk=lit?(MOUNTAIN_STEP_CATS[i-1]||[]):(here?weekCats(mondayOf(todayStr())):[]);
-      const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${side==='l'?'r':'l'}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
+      const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${restSide}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
       const flag=here?`<span class="mflag ${side}">${weekTxt}</span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
