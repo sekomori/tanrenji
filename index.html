@@ -928,7 +928,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.12';
+const APP_VERSION='v0.16.13';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2244,12 +2244,12 @@ function quickRecord(key,step){
 const CHARS=[
   {name:'師範',img:'shihan.webp',      say:(nm,st)=>`よくぞここまで来た。次は〈${nm}〉だ。3組×${st}回から始めよ。`},
   {name:'師範',img:'shihan-f.webp',      say:(nm,st)=>`見事。驕らず、次は〈${nm}〉。まず3組×${st}回だ。`},
-  {name:'先輩修行者',img:'senpai-a.webp',say:(nm,st)=>`お見事です。次は〈${nm}〉ですね。まずは${st}回を目安に。`},
-  {name:'先輩修行者',img:'senpai-b.webp',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
-  {name:'ライバル',img:'rival-m.webp',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
-  {name:'ライバル',img:'rival-f.webp',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
-  {name:'弟子',img:'deshi-m.webp',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
-  {name:'弟子',img:'deshi-f.webp',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
+  {name:'兄弟子',img:'senpai-a.webp',say:(nm,st)=>`お見事です。次は〈${nm}〉ですね。まずは${st}回を目安に。`},
+  {name:'姉弟子',img:'senpai-b.webp',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
+  {name:'好敵手',img:'rival-m.webp',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
+  {name:'好敵手',img:'rival-f.webp',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
+  {name:'弟弟子',img:'deshi-m.webp',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
+  {name:'妹弟子',img:'deshi-f.webp',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
 ];
 
 function doRecord(step){
