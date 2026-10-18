@@ -318,6 +318,15 @@
   .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
   .mnode{ position:absolute;z-index:2;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:13px;border:2px solid rgba(244,236,220,.4);background:rgba(20,17,16,.78);color:rgba(244,236,220,.7);box-shadow:0 2px 8px rgba(0,0,0,.6); }
   .mnode.done{ border-color:rgba(244,236,220,.6);cursor:pointer; }
+  .mnode.lan{ width:30px;height:34px;border:none;border-radius:0;background:none;box-shadow:none;transform:translate(-50%,-78%); }
+  .mnode.lan img{ width:100%;height:100%;object-fit:contain; }
+  .mnode.lan.off img{ filter:brightness(.55) saturate(.6) drop-shadow(0 2px 4px rgba(0,0,0,.8)); }
+  .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 5px rgba(255,200,90,1)) drop-shadow(0 0 12px rgba(255,170,60,.85)) drop-shadow(0 0 22px rgba(255,150,40,.5)); }
+  .mnode.lan.on{ cursor:pointer; }
+  .mnode.lan .av{ position:absolute;left:50%;bottom:calc(100% + 2px);transform:translateX(-50%);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border:2px solid var(--kin2);box-shadow:0 0 0 4px rgba(217,172,82,.22),0 4px 14px rgba(0,0,0,.6);animation:avBob 2.2s ease-in-out infinite; }
+  @keyframes avBob{ 0%,100%{transform:translate(-50%,0);} 50%{transform:translate(-50%,-4px);} }
+  .mtemple{ position:absolute;z-index:1;transform:translate(-50%,-30%);width:44%;pointer-events:none; }
+  .mtemple img{ width:100%;display:block; }
   .mnode.here{ width:46px;height:46px;font-size:21px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.2),0 6px 20px rgba(217,172,82,.5);animation:hereBob2 2.2s ease-in-out infinite; }
   @keyframes hereBob2{ 0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(-50%,calc(-50% - 4px));} }
   .mflag{ position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--kin2);background:rgba(20,17,16,.82);border:1px solid rgba(217,172,82,.35);padding:4px 9px;border-radius:9px; }
@@ -356,8 +365,14 @@
   .pswipe{ text-align:center;font-size:11px;color:var(--faint);letter-spacing:.1em;margin-bottom:6px; }
   /* ── 起動スプラッシュ ── */
   #splash{ position:fixed;inset:0;z-index:99;background:#0b0907;display:none;cursor:pointer; }
-  #splash img,#splash video{ position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
-  #splash video{ display:none; }
+  #splash img{ position:absolute;inset:0;width:100%;height:100%;object-fit:contain; }
+  #splash .sp-a{ filter:blur(22px) brightness(.55);transform:scale(1.06); }
+  #splash .sp-b{ opacity:0; }
+  #splash.play .sp-a{ animation:spSharp 1.3s .1s cubic-bezier(.3,0,.2,1) forwards; }
+  #splash.play .sp-b{ animation:spGlow 1.6s 1.3s ease-in forwards; }
+  #splash.still .sp-a{ filter:none;transform:none; } #splash.still .sp-b{ opacity:1; }
+  @keyframes spSharp{ to{ filter:blur(0) brightness(1);transform:scale(1); } }
+  @keyframes spGlow{ 0%{opacity:0;filter:brightness(1);} 70%{opacity:1;filter:brightness(1.15);} 100%{opacity:1;filter:brightness(1.3);} }
   @keyframes splashUp{ from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;} }
   #splash.out{ animation:splashOut .45s ease forwards; }
   @keyframes splashOut{ to{opacity:0;visibility:hidden;} }
@@ -421,8 +436,8 @@
   <div id="shareFx"></div>
   <div id="restFx"></div>
   <div id="splash" onclick="hideSplash()">
-    <img id="splashImg" src="images/splash.jpg" alt="鍛錬寺">
-    <video id="splashVid" src="images/splash.mp4" muted playsinline preload="auto"></video>
+    <img class="sp-a" src="images/splash.jpg" alt="鍛錬寺">
+    <img class="sp-b" src="images/splash-glow.jpg" alt="">
   </div>
   <div class="tabbar" id="tabbar"></div>
 </div>
@@ -883,7 +898,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.15.0';
+const APP_VERSION='v0.16.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1187,23 +1202,21 @@ function viewHome(){
     let nodes='';
     for(let i=1;i<=total;i++){
       const [x,y]=pathPoint(art.path,i/total);
-      let cls='', inner=i, click='';
-      if(i<=climbed){
-        cls='done';
-        const cats=MOUNTAIN_STEP_CATS[i-1]||[];
-        const colors=cats.length?cats.map(c=>CAT_COLORS[c.key]):['var(--shu)'];
-        inner=`<div style="position:absolute;inset:0;border-radius:50%;overflow:hidden">${miniPie(colors)}</div><div style="position:relative;z-index:1;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:14px">✓</div>`;
-        click=` onclick="stepDetail(${i})"`;
-      } else if(i===climbed+1){ cls='here'; inner='⛩'; }
+      // 石灯籠：登った週は灯がともり、まだの週は消えたまま。今の週の灯籠には自分が立つ
+      const lit=i<=climbed, here=!reached && i===climbed+1, me=here || (reached && i===total);
+      const cls='lan '+(lit?'on':'off');
+      const inner=`<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${me?`<div class="av">${currentAvatar}</div>`:''}`;
+      const click=lit?` onclick="stepDetail(${i})"`:'';
       const side=x>55?'l':'r';
-      const flag=cls==='here'?`<span class="mflag ${side}">${weekTxt}・あと${total-climbed}基</span>`:'';
+      const flag=here?`<span class="mflag ${side}">${weekTxt}・あと${total-climbed}基</span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
     }
     const [fx,fy]=pathPoint(art.path,0), [tx,ty]=pathPoint(art.path,1);
     return `
     <div class="mart">
       <div class="mart-in" style="background-image:url('${art.img}')">
-        <div class="mlabel" style="left:${fx}%;top:${fy+2.4}%">— 麓 —</div>
+        <div class="mtemple" style="left:${fx}%;top:${fy}%"><img src="images/temple.webp" alt="鍛錬寺"></div>
+        <div class="mlabel" style="left:${fx}%;top:${fy+7.6}%">鍛錬寺</div>
         <div class="mlabel peak${reached?' reached':''}" style="left:${tx}%;top:${ty-7}%" ${reached?'onclick="onPeakReached()"':''}>${reached?'⛩ 登頂！分かち合う':'頂の鳥居'}</div>
         ${nodes}
       </div>
@@ -1264,6 +1277,7 @@ function viewChoose(){
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
         <div class="ring">${ring(e.cur,total,52,CAT_COLORS[e.key])}</div>
         <div class="body"><div class="nm">${e.name}</div><div class="st"><b>第${e.cur}段</b> ／ ${nm}</div></div>
+        <img src="images/ex-${e.key}.webp" alt="" style="width:64px;height:52px;object-fit:contain;flex:0 0 auto">
         <div class="chev">›</div></div>`;
     }).join('')}
   </div>`;
@@ -1491,7 +1505,7 @@ function viewAchieve(){
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
     ${STAMPS.map(s=>`<div style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};min-width:76px">
       <div style="font-size:11px;color:${s.got?'var(--kin)':'var(--sub)'};font-weight:700">${s.month}</div>
-      <div style="font-size:26px;margin-top:2px">🏵️</div>
+      <img src="images/shirushi.webp" alt="印" style="width:40px;height:40px;margin-top:4px;${s.got?'':'filter:grayscale(1)'}">
     </div>`).join('')}
   </div>
   <div class="h">巻物</div>
@@ -2098,7 +2112,7 @@ function bigClear(key,step){
     <div class="seal"><div class="k">成</div></div>
     <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:24px;letter-spacing:.1em">第${step}段 クリア</div>
     ${nextName?`<div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-top:20px;text-align:left;display:flex;gap:12px;align-items:flex-start">
-      <div style="font-size:26px">🧑‍🏫</div>
+      <img src="images/${ch.img}" alt="" style="width:56px;height:56px;object-fit:contain;flex:0 0 auto">
       <div><div style="font-size:12px;color:var(--kin)">${ch.name}</div><div style="font-size:14px;line-height:1.6;margin-top:4px">${ch.say(nextName,nc.start)}</div></div>
     </div>
     <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 この成就を分かち合う</button>
@@ -2196,12 +2210,12 @@ function quickRecord(key,step){
 }
 
 const CHARS=[
-  {name:'師範',      say:(nm,st)=>`よくぞここまで来た。次は〈${nm}〉だ。3組×${st}回から始めよ。`},
-  {name:'師範',      say:(nm,st)=>`見事。驕らず、次は〈${nm}〉。まず3組×${st}回だ。`},
-  {name:'先輩修行者',say:(nm,st)=>`お見事です。次は〈${nm}〉ですね。まずは${st}回を目安に。`},
-  {name:'先輩修行者',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
-  {name:'ライバル',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
-  {name:'ライバル',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
+  {name:'師範',img:'shihan.webp',      say:(nm,st)=>`よくぞここまで来た。次は〈${nm}〉だ。3組×${st}回から始めよ。`},
+  {name:'師範',img:'shihan-f.webp',      say:(nm,st)=>`見事。驕らず、次は〈${nm}〉。まず3組×${st}回だ。`},
+  {name:'先輩修行者',img:'senpai-a.webp',say:(nm,st)=>`お見事です。次は〈${nm}〉ですね。まずは${st}回を目安に。`},
+  {name:'先輩修行者',img:'senpai-b.webp',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
+  {name:'ライバル',img:'rival-m.webp',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
+  {name:'ライバル',img:'rival-f.webp',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
   {name:'弟子',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
   {name:'弟子',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
 ];
@@ -2232,7 +2246,7 @@ function levelClear(key, step){
     <div style="font-size:40px">🎊</div>
     <h3 style="color:var(--kin2)">第${step}段 クリア！</h3>
     <div style="display:flex;align-items:flex-start;gap:10px;text-align:left;margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--glass)">
-      <div style="font-size:28px;flex:0 0 auto">🧑‍🏫</div>
+      <img src="images/${ch.img}" alt="" style="width:60px;height:60px;object-fit:contain;flex:0 0 auto">
       <div><div style="font-size:12px;color:var(--kin)">${ch.name}</div>
       <div style="font-size:14px;margin-top:4px;line-height:1.5">${ch.say(nextName, nc.start)}</div></div>
     </div>
@@ -2331,7 +2345,7 @@ function relicInfo(type,idx){
 
 function stampInfo(month, got){
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${got?1:.4}">🏵️</div>
+    <div style="text-align:center;margin-bottom:6px;opacity:${got?1:.4}"><img src="images/shirushi.webp" alt="印" style="width:72px;height:72px"></div>
     <h3 style="text-align:center">${month}の印</h3>
     <p style="text-align:center;font-size:13px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ 達成・獲得済み':'未達成'}</p>
     <p style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px">その月の山の頂に着くと獲得</p>
@@ -2664,7 +2678,7 @@ const TUT=[
   {big:'📅', tt:'週の目標を決めろ',
    speech:'週に何日 道場へ来るか。<br>1日でも構わん。続けることが全てだ。<br>目標は設定から変えられる。', slider:true},
   {big:'⛩', tt:'毎月の山を登れ',
-   speech:'毎月、新しい山が現れる。<br>1週間に1基。週の目標日数だけ修行すれば一基登れる。<br>頂の鳥居に着けば「印」を授かる。'},
+   speech:'鍛錬寺は山の麓にある。毎月、頂の鳥居を目指して登れ。<br>週の目標日数だけ修行すれば、石灯籠に灯がともり一基進む。<br>頂に着けば「印」を授かる。'},
   {big:'⛰️', tt:'己の段を選べ',
    speech:'六種それぞれ、どの段から始めるか選べ。<br>迷ったら第1段からでよい。', steps:true},
   {big:'🔥', tt:'始める時が来た',
@@ -2805,7 +2819,7 @@ window.appBoot=function(api){
 history.replaceState({view:'home'},'');
 render();
 
-/* 起動スプラッシュ：その日はじめての起動は動画（約3秒・タップで省略）、2回目以降は最後の絵を一瞬だけ */
+/* 起動スプラッシュ：その日はじめての起動は ぼけ→くっきり→金の光（約3秒・タップで省略）、2回目以降は光った絵を一瞬だけ */
 let splashTimer=null;
 function maybeSplash(){
   let first=true;
@@ -2814,20 +2828,15 @@ function maybeSplash(){
     first=localStorage.getItem(k)!==today;
     localStorage.setItem(k,today);
   }catch(e){}
-  const sp=document.getElementById('splash'), v=document.getElementById('splashVid');
+  const sp=document.getElementById('splash');
+  sp.classList.add(first?'play':'still');
   sp.style.display='block';
-  if(!first){ splashTimer=setTimeout(hideSplash,900); return; }
-  v.style.display='block';
-  v.onended=()=>{ v.style.display='none'; splashTimer=setTimeout(hideSplash,500); };
-  const p=v.play();
-  if(p&&p.catch) p.catch(()=>{ v.style.display='none'; splashTimer=setTimeout(hideSplash,1500); });
-  splashTimer=setTimeout(hideSplash,5000);   // 動画が止まった時の保険
+  splashTimer=setTimeout(hideSplash,first?3300:900);
 }
 function hideSplash(){
   if(splashTimer){clearTimeout(splashTimer);splashTimer=null;}
-  const sp=document.getElementById('splash'), v=document.getElementById('splashVid');
-  if(v){ v.onended=null; try{v.pause();}catch(e){} }
-  if(sp&&sp.style.display!=='none'){ sp.classList.add('out'); setTimeout(()=>{sp.style.display='none';sp.classList.remove('out');if(v)v.style.display='none';},450); }
+  const sp=document.getElementById('splash');
+  if(sp&&sp.style.display!=='none'){ sp.classList.add('out'); setTimeout(()=>{sp.style.display='none';sp.classList.remove('out','play','still');},450); }
 }
 maybeSplash();
 
