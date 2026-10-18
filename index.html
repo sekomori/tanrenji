@@ -675,11 +675,28 @@ function recompute(){
 function saveUser(partial){ if(!FB) return; FB.saveUser(partial).catch(e=>{ console.warn(e); toast('保存に失敗しました'); }); }
 function addLedger(entry){ saveUser({ledger:FB.union(Object.assign({at:Date.now()},entry))}); }
 function saveMicroGoal(){ saveUser({microGoal:Object.assign({},microGoal)}); }
-function addLog(key,step,sets){
+function addLog(key,step,sets,noteIn){
   const memoEl=document.getElementById('memoInput');
-  const note=memoEl?memoEl.value.trim():'';
+  const note=noteIn!=null?String(noteIn).trim():(memoEl?memoEl.value.trim():'');
   if(note) microGoalProgress('memo',1);
-  FB.addLog({date:todayStr(),ts:Date.now(),ex:key,step,sets,note}).catch(e=>{ console.warn(e); toast('記録の保存に失敗しました'); });
+  const p=FB.addLog({date:todayStr(),ts:Date.now(),ex:key,step,sets,note});
+  p.catch(e=>{ console.warn(e); toast('記録の保存に失敗しました'); });
+  return {id:p.id,note};
+}
+// 記録のあとで覚書を書き足す（次回に引き継ぎたいこと）
+const MEMO_ASK='次回に引き継ぎたいことがあれば、覚書に書いておこう';
+function memoAskHtml(id,note,wide){
+  return `<div style="width:100%;max-width:${wide?'none':'320px'};margin-top:18px;text-align:left">
+    <div style="font-size:12px;color:var(--kin);margin-bottom:6px">📝 ${MEMO_ASK}</div>
+    <input type="text" id="${id}" maxlength="200" value="${escHtml(note||'')}" placeholder="例：3組目でひじが開いた" style="width:100%;box-sizing:border-box;background:var(--sumi3);border:1px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:15px;font-family:var(--sans)">
+  </div>`;
+}
+function saveLaterMemo(rec,inputId){
+  const el=document.getElementById(inputId); if(!el||!rec||!rec.id) return;
+  const v=el.value.trim();
+  if(v===rec.note) return;
+  if(v && !rec.note) microGoalProgress('memo',1);
+  FB.updateLog(rec.id,{note:v}).catch(e=>{ console.warn(e); toast('覚書の保存に失敗しました'); });
 }
 
 const FRIENDS=[
@@ -900,7 +917,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.3';
+const APP_VERSION='v0.16.4';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2049,7 +2066,7 @@ function finishWorkout(){
   const key=WK.key, step=WK.step;
   // 記録を保存（当日）
   if(sets>0){
-    addLog(key,step,WK.tally.slice());
+    WK.rec=addLog(key,step,WK.tally.slice());
     microGoalProgress('streak',1);
     microGoalProgress('xp',xp);
   }
@@ -2062,12 +2079,14 @@ function finishWorkout(){
       <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${total}</div><div style="font-size:11px;color:var(--sub);letter-spacing:.1em">合計${ty==='s'?'秒':'回'}</div></div>
       <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--kin2)">+${xp}</div><div style="font-size:11px;color:var(--sub);letter-spacing:.1em">経験値</div></div>
     </div>
-    <div style="font-size:13px;color:var(--sub)">各組：${WK.tally.join(' / ')}</div>`;
+    <div style="font-size:13px;color:var(--sub)">各組：${WK.tally.join(' / ')}</div>
+    ${WK.rec?memoAskHtml('dMemo',WK.rec.note):''}`;
   btns.innerHTML=`<button class="dstop" onclick="closeWorkout(${cleared},'${key}',${step})">記録する</button>`;
   vib([50,40,80]);
 }
 
 function closeWorkout(cleared,key,step){
+  if(WK&&WK.rec) saveLaterMemo(WK.rec,'dMemo');
   document.getElementById('dojo').style.display='none';
   WK=null;
   // 練度上昇の演出
@@ -2187,6 +2206,7 @@ function quickRecordSheet(key,step){
       <div style="flex:1"><label>組数</label><input id="qSets" type="number" inputmode="numeric" value="3"></div>
       <div style="flex:1"><label>1組の${unit}数</label><input id="qReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
     </div>
+    ${memoAskHtml('qMemo',(document.getElementById('memoInput')||{}).value||'',true)}
     <button class="btnprime" onclick="quickRecord('${key}',${step})">記録する</button>
     <button class="btnghost" onclick="closeModal()">閉じる</button>
   </div>`);
@@ -2197,7 +2217,7 @@ function quickRecord(key,step){
   if(sets<=0||reps<=0){ toast('組数と回数を入力してください'); return; }
   const ty=stepType(key,step), c=criteria(key,step);
   const per=ty==='s'?3:ty==='n'?20:10;
-  addLog(key,step,Array(Math.min(sets,20)).fill(reps));
+  addLog(key,step,Array(Math.min(sets,20)).fill(reps),(document.getElementById('qMemo')||{}).value||'');
   const qxp=sets*reps*per;
   microGoalProgress('streak',1);
   microGoalProgress('xp',qxp);
@@ -2215,8 +2235,8 @@ const CHARS=[
   {name:'先輩修行者',img:'senpai-b.webp',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
   {name:'ライバル',img:'rival-m.webp',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
   {name:'ライバル',img:'rival-f.webp',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
-  {name:'弟子',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
-  {name:'弟子',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
+  {name:'弟子',img:'deshi-m.webp',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
+  {name:'弟子',img:'deshi-f.webp',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
 ];
 
 function doRecord(step){
@@ -2888,7 +2908,7 @@ window.appBoot({
   unlisten(){ unsubs.forEach(f => f()); unsubs = []; },
   saveUser(partial){ return setDoc(userRef(), partial, { merge: true }); },
   union(...items){ return arrayUnion(...items); },
-  addLog(data){ return setDoc(doc(logsCol()), data); },
+  addLog(data){ const r = doc(logsCol()); const p = setDoc(r, data); p.id = r.id; return p; },
   updateLog(id, partial){ return updateDoc(doc(logsCol(), id), partial); },
   deleteLog(id){ return deleteDoc(doc(logsCol(), id)); },
   savePublic(p){ return setDoc(doc(db, 'profiles', uid), { ...p, updatedAt: serverTimestamp() }); },
