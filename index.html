@@ -321,13 +321,13 @@
   .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
   .mnode{ position:absolute;z-index:2;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:15px;border:2px solid rgba(244,236,220,.4);background:rgba(20,17,16,.78);color:rgba(244,236,220,.7);box-shadow:0 2px 8px rgba(0,0,0,.6); }
   .mnode.done{ border-color:rgba(244,236,220,.6);cursor:pointer; }
-  .mnode.lan{ width:76px;height:76px;border-radius:50%;background:rgba(20,17,16,.82);border:2px solid rgba(244,236,220,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translate(-50%,-50%); }
+  .mnode.lan{ width:57px;height:57px;border-radius:50%;background:rgba(20,17,16,.82);border:2px solid rgba(244,236,220,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translate(-50%,-50%); }
   .mnode.lan img{ width:74%;height:74%;object-fit:contain; }
-  .mnode.lan .mring{ position:absolute;inset:-8px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6.5px)); }
+  .mnode.lan .mring{ position:absolute;inset:-6px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5.5px),#000 calc(100% - 5px));mask:radial-gradient(farthest-side,transparent calc(100% - 5.5px),#000 calc(100% - 5px)); }
   .mnode.lan.off img{ filter:brightness(.6) saturate(.6); }
   .mnode.lan.on{ border-color:var(--kin2);background:radial-gradient(circle at 50% 45%,rgba(120,80,20,.9),rgba(20,17,16,.9));box-shadow:0 0 0 3px rgba(217,172,82,.18),0 0 14px rgba(255,180,70,.55);cursor:pointer; }
   .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,200,90,1)); }
-  .mnode.lan.go{ width:96px;height:96px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
+  .mnode.lan.go{ width:72px;height:72px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
   @keyframes goPulse{ 0%,100%{box-shadow:0 0 0 4px rgba(217,172,82,.25),0 6px 20px rgba(217,172,82,.4);} 50%{box-shadow:0 0 0 9px rgba(217,172,82,.08),0 6px 26px rgba(217,172,82,.7);} }
   .mrest{ position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(20,17,16,.88);color:var(--washi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.6); }
   .mrest .ic{ font-size:16px;line-height:1; } .mrest .lb{ font-size:11px;font-weight:900; }
@@ -931,7 +931,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.17';
+const APP_VERSION='v0.16.18';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2449,7 +2449,8 @@ function friendCompare(idx){
 function sendReact(icon, name){
   const serif=randomSerif(icon);
   closeModal();
-  toast(`${icon} を送りました「${serif.slice(0,18)}…」`);
+  const lb={'🔥':'熱い','💪':'強い','💙':'励まし','👊':'喝'}[icon]||'応援';
+  toast(`${name}に「${lb}」を送りました`);
 }
 
 function addFriend(){
@@ -2782,7 +2783,7 @@ function tutNext(){
 let tt;
 function toast(msg){
   let t=document.getElementById('toast');
-  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='pointer-events:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:16px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';document.body.appendChild(t);}
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='pointer-events:none;white-space:nowrap;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1c2b1c;color:#bfe6c0;padding:10px 18px;border-radius:20px;font-size:16px;font-weight:700;z-index:90;opacity:0;transition:opacity .2s;border:1px solid rgba(127,176,105,.4)';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(tt);tt=setTimeout(()=>t.style.opacity='0',1500);
 }
 
