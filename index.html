@@ -290,8 +290,8 @@
   .cdpop{ animation:cdpop .3s ease; }
   /* 段クリア大演出 */
   #clearFx{ position:fixed;inset:0;z-index:92;display:none;align-items:center;justify-content:center;background:rgba(10,8,7,.86);backdrop-filter:blur(4px); }
-  #clearFx .seal{ width:230px;height:230px;border-radius:50%;border:4px solid var(--shu);display:grid;place-items:center;position:relative;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
-  #clearFx .seal .k{ font-family:var(--serif);font-size:88px;font-weight:800;color:var(--shu2); }
+  #clearFx .seal{ width:min(230px,20vh);height:min(230px,20vh);border-radius:50%;border:4px solid var(--shu);display:grid;place-items:center;position:relative;margin:0 auto;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
+  #clearFx .seal .k{ font-family:var(--serif);font-size:min(88px,8vh);font-weight:800;color:var(--shu2); }
   @keyframes sealIn{ 0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;} }
   /* ── 修行の山道（双六ホーム） ── */
   .mtn-head{ display:flex;justify-content:space-between;align-items:flex-start;margin:2px 2px 8px; }
@@ -928,7 +928,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.11';
+const APP_VERSION='v0.16.12';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2141,10 +2141,10 @@ function bigClear(key,step){
     <div class="shock"></div><div class="shock s2"></div><div class="shock s3"></div>
     ${conf}
     <div class="seal"><div class="k">成</div></div>
-    <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:24px;letter-spacing:.1em">第${step}段 クリア</div>
-    ${nextName?`<div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px;margin-top:20px;text-align:left;display:flex;gap:12px;align-items:flex-start">
-      <img src="images/${ch.img}" alt="" style="width:56px;height:56px;object-fit:contain;flex:0 0 auto">
-      <div><div style="font-size:14px;color:var(--kin)">${ch.name}</div><div style="font-size:16px;line-height:1.6;margin-top:4px">${ch.say(nextName,nc.start)}</div></div>
+    <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:14px;letter-spacing:.1em">第${step}段 クリア</div>
+    ${nextName?`<div style="margin-top:14px;text-align:center">
+      <img src="images/${ch.img}" alt="" style="height:min(24vh,200px);max-width:100%;object-fit:contain;display:block;margin:0 auto -6px">
+      <div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:12px 16px;text-align:left"><div style="font-size:14px;color:var(--kin)">${ch.name}</div><div style="font-size:16px;line-height:1.6;margin-top:4px">${ch.say(nextName,nc.start)}</div></div>
     </div>
     <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 この成就を分かち合う</button>
     <button class="btnprime" onclick="afterBigClear('${key}',${step+1})">次の段へ進む</button>
@@ -2277,10 +2277,10 @@ function levelClear(key, step){
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:40px">🎊</div>
     <h3 style="color:var(--kin2)">第${step}段 クリア！</h3>
-    <div style="display:flex;align-items:flex-start;gap:10px;text-align:left;margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--glass)">
-      <img src="images/${ch.img}" alt="" style="width:60px;height:60px;object-fit:contain;flex:0 0 auto">
-      <div><div style="font-size:14px;color:var(--kin)">${ch.name}</div>
-      <div style="font-size:16px;margin-top:4px;line-height:1.5">${ch.say(nextName, nc.start)}</div></div>
+    <img src="images/${ch.img}" alt="" style="height:min(34vh,240px);max-width:100%;object-fit:contain;display:block;margin:10px auto -6px">
+    <div style="text-align:left;margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--glass)">
+      <div style="font-size:14px;color:var(--kin)">${ch.name}</div>
+      <div style="font-size:16px;margin-top:4px;line-height:1.5">${ch.say(nextName, nc.start)}</div>
     </div>
     <button class="btnprime" onclick="closeModal();nav('record',{exKey:'${key}',step:${step+1}})">次の段へ進む</button>
     <button class="btnghost" onclick="closeModal()">まだこの段で鍛える</button>
