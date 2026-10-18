@@ -298,7 +298,7 @@
   .mtn-name{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.08em; }
   .mtn-sub{ font-size:13px;color:var(--sub);letter-spacing:.1em;margin-top:3px;font-weight:500; }
   .mtn-streak{ display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:14px;background:var(--card);border:1px solid var(--line2);flex:0 0 auto; }
-  .mtn-streak .f{ font-size:19px; }
+  .mtn-streak .f{ font-size:24px;line-height:1; }
   .mtn-streak .n{ font-family:var(--serif);font-size:20px;font-weight:800; }
   .mtn-streak .u{ font-size:12px;color:var(--sub);letter-spacing:.1em; }
   .path{ position:relative;margin:6px 0 12px;padding:14px 0; }
@@ -748,6 +748,8 @@ let STAMPS=[];
 // 巻物：取得分だけ表示、条件は最初から見える
 // 御札・巻物の絵（文字の大きさに合わせて表示）
 const FUDA=`<img src="images/fuda.webp" alt="御札" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+const FLAME=`<img src="images/flame.webp" alt="炎" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
+const emo=s=>String(s).replace(/🔥/g,FLAME);
 const MAKI=`<img src="images/makimono.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 // 巻物ごとに色を変える（images/maki-色.webp）。未使用の色：teal / ochre / slate / rose（今後の巻物用）
 const makiImg=c=>`<img src="images/maki-${c}.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
@@ -888,7 +890,7 @@ function microGoalCard(){
     const withinWindow = microGoal.deadline && Date.now() < microGoal.deadline;
     return `<div class="mission" style="padding:16px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:26px">${def.icon}</div>
+        <div style="font-size:26px">${emo(def.icon)}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
           <div style="font-size:13px;color:${withinWindow?'var(--kin)':'var(--shu2)'};margin-top:2px">${withinWindow?'連続が途切れ、非クリアとなった（起算日から1週間以内はまだ再挑戦できます）':'1週間以内に達成できず、非クリアとなった'}</div>
@@ -900,7 +902,7 @@ function microGoalCard(){
   if(!microGoal.active){
     return `<div class="mission" style="padding:16px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:26px">${def.icon}</div>
+        <div style="font-size:26px">${emo(def.icon)}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
           <div style="font-size:13px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
@@ -914,7 +916,7 @@ function microGoalCard(){
   const hoursLeft=Math.max(0,Math.ceil((microGoal.deadline-Date.now())/(60*60*1000)));
   return `<div class="mission" style="padding:16px;margin-bottom:14px">
     <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:26px">${def.icon}</div>
+      <div style="font-size:26px">${emo(def.icon)}</div>
       <div style="flex:1">
         <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
         <div style="font-size:13px;color:var(--sub);margin-top:2px">残り${hoursLeft}時間</div>
@@ -926,7 +928,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.10';
+const APP_VERSION='v0.16.11';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1220,7 +1222,7 @@ function viewHome(){
       <div class="ver">${APP_VERSION}</div>
     </div>
     <div class="mtn-streak">
-      <div class="f">🔥</div>
+      <div class="f">${FLAME}</div>
       <div><div class="n">${streakDays}</div><div class="u">連続</div></div>
     </div>
   </div>`;
@@ -1458,7 +1460,7 @@ function inviteFriend(){
     <p class="sub">誘われた門下生はそのまま参加する（先に誘った者勝ち）</p>
     ${候補.length?候補.map(f=>`<div class="friend" onclick="doInvite('${f.name}','${f.em}')">
       <div class="av">${f.em}</div>
-      <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目</div></div>
+      <div><div class="nm">${f.name}</div><div class="sk">${FLAME} 修行${f.streak}日目</div></div>
       <div class="chev">›</div>
     </div>`).join(''):'<p class="sub">誘える門下生がいません</p>'}
     <button class="btnghost" onclick="closeModal()">閉じる</button>
@@ -1567,7 +1569,7 @@ function doFudaExchange(){
 }
 
 /* ══ フレンドタブ ══ */
-/* ══ 掲示板 ══ */
+/* ══ 立て札 ══ */
 const BOARD=[
   {who:'ノリ',   me:true, type:'rank', text:'『修行僧』に昇格した', tm:'たった今'},
   {who:'ノリ・タカシ・翔', me:true, em:'🤝', type:'quest', text:'道連れ修行「百八の煩悩退治」を成就した', tm:'30分前'},
@@ -1579,11 +1581,11 @@ const BOARD=[
   {who:'ノリ',   me:true, type:'streak',text:'10日 連続修行を達成', tm:'2日前'},
 ];
 function viewBoard(){
-  // 応援も掲示板に流す（typeが'react'の項目）
-  const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`${r.react}「${r.serif}」を送った`, tm:r.tm}));
+  // 応援も立て札に流す（typeが'react'の項目）
+  const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`${emo(r.react)}「${r.serif}」を送った`, tm:r.tm}));
   const feed=[BOARD[0],BOARD[1],reactEntries[0],...BOARD.slice(2,5),...(reactEntries[1]?[reactEntries[1]]:[]),...BOARD.slice(5)];
   return `
-  ${pageHead('BOARD','掲示板')}
+  ${pageHead('BOARD','立て札')}
   ${feed.filter(Boolean).map(b=>{
     const av = b.me ? currentAvatar : (b.em||'🧑');
     const icon=`<div style="width:64px;height:64px;flex:0 0 auto;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:34px">${av}</div>`;
@@ -1609,7 +1611,7 @@ function viewFriends(){
   </div>
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
     <div class="av">${f.em}</div>
-    <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div>
+    <div><div class="nm">${f.name}</div><div class="sk">${FLAME} 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div>
     ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:14px;color:var(--kin);font-weight:700;cursor:pointer">${FUDA} 御札を送る ›</div>`:''}
     </div>
     <div class="chev">›</div>
@@ -2401,7 +2403,7 @@ function friendCompare(idx){
   const f=FRIENDS[idx], me={streak:streakDays,monthXP:monthXP,totalXP:TOTAL_XP,vals:EX.map(e=>e.cur)};
   const trained=f.trained;
   const reactBtns = trained
-    ? `<button onclick="sendReact('🔥','${f.name}')">🔥 熱い</button>
+    ? `<button onclick="sendReact('🔥','${f.name}')">${FLAME} 熱い</button>
        <button onclick="sendReact('💪','${f.name}')">💪 強い</button>
        <button onclick="sendReact('💙','${f.name}')">💙 励まし</button>`
     : `<button onclick="sendReact('👊','${f.name}')">👊 喝</button>`;
@@ -2413,7 +2415,7 @@ function friendCompare(idx){
       <span style="font-size:16px;font-weight:700;color:#6E93A6"><span style="font-size:14px">●</span> ${f.name}</span>
     </div>
     <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
-      ${[['🔥 ストリーク', me.streak+'日', f.streak+'日'],
+      ${[[`${FLAME} ストリーク`, me.streak+'日', f.streak+'日'],
          ['今月の経験値', me.monthXP, f.monthXP],
          ['累計経験値', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
         ].map(([label,mv,fv])=>`
