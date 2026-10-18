@@ -366,7 +366,8 @@
   #restFx .rsub{ font-size:15px;color:var(--sub);max-width:260px;text-align:center;line-height:1.7; }
   /* ── 道連れ修行：三つ巴カルーセル ── */
   .party-stage{ position:relative;height:300px;margin:6px 0 10px;perspective:1000px;touch-action:pan-y; user-select:none; }
-  .pchar{ position:absolute;left:50%;top:50%;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s,filter .5s;will-change:transform; }
+  .pchar{ position:absolute;left:50%;top:50%;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s,filter .45s;will-change:transform; }
+  .pchar .plbl{ transition:opacity .2s; }
   .pchar .pav{ width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--sumi3),var(--sumi2));border:2px solid var(--line2);display:grid;place-items:center;font-size:58px; }
   .pchar .pname{ text-align:center;font-family:var(--serif);font-weight:800;font-size:16px;margin-top:8px; }
   .pchar .pmeta{ text-align:center;font-size:13px;color:var(--sub);margin-top:2px; }
@@ -938,7 +939,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.20';
+const APP_VERSION='v0.16.21';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1497,44 +1498,75 @@ function doInvite(name,em){
   nav('quest');
 }
 
-// カルーセル描画（3体を三角配置。front=正面、他2体は斜め後ろ）
+// カルーセル描画：輪の上に並べ、指の動きに合わせて連続的に回す（partyPos は小数も取る）
+let partyPos=0, partyMoved=false;
 function renderParty(){
   const stage=document.getElementById('partyStage'); if(!stage) return;
-  const n=PARTY.length;
-  const slots=[
-    {x:0,   y:10,  s:1.0,  z:3, o:1,   blur:0},
-    {x:96,  y:-30, s:.62, z:1, o:.55, blur:1.5},
-    {x:-96, y:-30, s:.62, z:1, o:.55, blur:1.5},
-  ];
-  stage.innerHTML=PARTY.map((p,i)=>{
-    const rel=(i-partyFront+n)%n;
-    const sl=slots[Math.min(rel,2)];
-    return `<div class="pchar ${rel===0?'front':''}" onclick="partyTap(${i},${rel})" style="cursor:pointer;z-index:${sl.z};opacity:${sl.o};filter:blur(${sl.blur}px);transform:translate(-50%,-50%) translate(${sl.x}px,${sl.y}px) scale(${sl.s})">
+  partyPos=partyFront;
+  stage.innerHTML=PARTY.map((p,i)=>`<div class="pchar" data-i="${i}" onclick="partyTap(${i})" style="cursor:pointer">
       <div class="pav">${p.em}</div>
-      ${rel===0?`<div class="pname">${p.name}${p.me?'（自分）':''}</div><div class="pmeta">今週の目標 ${(p.lvxp*p.week).toLocaleString()} 経験値</div>`:''}
-    </div>`;
-  }).join('');
-  const dots=document.getElementById('partyDots');
-  if(dots) dots.innerHTML=PARTY.map((_,i)=>`<i class="${i===partyFront?'on':''}"></i>`).join('');
+      <div class="plbl"><div class="pname">${p.name}${p.me?'（自分）':''}</div><div class="pmeta">今週の目標 ${(p.lvxp*p.week).toLocaleString()} 経験値</div></div>
+    </div>`).join('');
+  layoutParty(false);
 }
-// タップ：正面なら比較モーダル、奥ならそのキャラを正面へ回す
-function partyTap(idx,rel){
-  if(rel!==0){ partyFront=idx; vib(10); renderParty(); return; }
+function layoutParty(anim){
+  const stage=document.getElementById('partyStage'); if(!stage) return;
+  const n=PARTY.length, R=Math.min(110,stage.clientWidth*0.3);
+  stage.querySelectorAll('.pchar').forEach(el=>{
+    const i=+el.dataset.i, th=(i-partyPos)*2*Math.PI/Math.max(n,3);
+    const f=(1+Math.cos(th))/2; // 正面=1、真後ろ=0
+    el.style.transition=anim?'':'none';
+    el.style.transform=`translate(-50%,-50%) translate(${(R*Math.sin(th)).toFixed(1)}px,${(10-40*(1-f)).toFixed(1)}px) scale(${(.62+.38*f).toFixed(3)})`;
+    el.style.opacity=(.45+.55*f).toFixed(2);
+    el.style.filter=`blur(${(1.5*(1-f)).toFixed(2)}px)`;
+    el.style.zIndex=Math.round(f*10);
+    el.classList.toggle('front',f>.9);
+    el.querySelector('.plbl').style.opacity=Math.max(0,(f-.8)/.2).toFixed(2);
+  });
+  const dots=document.getElementById('partyDots');
+  const fr=((Math.round(partyPos)%n)+n)%n;
+  if(dots) dots.innerHTML=PARTY.map((_,i)=>`<i class="${i===fr?'on':''}"></i>`).join('');
+}
+function snapParty(target){
+  const n=PARTY.length;
+  partyPos=target; partyFront=((Math.round(target)%n)+n)%n;
+  layoutParty(true);
+}
+// タップ：正面なら比較モーダル、奥ならそのキャラを正面へ回す（近い向きで回る）
+function partyTap(idx){
+  if(partyMoved) return;
+  const n=PARTY.length;
+  let d=idx-partyPos; d=((d%n)+n)%n; if(d>n/2) d-=n;
+  if(Math.abs(d)>.5){ vib(10); snapParty(Math.round(partyPos+d)); return; }
   const p=PARTY[idx];
   if(p.me){ toast('己は「己」タブで見られる'); return; }
   const fi=FRIENDS.findIndex(f=>f.name===p.name);
   if(fi>=0) friendCompare(fi);
   else toast('この門下生の情報はまだない');
 }
-function rotateParty(dir){ partyFront=(partyFront+dir+PARTY.length)%PARTY.length; vib(10); renderParty(); }
+function rotateParty(dir){ vib(10); snapParty(Math.round(partyPos)+dir); }
 function bindPartySwipe(){
   const stage=document.getElementById('partyStage'); if(!stage) return;
-  let sx=0,active=false;
-  stage.addEventListener('touchstart',e=>{ sx=e.touches[0].clientX; active=true; },{passive:true});
-  stage.addEventListener('touchend',e=>{ if(!active)return; active=false; const dx=e.changedTouches[0].clientX-sx; if(Math.abs(dx)>40) rotateParty(dx<0?1:-1); });
-  let md=false,mx=0;
-  stage.addEventListener('mousedown',e=>{ md=true;mx=e.clientX; });
-  stage.addEventListener('mouseup',e=>{ if(!md)return; md=false; const dx=e.clientX-mx; if(Math.abs(dx)>40) rotateParty(dx<0?1:-1); });
+  let sx=0, p0=0, down=false;
+  const STEP=150; // 指をこれだけ動かすと1人分回る
+  const begin=x=>{ down=true; sx=x; p0=partyPos; partyMoved=false; };
+  const move=x=>{ if(!down||PARTY.length<2) return; const dx=x-sx; if(Math.abs(dx)>6) partyMoved=true; partyPos=p0-dx/STEP; layoutParty(false); };
+  const end=(x,v)=>{ if(!down) return; down=false; if(!partyMoved||PARTY.length<2) return;
+    // 指を離した勢いも少し足してから一番近い人に止める
+    let t=Math.round(partyPos-(v||0)*0.15);
+    // 短く払っただけでも、動かした向きに1人分は回す
+    if(t===Math.round(p0) && Math.abs(partyPos-p0)>.15) t+=partyPos>p0?1:-1;
+    if(t!==Math.round(p0)) vib(10);
+    snapParty(t); setTimeout(()=>{ partyMoved=false; },50); };
+  let lx=0, lt=0, vel=0;
+  const track=x=>{ const now=performance.now(); if(lt) vel=(x-lx)/Math.max(1,now-lt)*16/STEP*4; lx=x; lt=now; };
+  stage.addEventListener('touchstart',e=>{ lt=0; vel=0; begin(e.touches[0].clientX); },{passive:true});
+  stage.addEventListener('touchmove',e=>{ const x=e.touches[0].clientX; track(x); move(x); },{passive:true});
+  stage.addEventListener('touchend',e=>end(e.changedTouches[0].clientX,vel));
+  stage.addEventListener('mousedown',e=>{ lt=0; vel=0; begin(e.clientX); });
+  stage.addEventListener('mousemove',e=>{ if(down){ track(e.clientX); move(e.clientX); } });
+  stage.addEventListener('mouseup',e=>end(e.clientX,vel));
+  stage.addEventListener('mouseleave',e=>end(e.clientX,vel));
 }
 
 /* ══ 功績 ══ */
