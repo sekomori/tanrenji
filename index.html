@@ -323,6 +323,7 @@
   .mnode.done{ border-color:rgba(244,236,220,.6);cursor:pointer; }
   .mnode.lan{ width:38px;height:38px;border-radius:50%;background:rgba(20,17,16,.82);border:2px solid rgba(244,236,220,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translate(-50%,-50%); }
   .mnode.lan img{ width:74%;height:74%;object-fit:contain; }
+  .mnode.lan .mring{ position:absolute;inset:-5px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px)); }
   .mnode.lan.off img{ filter:brightness(.6) saturate(.6); }
   .mnode.lan.on{ border-color:var(--kin2);background:radial-gradient(circle at 50% 45%,rgba(120,80,20,.9),rgba(20,17,16,.9));box-shadow:0 0 0 3px rgba(217,172,82,.18),0 0 14px rgba(255,180,70,.55);cursor:pointer; }
   .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,200,90,1)); }
@@ -928,7 +929,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.13';
+const APP_VERSION='v0.16.14';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1168,6 +1169,14 @@ function pathPoint(pts,t){
 // 登った基（日）ごとに、その日行った種目とXP（recompute()が今月の記録から作る）
 let MOUNTAIN_STEP_CATS=[];
 // 単色 or 均等分割の円（やった種目数ぶんに色分け）
+// 石灯籠の縁：その週にやった種目の色で区切って塗る
+function lanRing(keys){
+  if(!keys.length) return '';
+  const n=keys.length, per=360/n, gap=n>1?4:0;
+  const g=keys.map((k,j)=>`${CAT_COLORS[k]} ${j*per+gap/2}deg ${(j+1)*per-gap/2}deg, transparent ${(j+1)*per-gap/2}deg ${(j+1)*per+gap/2}deg`).join(',');
+  return `<div class="mring" style="background:conic-gradient(${g})"></div>`;
+}
+function weekKeys(mon){ const s=new Set(); for(let i=0;i<7;i++) (DAY_LOG[addDays(mon,i)]||[]).forEach(l=>s.add(l.key)); return EX.map(e=>e.key).filter(k=>s.has(k)); }
 function miniPie(colors){
   if(colors.length<=1) return `<div style="width:100%;height:100%;border-radius:50%;background:${colors[0]||'var(--shu)'}"></div>`;
   const n=colors.length, per=360/n;
@@ -1238,7 +1247,8 @@ function viewHome(){
       const cls='lan '+(lit?'on':'off')+(me?' go':'');
       const side=x>55?'l':'r';
       const canRest=me && !trainedToday && CAL_DATA[todayStr()]!=='rest';
-      const inner=`<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${side==='l'?'r':'l'}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
+      const rk=lit?EX.map(e=>e.key).filter(k=>(MOUNTAIN_STEP_CATS[i-1]||[]).some(c=>c.key===k)):(here?weekKeys(mondayOf(todayStr())):[]);
+      const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${side==='l'?'r':'l'}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
       const flag=here?`<span class="mflag ${side}">${weekTxt}</span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
