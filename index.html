@@ -748,14 +748,17 @@ let STAMPS=[];
 // 御札・巻物の絵（文字の大きさに合わせて表示）
 const FUDA=`<img src="images/fuda.webp" alt="御札" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 const MAKI=`<img src="images/makimono.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+// 巻物ごとに色を変える（images/maki-色.webp）。未使用の色：teal / ochre / slate / rose（今後の巻物用）
+const makiImg=c=>`<img src="images/maki-${c}.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 const SCROLLS=[
-  {em:MAKI,l:'初学の巻',  got:false, cond:'はじめて記録した'},
-  {em:MAKI,l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
-  {em:MAKI,l:'継続の巻',  got:false, cond:'7日連続で修行した'},
-  {em:MAKI,l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
-  {em:MAKI,l:'精進の巻',  got:false, cond:'30日連続で修行した'},
-  {em:'🗝️',l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
+  {c:'pine',      l:'初学の巻',  got:false, cond:'はじめて記録した'},
+  {c:'terracotta',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
+  {c:'indigo',    l:'継続の巻',  got:false, cond:'7日連続で修行した'},
+  {c:'plum',      l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
+  {c:'burgundy',  l:'精進の巻',  got:false, cond:'30日連続で修行した'},
+  {c:'midnight',  l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
 ];
+SCROLLS.forEach(r=>r.em=makiImg(r.c));
 
 // 以下は recompute() が記録から計算して入れる
 let toku=0;        // 現在の徳
@@ -922,7 +925,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.7';
+const APP_VERSION='v0.16.8';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1530,8 +1533,8 @@ function viewAchieve(){
   </div>
   <div class="h">巻物</div>
   <div class="relics">
-    ${SCROLLS.filter(r=>r.got).map(r=>`<div class="relic got" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><img class="rimg" src="images/makimono.webp" alt=""><div class="rname">${r.l}</div></div>`).join('')}
-    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))">${r.secret?'<div class="em" style="position:absolute;opacity:.5">🗝️</div>':'<img class="rimg" src="images/makimono.webp" alt="" style="filter:grayscale(1)">'}<div class="rname">${r.secret?'？？？':r.l}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>r.got).map(r=>`<div class="relic got" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><img class="rimg" src="images/maki-${r.c}.webp" alt=""><div class="rname">${r.l}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))">${r.secret?'<div class="em" style="position:absolute;opacity:.5">🗝️</div>':`<img class="rimg" src="images/maki-${r.c}.webp" alt="" style="filter:grayscale(1)">`}<div class="rname">${r.secret?'？？？':r.l}</div></div>`).join('')}
   </div>`;
 }
 
@@ -2378,7 +2381,7 @@ function stampInfo(month, got){
 function scrollInfo(idx){
   const r=SCROLLS[idx];
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${r.got?1:.4}">${MAKI}</div>
+    <div style="text-align:center;margin-bottom:6px;opacity:${r.got?1:.4}">${(r.secret&&!r.got)?'<span style="font-size:56px">🗝️</span>':`<img src="images/maki-${r.c}.webp" alt="巻物" style="width:120px;height:120px;object-fit:contain;${r.got?'':'filter:grayscale(1)'}">`}</div>
     <h3 style="text-align:center">${r.got?r.l:'未取得の巻物'}</h3>
     ${r.got
       ? `<p class="sub" style="text-align:center">取得条件</p>
