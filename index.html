@@ -320,9 +320,15 @@
   .mstep.here .node{ width:52px;height:52px;font-size:24px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.16),0 6px 20px rgba(217,172,82,.4);animation:hereBob 2.2s ease-in-out infinite; }
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   /* 山の絵（絵の山道の上にマスを並べる） */
+  .mtalk{ position:absolute;left:10px;right:12px;bottom:8px;z-index:6;display:flex;align-items:flex-end;gap:6px;pointer-events:none; }
+  .mtalk img{ height:min(19cqh,150px);width:auto;max-width:34%;object-fit:contain;object-position:bottom;flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
+  .mtalk .bub{ pointer-events:auto;flex:1;margin-bottom:14px;background:rgba(20,17,16,.9);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;font-size:15px;line-height:1.55;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.6); }
+  .mtalk .bub::before{ content:'';position:absolute;left:-7px;bottom:18px;width:12px;height:12px;background:inherit;border-left:1px solid var(--line2);border-bottom:1px solid var(--line2);transform:rotate(45deg); }
+  .mtalk .bub .who{ font-size:13px;color:var(--kin);font-weight:700;margin-bottom:2px; }
+  .mtalk .bub .go{ font-size:13px;color:var(--kin2);font-weight:700;margin-top:4px;text-align:right; }
   .mart{ position:relative;margin:-18px -16px -130px;height:calc(100vh - 64px - env(safe-area-inset-bottom));height:calc(100dvh - 64px - env(safe-area-inset-bottom));min-height:560px;overflow:hidden;background:var(--sumi);container-type:size; }
   /* 絵を少し拡大して山を大きく見せる。マスの座標は元の絵に対する%のまま使える */
-  .mart-in{ position:absolute;width:135%;left:-17.5%;top:-21%;top:max(calc(100cqh - 172cqw), -21cqw);aspect-ratio:2/3;background-size:100% 100%; }
+  .mart-in{ position:absolute;width:135%;left:-17.5%;top:-21%;top:max(calc(100cqh - 202.5cqw), -21cqw);aspect-ratio:2/3;background-size:100% 100%; }
    .mart::after{ content:"";position:absolute;z-index:1;inset:auto 0 0 0;height:12%;background:linear-gradient(transparent,var(--sumi));pointer-events:none; }
   .mart-head{ position:absolute;left:16px;right:16px;top:18px;z-index:3; }
   .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
@@ -679,7 +685,7 @@ function recompute(){
   SCROLLS[3].got=EX.every(e=>keysDone.has(e.key));
   SCROLLS[4].got=maxStreak>=30;
   SCROLLS[5].got=tokuEarned>=10000;
-  // マイクロ目標
+  // 小さな誓い
   microGoal=u.microGoal?Object.assign({},u.microGoal):(microGoal||pickNewMicroGoalCandidate());
 }
 
@@ -803,7 +809,7 @@ function useFudaForFreeze(){
   nav('home');
 }
 
-/* ══ マイクロ目標（2日で達成できる簡単な目標）══
+/* ══ 小さな誓い（2日で達成できる簡単な目標）══
    ・好きなタイミングで挑戦を開始できる（常時進行ではない）
    ・開始から1週間以内に達成しないと非クリア
    ・達成しても徳の付与はなし
@@ -841,7 +847,7 @@ function startMicroGoal(){
   microGoal.startedAt=Date.now();
   microGoal.deadline=Date.now()+7*24*60*60*1000; // 起算日から1週間
   saveMicroGoal();
-  vib(20); toast('マイクロ目標に挑戦を開始した！1週間以内に達成しよう');
+  vib(20); toast('小さな誓いに挑戦を開始した！1週間以内に達成しよう');
   if(state.view==='quest') nav('quest');
 }
 // 連続が途切れた場合の再挑戦：起算日・期限はそのまま、進捗だけリセット
@@ -865,7 +871,7 @@ function completeMicroGoal(){
   saveMicroGoal();
   addLedger({k:'micro',amt:2});
   vib([30,20,60]);
-  toast('マイクロ目標 達成！徳+2');
+  toast('小さな誓い 達成！徳+2');
   setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
 }
 // kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
@@ -892,7 +898,7 @@ function microGoalCard(){
   checkMicroGoalExpiry();
   if(!eligibleForMicroGoal()){
     return `<div class="mission" style="padding:16px;margin-bottom:14px;opacity:.75">
-      <div style="font-size:15px;color:var(--sub);line-height:1.6">週の目標日数が少ないため、マイクロ目標には挑戦できません。<br>設定で週2日以上に変更すると挑戦できるようになります。</div>
+      <div style="font-size:15px;color:var(--sub);line-height:1.6">週の目標日数が少ないため、小さな誓いには挑戦できません。<br>設定で週2日以上に変更すると挑戦できるようになります。</div>
       <button class="btnghost" style="margin-top:10px" onclick="openSettings()">設定を開く</button>
     </div>`;
   }
@@ -939,7 +945,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.21';
+const APP_VERSION='v0.16.22';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1276,6 +1282,7 @@ function viewHome(){
         ${nodes}
       </div>
       <div class="mart-head">${head}${banners}</div>
+      ${homeTalk()}
     </div>`;
   }
 
@@ -1295,6 +1302,31 @@ function viewHome(){
   ${todayBtns}
   <div style="height:80px"></div>
   `;
+}
+
+/* ホーム下部：その日のキャラが、次にやる修行や励ましをひと言 */
+const HOME_TALK={
+  'shihan.webp':  {next:n=>`今週はまだ〈${n}〉に手を付けておらんな。今日はそれだ。`, cheer:['一日一歩。それで山は登れる。','休むのも修行のうち。だが、怠けるのとは違うぞ。'], done:'今日の修行、見事だった。明日もまた山に向かえ。'},
+  'shihan-f.webp':{next:n=>`〈${n}〉が手薄ね。今日はそこを鍛えなさい。`, cheer:['焦らなくていい。続けることが一番の才能よ。','小さな積み重ねが、いずれ大きな力になる。'], done:'よく鍛えたわね。体を休めるのも忘れずに。'},
+  'senpai-a.webp':{next:n=>`次は〈${n}〉はどうですか？今週はまだですよね。`, cheer:['昨日の自分より一回多く。それで十分です。'], done:'今日もお疲れさまでした。いい流れですね。'},
+  'senpai-b.webp':{next:n=>`今日は〈${n}〉をやりましょう。一緒に頑張りましょう。`, cheer:['無理せず、でも止まらずに。'], done:'今日の分は済みましたね。明日もこの調子で。'},
+  'rival-m.webp': {next:n=>`〈${n}〉サボってんの、バレてるぞ。`, cheer:['お前が休んでる間に、俺は一段上がるぜ。'], done:'へぇ、今日もやったのか。……まあ、悪くねえ。'},
+  'rival-f.webp': {next:n=>`まだ〈${n}〉やってないの？置いてくわよ。`, cheer:['今日もやらないなら、差は開く一方ね。'], done:'今日はやったのね。明日も同じことができるかしら？'},
+  'deshi-m.webp': {next:n=>`今日は〈${n}〉ですか？僕も一緒にやります！`, cheer:['今日の修行、見てていいですか？'], done:'今日もやり切りましたね！かっこいいです！'},
+  'deshi-f.webp': {next:n=>`次は〈${n}〉ですよね！応援してます！`, cheer:['毎日続けてるの、本当にすごいです！'], done:'今日もお疲れさまです！明日も応援してます！'},
+};
+function homeTalk(){
+  const today=todayStr();
+  let h=0; for(const c of today) h=(h*31+c.charCodeAt(0))>>>0; // 日ごとに同じキャラ
+  const ch=CHARS[h%CHARS.length], t=HOME_TALK[ch.img]; if(!t) return '';
+  // 今週の経験値が少ない種目（やっていない種目を優先）を次の修行に勧める
+  const wk=weekCats(mondayOf(today)), xpOf=k=>(wk.find(c=>c.key===k)||{xp:0}).xp;
+  const pick=EX.slice().sort((a,b)=>xpOf(a.key)-xpOf(b.key))[0];
+  let line, go='';
+  if(trainedToday) line=t.done;
+  else if((h>>4)%3===0) line=t.cheer[(h>>8)%t.cheer.length];
+  else { line=t.next(pick.name.replace(/（.*）/,'')); go=` onclick="tapFlash(this,()=>nav('steps',{exKey:'${pick.key}'}))"`; }
+  return `<div class="mtalk"><img src="images/${ch.img}" alt=""><div class="bub"${go}><div class="who">${ch.name}</div>${line}${go?'<div class="go">この修行へ ›</div>':''}</div></div>`;
 }
 
 /* 種目を選ぶ画面（旧ホームの六種の修行） */
@@ -1447,7 +1479,7 @@ function viewQuest(){
       <p style="font-size:15px;color:var(--sub);line-height:1.8;margin-top:10px">門下生を誘うか、誘われると<br>今週の道連れ修行が始まる（最大3名）</p>
       <button class="btnprime" style="max-width:280px;margin:22px auto 0" onclick="inviteFriend()">門下生を誘う</button>
     </div>
-    <div class="h">マイクロ目標</div>
+    <div class="h">小さな誓い</div>
     ${microGoalCard()}`;
   }
   // 状態B：パーティー結成済み
@@ -1470,7 +1502,7 @@ function viewQuest(){
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
   ${PARTY.length<3?`<button class="btnghost" style="margin-top:4px" onclick="inviteFriend()">＋ 門下生を誘う（あと${3-PARTY.length}名）</button>`:''}
-  <div class="h">マイクロ目標</div>
+  <div class="h">小さな誓い</div>
   ${microGoalCard()}
 `;
 }
@@ -2696,7 +2728,7 @@ function openSettings(){
     </div>
     <label>週の目標日数：<span id="goalv">${nextGoal}</span> 日</label>
     <input type="range" min="1" max="7" id="weeklyGoalInput" value="${nextGoal}" oninput="document.getElementById('goalv').textContent=this.value">
-    <p style="font-size:13px;color:var(--sub);margin-top:4px">山を1基登るのに必要な、週の修行日数です。変更は来週の月曜から反映されます（今週は${weeklyGoalDays}日）。週2日以上でマイクロ目標に挑戦できます。</p>
+    <p style="font-size:13px;color:var(--sub);margin-top:4px">山を1基登るのに必要な、週の修行日数です。変更は来週の月曜から反映されます（今週は${weeklyGoalDays}日）。週2日以上で小さな誓いに挑戦できます。</p>
     <label>1日の目標XP：<span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
     <label>修行名</label>
