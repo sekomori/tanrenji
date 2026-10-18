@@ -750,7 +750,9 @@ let STAMPS=[];
 // 御札・巻物の絵（文字の大きさに合わせて表示）
 const FUDA=`<img src="images/fuda.webp" alt="御札" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 const FLAME=`<img src="images/flame.webp" alt="炎" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
-const emo=s=>String(s).replace(/🔥/g,FLAME);
+const REACT_IMG={'💪':'tsuyoi','💙':'hagemashi','👊':'katsu'};
+const reactImg=e=>`<img src="images/react-${REACT_IMG[e]}.webp" alt="${e}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
+const emo=s=>String(s).replace(/🔥/g,FLAME).replace(/💪|💙|👊/g,reactImg);
 const MAKI=`<img src="images/makimono.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 // 巻物ごとに色を変える（images/maki-色.webp）。未使用の色：teal / ochre / slate / rose（今後の巻物用）
 const makiImg=c=>`<img src="images/maki-${c}.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
@@ -929,7 +931,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.15';
+const APP_VERSION='v0.16.16';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2413,10 +2415,10 @@ function friendCompare(idx){
   const f=FRIENDS[idx], me={streak:streakDays,monthXP:monthXP,totalXP:TOTAL_XP,vals:EX.map(e=>e.cur)};
   const trained=f.trained;
   const reactBtns = trained
-    ? `<button onclick="sendReact('🔥','${f.name}')">${FLAME} 熱い</button>
-       <button onclick="sendReact('💪','${f.name}')">💪 強い</button>
-       <button onclick="sendReact('💙','${f.name}')">💙 励まし</button>`
-    : `<button onclick="sendReact('👊','${f.name}')">👊 喝</button>`;
+    ? `<button onclick="sendReact('🔥','${f.name}')"><span style="font-size:26px">${FLAME}</span> 熱い</button>
+       <button onclick="sendReact('💪','${f.name}')"><span style="font-size:26px">${emo('💪')}</span> 強い</button>
+       <button onclick="sendReact('💙','${f.name}')"><span style="font-size:26px">${emo('💙')}</span> 励まし</button>`
+    : `<button onclick="sendReact('👊','${f.name}')"><span style="font-size:26px">${emo('👊')}</span> 喝</button>`;
   modal(`<div class="sheet">
     <div style="display:grid;place-items:center;padding:6px 0">${radar([me.vals,f.vals],['#C8A24C','#6E93A6'])}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;padding:0 4px">
