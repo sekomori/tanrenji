@@ -321,13 +321,13 @@
   .mart-head .mtn-name,.mart-head .mtn-sub{ text-shadow:0 2px 8px rgba(0,0,0,.8); }
   .mnode{ position:absolute;z-index:2;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:800;font-size:15px;border:2px solid rgba(244,236,220,.4);background:rgba(20,17,16,.78);color:rgba(244,236,220,.7);box-shadow:0 2px 8px rgba(0,0,0,.6); }
   .mnode.done{ border-color:rgba(244,236,220,.6);cursor:pointer; }
-  .mnode.lan{ width:38px;height:38px;border-radius:50%;background:rgba(20,17,16,.82);border:2px solid rgba(244,236,220,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translate(-50%,-50%); }
+  .mnode.lan{ width:76px;height:76px;border-radius:50%;background:rgba(20,17,16,.82);border:2px solid rgba(244,236,220,.35);box-shadow:0 2px 8px rgba(0,0,0,.6);transform:translate(-50%,-50%); }
   .mnode.lan img{ width:74%;height:74%;object-fit:contain; }
-  .mnode.lan .mring{ position:absolute;inset:-5px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px)); }
+  .mnode.lan .mring{ position:absolute;inset:-8px;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6.5px)); }
   .mnode.lan.off img{ filter:brightness(.6) saturate(.6); }
   .mnode.lan.on{ border-color:var(--kin2);background:radial-gradient(circle at 50% 45%,rgba(120,80,20,.9),rgba(20,17,16,.9));box-shadow:0 0 0 3px rgba(217,172,82,.18),0 0 14px rgba(255,180,70,.55);cursor:pointer; }
   .mnode.lan.on img{ filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,200,90,1)); }
-  .mnode.lan.go{ width:48px;height:48px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
+  .mnode.lan.go{ width:96px;height:96px;border:2.5px solid var(--kin2);cursor:pointer;box-shadow:0 0 0 5px rgba(217,172,82,.22),0 6px 20px rgba(217,172,82,.45);animation:goPulse 2s ease-in-out infinite; }
   @keyframes goPulse{ 0%,100%{box-shadow:0 0 0 4px rgba(217,172,82,.25),0 6px 20px rgba(217,172,82,.4);} 50%{box-shadow:0 0 0 9px rgba(217,172,82,.08),0 6px 26px rgba(217,172,82,.7);} }
   .mrest{ position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(20,17,16,.88);color:var(--washi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.6); }
   .mrest .ic{ font-size:16px;line-height:1; } .mrest .lb{ font-size:11px;font-weight:900; }
@@ -931,7 +931,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.16';
+const APP_VERSION='v0.16.17';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1171,14 +1171,17 @@ function pathPoint(pts,t){
 // 登った基（日）ごとに、その日行った種目とXP（recompute()が今月の記録から作る）
 let MOUNTAIN_STEP_CATS=[];
 // 単色 or 均等分割の円（やった種目数ぶんに色分け）
-// 石灯籠の縁：その週にやった種目の色で区切って塗る
-function lanRing(keys){
-  if(!keys.length) return '';
-  const n=keys.length, per=360/n, gap=n>1?4:0;
-  const g=keys.map((k,j)=>`${CAT_COLORS[k]} ${j*per+gap/2}deg ${(j+1)*per-gap/2}deg, transparent ${(j+1)*per-gap/2}deg ${(j+1)*per+gap/2}deg`).join(',');
+// 石灯籠の縁：その週の種目ごとの経験値の割合で色を塗り分ける
+function lanRing(cats){
+  const cs=EX.map(e=>cats.find(c=>c.key===e.key)).filter(c=>c&&c.xp>0);
+  const sum=cs.reduce((a,c)=>a+c.xp,0);
+  if(!sum) return '';
+  const gap=cs.length>1?3:0; let at=0;
+  const g=cs.map(c=>{ const a=at, b=at+360*c.xp/sum; at=b;
+    return `transparent ${a}deg ${a+gap/2}deg, ${CAT_COLORS[c.key]} ${a+gap/2}deg ${b-gap/2}deg, transparent ${b-gap/2}deg ${b}deg`; }).join(',');
   return `<div class="mring" style="background:conic-gradient(${g})"></div>`;
 }
-function weekKeys(mon){ const s=new Set(); for(let i=0;i<7;i++) (DAY_LOG[addDays(mon,i)]||[]).forEach(l=>s.add(l.key)); return EX.map(e=>e.key).filter(k=>s.has(k)); }
+function weekCats(mon){ const by={}; for(let i=0;i<7;i++) (DAY_LOG[addDays(mon,i)]||[]).forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; }); return Object.keys(by).map(key=>({key,xp:by[key]})); }
 function miniPie(colors){
   if(colors.length<=1) return `<div style="width:100%;height:100%;border-radius:50%;background:${colors[0]||'var(--shu)'}"></div>`;
   const n=colors.length, per=360/n;
@@ -1249,7 +1252,7 @@ function viewHome(){
       const cls='lan '+(lit?'on':'off')+(me?' go':'');
       const side=x>55?'l':'r';
       const canRest=me && !trainedToday && CAL_DATA[todayStr()]!=='rest';
-      const rk=lit?EX.map(e=>e.key).filter(k=>(MOUNTAIN_STEP_CATS[i-1]||[]).some(c=>c.key===k)):(here?weekKeys(mondayOf(todayStr())):[]);
+      const rk=lit?(MOUNTAIN_STEP_CATS[i-1]||[]):(here?weekCats(mondayOf(todayStr())):[]);
       const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${side==='l'?'r':'l'}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
       const flag=here?`<span class="mflag ${side}">${weekTxt}</span>`:'';
