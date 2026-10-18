@@ -223,8 +223,10 @@
   .react-btns button:active{ background:rgba(229,72,46,.2);transform:scale(.96); }
 
   /* 指南 */
-  #login{ position:fixed;inset:0;z-index:79;background:linear-gradient(180deg,var(--sumi),#1B1410);display:none;flex-direction:column;padding:34px 24px calc(30px + env(safe-area-inset-bottom)); }
-  #login .lstage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px; }
+  #login{ position:fixed;inset:0;z-index:79;background:linear-gradient(180deg,rgba(11,9,7,0) 30%,rgba(11,9,7,.75) 62%,#0b0907 100%),url(images/login.jpg) center top/cover,#0b0907;display:none;flex-direction:column;padding:34px 24px calc(30px + env(safe-area-inset-bottom)); }
+  #login .lstage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;gap:14px;padding-bottom:22px; }
+  #login .lshihan{ width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 6px 18px rgba(0,0,0,.7));margin-bottom:-10px; }
+  #login .ltt{ text-shadow:0 2px 12px rgba(0,0,0,.9); }
   #login .ltt{ font-family:var(--serif);font-size:34px;font-weight:800;letter-spacing:.2em; }
   #login .lspeech{ background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px 18px;font-size:14px;line-height:1.8;max-width:310px; }
   #login .lnote{ text-align:center;font-size:11px;color:var(--sub);margin-top:12px; }
@@ -233,6 +235,11 @@
   #tut .skip{ position:absolute;top:20px;right:20px;color:var(--faint);font-size:13px;cursor:pointer;font-weight:700; }
   #tut .stage{ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px; }
   #tut .big{ font-size:64px; }
+  #tut .gimg{ width:100%;max-width:360px;aspect-ratio:16/10;object-fit:cover;border-radius:16px;border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  #tut .gimg.sm{ aspect-ratio:16/6; }
+  #tut .sprow{ display:flex;align-items:flex-end;gap:6px;max-width:360px;text-align:left; }
+  #tut .sprow img{ width:76px;height:76px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
+  #tut .sprow .speech::before{ top:auto;bottom:18px;left:-7px;transform:rotate(-45deg); }
   #tut .tt{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.1em; }
   #tut .tx{ font-size:14px;color:var(--sub);line-height:1.8;max-width:300px; }
   #tut .speech{ background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:16px 18px;font-size:14px;line-height:1.75;max-width:310px;position:relative; }
@@ -348,12 +355,9 @@
   .pdots i.on{ background:var(--kin);width:20px;border-radius:4px; }
   .pswipe{ text-align:center;font-size:11px;color:var(--faint);letter-spacing:.1em;margin-bottom:6px; }
   /* ── 起動スプラッシュ ── */
-  #splash{ position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 42%,#221a15,#100d0b 70%);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px; }
-  #splash .enso-draw{ width:170px;height:170px; }
-  #splash .enso-draw circle{ fill:none;stroke:var(--shu);stroke-width:7;stroke-linecap:round;stroke-dasharray:490;stroke-dashoffset:490;transform:rotate(-80deg);transform-origin:center;animation:ensoDraw 1.4s .2s cubic-bezier(.4,0,.2,1) forwards; }
-  @keyframes ensoDraw{ to{ stroke-dashoffset:46; } }
-  #splash .sname{ font-family:var(--serif);font-size:40px;font-weight:800;letter-spacing:.32em;margin-left:.32em;opacity:0;animation:splashUp .7s 1.2s ease forwards; }
-  #splash .stag{ font-size:12px;color:var(--sub);letter-spacing:.42em;margin-left:.42em;opacity:0;animation:splashUp .7s 1.55s ease forwards; }
+  #splash{ position:fixed;inset:0;z-index:99;background:#0b0907;display:none;cursor:pointer; }
+  #splash img,#splash video{ position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+  #splash video{ display:none; }
   @keyframes splashUp{ from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;} }
   #splash.out{ animation:splashOut .45s ease forwards; }
   @keyframes splashOut{ to{opacity:0;visibility:hidden;} }
@@ -417,17 +421,16 @@
   <div id="shareFx"></div>
   <div id="restFx"></div>
   <div id="splash" onclick="hideSplash()">
-    <svg class="enso-draw" viewBox="0 0 170 170"><circle cx="85" cy="85" r="76"/></svg>
-    <div class="sname">鍛錬寺</div>
-    <div class="stag">今日も、一段。</div>
+    <img id="splashImg" src="images/splash.jpg" alt="鍛錬寺">
+    <video id="splashVid" src="images/splash.mp4" muted playsinline preload="auto"></video>
   </div>
   <div class="tabbar" id="tabbar"></div>
 </div>
 <div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
 <div id="login">
   <div class="lstage">
-    <div style="font-size:64px">🧑‍🏫</div>
     <div class="ltt">鍛錬寺</div>
+    <img class="lshihan" src="images/shihan.webp" alt="師範">
     <div class="lspeech">修行を志す者よ、門を叩け。<br>お前の歩みは、ここにすべて記される。</div>
   </div>
   <button class="btnprime" id="loginBtn" onclick="doSignIn()">Googleで入門する</button>
@@ -880,7 +883,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.14.1';
+const APP_VERSION='v0.15.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1515,7 +1518,7 @@ function doFudaExchange(){
   vib([30,20,60]);
   closeModal();
   modal(`<div class="sheet card-c" style="text-align:center">
-    <div style="font-size:44px">🧑‍🏫</div>
+    <img src="images/shihan.webp" alt="師範" style="width:96px;height:96px;object-fit:contain">
     <h3>師匠より御札を授かった</h3>
     <p class="sub" style="text-align:center">所有数: ${n}</p>
     <button class="btnprime" onclick="closeModal();nav('achieve')">閉じる</button>
@@ -2697,9 +2700,9 @@ function renderTut(){
   stage.style.justifyContent=(tutOnboard&&t.steps)?'flex-start':'';
   stage.style.overflowY=(tutOnboard&&t.steps)?'auto':'';
   stage.innerHTML=`
-    <div class="big"${(tutOnboard&&t.steps)?' style="font-size:44px"':''}>${t.big}</div>
+    <img class="gimg${(tutOnboard&&t.steps)?' sm':''}" src="images/guide${tutI+1}.jpg" alt="">
     <div class="tt">${t.tt}</div>
-    <div class="speech" style="margin-top:12px">${t.speech}</div>
+    <div class="sprow"><img src="images/shihan.webp" alt="師範"><div class="speech">${t.speech}</div></div>
     ${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
   document.getElementById('tutNext').textContent=tutI===TUT.length-1?(tutOnboard?'入門する':'道場へ入る'):'進む';
@@ -2802,22 +2805,29 @@ window.appBoot=function(api){
 history.replaceState({view:'home'},'');
 render();
 
-/* 毎日はじめの起動スプラッシュ（約3秒・タップで省略） */
+/* 起動スプラッシュ：その日はじめての起動は動画（約3秒・タップで省略）、2回目以降は最後の絵を一瞬だけ */
 let splashTimer=null;
 function maybeSplash(){
+  let first=true;
   try{
     const k='tanren_splash_day', today=new Date().toDateString();
-    if(localStorage.getItem(k)===today) return;
+    first=localStorage.getItem(k)!==today;
     localStorage.setItem(k,today);
   }catch(e){}
-  const sp=document.getElementById('splash');
-  sp.style.display='flex';
-  splashTimer=setTimeout(hideSplash,3000);
+  const sp=document.getElementById('splash'), v=document.getElementById('splashVid');
+  sp.style.display='block';
+  if(!first){ splashTimer=setTimeout(hideSplash,900); return; }
+  v.style.display='block';
+  v.onended=()=>{ v.style.display='none'; splashTimer=setTimeout(hideSplash,500); };
+  const p=v.play();
+  if(p&&p.catch) p.catch(()=>{ v.style.display='none'; splashTimer=setTimeout(hideSplash,1500); });
+  splashTimer=setTimeout(hideSplash,5000);   // 動画が止まった時の保険
 }
 function hideSplash(){
   if(splashTimer){clearTimeout(splashTimer);splashTimer=null;}
-  const sp=document.getElementById('splash');
-  if(sp&&sp.style.display!=='none'){ sp.classList.add('out'); setTimeout(()=>{sp.style.display='none';sp.classList.remove('out');},450); }
+  const sp=document.getElementById('splash'), v=document.getElementById('splashVid');
+  if(v){ v.onended=null; try{v.pause();}catch(e){} }
+  if(sp&&sp.style.display!=='none'){ sp.classList.add('out'); setTimeout(()=>{sp.style.display='none';sp.classList.remove('out');if(v)v.style.display='none';},450); }
 }
 maybeSplash();
 

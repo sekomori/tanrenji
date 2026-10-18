@@ -24,6 +24,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // 動画の部分読み込み（Range）はブラウザに任せる
+  if (e.request.headers.has('range')) return;
   const url = new URL(e.request.url);
   if (url.hostname === SDK_HOST && url.pathname.startsWith('/firebasejs/')) {
     e.respondWith(
