@@ -348,7 +348,7 @@
   .tbtn:active{ transform:scale(.94); }
   .done-today{ text-align:center;padding:14px;border-radius:16px;background:rgba(134,181,115,.12);border:1px solid rgba(134,181,115,.35);color:var(--matsu);font-weight:700;font-size:14px; }
   /* 休息アニメ */
-  #restFx{ position:fixed;inset:0;z-index:88;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:radial-gradient(circle at 50% 40%,#1a2228,#101418 75%);color:var(--washi); }
+  #restFx{ position:fixed;inset:0;z-index:88;display:none;flex-direction:column;align-items:center;justify-content:flex-end;gap:18px;padding:0 24px calc(48px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(10,12,16,0) 40%,rgba(10,12,16,.85) 70%,#0a0c10 100%),url(images/rest.jpg) center top/cover,#0a0c10;color:var(--washi); }
   #restFx .moon{ font-size:78px;animation:floaty 4s ease-in-out infinite; }
   @keyframes floaty{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);} }
   #restFx .zzz{ font-family:var(--serif);font-size:26px;font-weight:800;letter-spacing:.2em;color:var(--ai); }
@@ -743,12 +743,15 @@ let hasNewReact=true; // 未確認の通知があるか
 // 印：月別（アプリ開始月から自動追加、クリアしたらカラー）※recompute()で記録から作る
 let STAMPS=[];
 // 巻物：取得分だけ表示、条件は最初から見える
+// 御札・巻物の絵（文字の大きさに合わせて表示）
+const FUDA=`<img src="images/fuda.webp" alt="御札" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+const MAKI=`<img src="images/makimono.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 const SCROLLS=[
-  {em:'📜',l:'初学の巻',  got:false, cond:'はじめて記録した'},
-  {em:'📜',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
-  {em:'📜',l:'継続の巻',  got:false, cond:'7日連続で修行した'},
-  {em:'📜',l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
-  {em:'📜',l:'精進の巻',  got:false, cond:'30日連続で修行した'},
+  {em:MAKI,l:'初学の巻',  got:false, cond:'はじめて記録した'},
+  {em:MAKI,l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
+  {em:MAKI,l:'継続の巻',  got:false, cond:'7日連続で修行した'},
+  {em:MAKI,l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
+  {em:MAKI,l:'精進の巻',  got:false, cond:'30日連続で修行した'},
   {em:'🗝️',l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
 ];
 
@@ -764,7 +767,7 @@ function checkStreakFreeze(){
   freezePromptShown=true;
   if(fudaCount>0){
     modal(`<div class="sheet card-c" style="text-align:center">
-      <div style="font-size:40px">🪧</div>
+      <div style="font-size:40px">${FUDA}</div>
       <h3>御札を使いますか？</h3>
       <p class="sub" style="text-align:center">昨日は修行していないようです。御札を使うと連続記録の途切れを防げます。<br>手持ちの御札：${fudaCount}枚</p>
       <button class="btnprime" onclick="useFudaForFreeze()">はい（御札を使う）</button>
@@ -917,7 +920,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.4';
+const APP_VERSION='v0.16.5';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1196,7 +1199,7 @@ function viewHome(){
     steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node" style="${nodeStyle}"${nodeClick}>${nodeInner}</div></div>`;
   }
 
-  const banners=`${freezeUsedToday?`<div style="text-align:center;font-size:12px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">🪧 御札を使い、連続記録を繋いだ</div>`:''}
+  const banners=`${freezeUsedToday?`<div style="text-align:center;font-size:12px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">${FUDA} 御札を使い、連続記録を繋いだ</div>`:''}
   ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:12px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ 昨日は修行しておらず、御札もありません（押下で功績画面へ）</div>`:''}`;
   const todayBtns=trainedToday
     ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ</div></div>`
@@ -1305,7 +1308,6 @@ function restToday(){
   const fx=document.getElementById('restFx');
   fx.style.display='flex';
   fx.innerHTML=`
-    <div class="moon">🌙</div>
     <div class="zzz">休 息</div>
     <div class="rsub">体を癒すのも修行のうち。<br>明日、また山に向かおう。</div>
     <button class="btnghost" style="width:auto;padding:12px 28px;margin-top:10px" onclick="document.getElementById('restFx').style.display='none'">閉じる</button>`;
@@ -1511,7 +1513,7 @@ function viewAchieve(){
   <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
     <p style="font-size:13px;margin:0 0 10px">徳を積むと、師匠より御札を授かる</p>
     <div onclick="openFudaExchange()" style="text-align:center;padding:14px;border-radius:10px;border:1px solid var(--line);cursor:pointer;max-width:160px">
-      <div style="font-size:26px">🪧</div>
+      <div style="font-size:26px">${FUDA}</div>
       <div style="font-size:13px;margin-top:6px;font-weight:700">御札</div>
       <div style="font-size:12px;color:var(--kin);margin-top:2px">30徳</div>
       <div style="font-size:11px;color:var(--sub);margin-top:4px">所有数: ${fudaCount}</div>
@@ -1527,14 +1529,14 @@ function viewAchieve(){
   <div class="h">巻物</div>
   <div class="relics">
     ${SCROLLS.filter(r=>r.got).map(r=>`<div class="relic got" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><div class="em">${r.em}</div><div>${r.l}</div></div>`).join('')}
-    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><div class="em" style="opacity:.4">${r.secret?'🗝️':'📜'}</div><div>${r.secret?'？？？':r.l}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><div class="em" style="opacity:.4">${r.secret?'🗝️':MAKI}</div><div>${r.secret?'？？？':r.l}</div></div>`).join('')}
   </div>`;
 }
 
 /* ══ 御札：交換フロー ══ */
 function openFudaExchange(){
   modal(`<div class="sheet card-c" style="text-align:center">
-    <div style="font-size:40px">🪧</div>
+    <div style="font-size:40px">${FUDA}</div>
     <h3>御札と交換しますか？</h3>
     <p class="sub" style="text-align:center">御札はストリークの途切れを防ぐお守り。<br>自分にも使え、門下生に送ることもできる。<br>30徳と交換して師匠より授かります。<br>現在の徳：${toku}　／　所有数：${fudaCount}枚</p>
     <button class="btnprime" onclick="doFudaExchange()">はい（30徳で交換）</button>
@@ -1599,7 +1601,7 @@ function viewFriends(){
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
     <div class="av">${f.em}</div>
     <div><div class="nm">${f.name}</div><div class="sk">🔥 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div>
-    ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:12px;color:var(--kin);font-weight:700;cursor:pointer">🪧 御札を送る ›</div>`:''}
+    ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:12px;color:var(--kin);font-weight:700;cursor:pointer">${FUDA} 御札を送る ›</div>`:''}
     </div>
     <div class="chev">›</div>
   </div>`).join('')}`;
@@ -1609,7 +1611,7 @@ function viewFriends(){
 function openSendFuda(idx){
   const f=FRIENDS[idx];
   modal(`<div class="sheet card-c" style="text-align:center">
-    <div style="font-size:40px">🪧</div>
+    <div style="font-size:40px">${FUDA}</div>
     <h3>${f.name} に御札を送りますか？</h3>
     <p class="sub" style="text-align:center">今日はまだ修行していないようです。御札を送るとストリークの途切れを防げます。<br>手持ちの御札：${fudaCount}枚</p>
     ${fudaCount>0?`<button class="btnprime" onclick="sendFuda(${idx},'stock')">手持ちの御札を送る</button>`:''}
@@ -2353,7 +2355,7 @@ function relicInfo(type,idx){
   const r=RELICS[idx];
   const typeLabel=type==='in'?'印（月次課業達成）':'巻物（隠し条件）';
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:(type==='in'?'🏵️':'📜')}</div>
+    <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:(type==='in'?'🏵️':MAKI)}</div>
     <h3 style="text-align:center">${r.got?r.l:typeLabel}</h3>
     <p class="sub" style="text-align:center">取得条件</p>
     <p style="text-align:center;font-size:15px;margin:0 0 4px">${r.got?r.cond:'取得すると明らかになります'}</p>
@@ -2374,7 +2376,7 @@ function stampInfo(month, got){
 function scrollInfo(idx){
   const r=SCROLLS[idx];
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${r.got?1:.4}">📜</div>
+    <div style="text-align:center;font-size:44px;margin-bottom:6px;opacity:${r.got?1:.4}">${MAKI}</div>
     <h3 style="text-align:center">${r.got?r.l:'未取得の巻物'}</h3>
     ${r.got
       ? `<p class="sub" style="text-align:center">取得条件</p>
