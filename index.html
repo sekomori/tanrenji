@@ -93,6 +93,13 @@
   .card .st b{ color:var(--kin);font-weight:700; }
   .card .chev{ color:var(--faint);font-size:22px;margin-left:4px; }
   .card.done{ border-color:rgba(217,172,82,.5); }
+  .chs .card{ padding:10px 14px 10px 10px;min-height:136px;gap:12px; }
+  .chs .card .picw{ position:relative;flex:0 0 auto; }
+  .chs .card .pic{ display:block;width:124px;height:124px;object-fit:contain;border-radius:12px;background:rgba(244,236,220,.04); }
+  .chs .card .picw .ring{ position:absolute;right:-6px;bottom:-6px;background:rgba(20,17,16,.85);border-radius:50%; }
+  .chs .card .st .of{ color:var(--faint);font-size:13px; }
+  .chs .card .nm{ font-size:18px; }
+  .chs .card .st{ font-size:15px;line-height:1.45;margin-top:6px; }
   @keyframes flash{ 0%{background:var(--card);}40%{background:rgba(229,72,46,.18);}100%{background:var(--card);} }
   .flash{ animation:flash .35s ease; }
 
@@ -931,7 +938,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.19';
+const APP_VERSION='v0.16.20';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1313,15 +1320,14 @@ function viewChoose(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">修行を選ぶ<small>六種のうち ひとつを選べ</small></div></div>
-  <div class="stack">
+  <div class="stack chs">
     ${EX.map(e=>{
       const total=stepCount(e.key);
       const cls=e.cur>=total?'done':'';
       const nm=stepName(e.key,e.cur);
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
-        <div class="ring">${ring(e.cur,total,52,CAT_COLORS[e.key])}</div>
-        <div class="body"><div class="nm">${e.name}</div><div class="st"><b>第${e.cur}段</b> ／ ${nm}</div></div>
-        <img src="images/ex-${e.key}.webp" alt="" style="width:64px;height:52px;object-fit:contain;flex:0 0 auto">
+        <div class="picw"><img class="pic" src="images/ex-${e.key}.webp" alt=""><div class="ring">${ring(e.cur,total,44,CAT_COLORS[e.key])}</div></div>
+        <div class="body"><div class="nm">${e.name}</div><div class="st"><b>第${e.cur}段</b> <span class="of">／全${total}段</span><br>${nm}</div></div>
         <div class="chev">›</div></div>`;
     }).join('')}
   </div>`;
