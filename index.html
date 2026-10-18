@@ -194,8 +194,9 @@
 
   /* ── タブバー ── */
   .tabbar{ position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;display:flex;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom));background:rgba(18,15,13,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:20; }
-  .tab{ width:56px;height:44px;display:grid;place-items:center;cursor:pointer;color:var(--faint);border-radius:14px;transition:all .18s; }
+  .tab{ width:56px;height:44px;display:grid;place-items:center;cursor:pointer;color:var(--sub);border-radius:14px;transition:all .18s; }
   .tab svg{ width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+  .tab .ti{ width:30px;height:30px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat; }
   .tab.on{ color:var(--shu);background:rgba(229,72,46,.14); }
   .tab:active{ transform:scale(.9); }
 
@@ -925,7 +926,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.8';
+const APP_VERSION='v0.16.9';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1037,7 +1038,7 @@ function renderTabs(){
   const cur=['home','choose','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
     `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);${t.id==='profile'?'openSelfMenu()':`nav('${t.id}')`}">
-       <svg viewBox="0 0 24 24">${t.icon}</svg></div>`).join('');
+       <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div></div>`).join('');
 }
 function openSelfMenu(){
   closeSelfMenu();
