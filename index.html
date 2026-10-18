@@ -328,8 +328,6 @@
   .mrest{ position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:rgba(20,17,16,.88);color:var(--washi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:var(--sans);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.6); }
   .mrest .ic{ font-size:16px;line-height:1; } .mrest .lb{ font-size:9px;font-weight:900; }
   .mrest.l{ right:calc(100% + 10px); } .mrest.r{ left:calc(100% + 10px); }
-  .mtemple{ position:absolute;z-index:2;left:50%;bottom:0;transform:translateX(-50%);width:100%;pointer-events:none; }
-  .mtemple img{ width:100%;display:block; }
   .mnode.here{ width:46px;height:46px;font-size:21px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.2),0 6px 20px rgba(217,172,82,.5);animation:hereBob2 2.2s ease-in-out infinite; }
   @keyframes hereBob2{ 0%,100%{transform:translate(-50%,-50%);}50%{transform:translate(-50%,calc(-50% - 4px));} }
   .mflag{ position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--sans);font-size:11px;font-weight:700;color:var(--kin2);background:rgba(20,17,16,.82);border:1px solid rgba(217,172,82,.35);padding:4px 9px;border-radius:9px; }
@@ -902,7 +900,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.2';
+const APP_VERSION='v0.16.3';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1224,7 +1222,6 @@ function viewHome(){
         <div class="mlabel peak${reached?' reached':''}" style="left:${tx}%;top:${ty-7}%" ${reached?'onclick="onPeakReached()"':''}>${reached?'⛩ 登頂！分かち合う':'頂の鳥居'}</div>
         ${nodes}
       </div>
-      <div class="mtemple"><img src="images/temple.webp" alt="鍛錬寺"></div>
       <div class="mart-head">${head}${banners}</div>
     </div>`;
   }
