@@ -421,6 +421,7 @@
   .mart.v2 .mnode.lan.go{ width:64px;height:64px;border:2px solid var(--kin2);border-radius:50%;background:rgba(20,17,16,.35);animation:goPulse 2.4s ease-in-out infinite; }
   .mart.v2 .mnode.lan .mring{ inset:-4px;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px)); }
   .mart.v2 .mnode.lan .mflag{ top:50%;left:calc(100% + 10px);transform:translateY(-50%);background:none;border:none;font-family:'Oswald',var(--sans);letter-spacing:.2em;font-size:14px;text-shadow:0 1px 6px #000;padding:0; }
+  .mart.v2 .mnode.lan .mflag.l{ left:auto;right:calc(100% + 10px);text-align:right; }
   .mtalk{ position:absolute;left:10px;right:12px;bottom:8px;z-index:6;display:flex;align-items:flex-end;gap:6px;pointer-events:none; }
   .mtalk img{ height:min(19cqh,150px);width:auto;max-width:34%;object-fit:contain;object-position:bottom;flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
   .mtalk .bub{ pointer-events:auto;flex:1;margin-bottom:14px;background:rgba(20,17,16,.9);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;font-size:15px;line-height:1.55;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.6); }
@@ -746,19 +747,23 @@ function goalForWeek(mon){
 }
 function trainedDaysInWeek(mon){ let n=0; for(let i=0;i<7;i++) if(DAY_LOG[addDays(mon,i)]) n++; return n; }
 function mountainOf(mk){
+  // 灯籠は月の週の数だけ。自分は「今の週」の灯籠に立つ（達成できなかった週の灯籠は消えたまま）
+  // 鳥居は最終週の達成でくぐれる。印は始めた週以降の灯籠がすべて灯ったときだけ
   const start=(USER&&USER.startDate)||todayStr(), thisMon=mondayOf(todayStr());
-  const weeks=weeksOfMonth(mk).filter(w=>dayDiff(start,addDays(w,6))>=0); // 始めた週から
-  let climbed=0; const cats=[];
-  for(const w of weeks){
-    if(dayDiff(w,thisMon)<0) break; // まだ来ていない週
-    if(trainedDaysInWeek(w)>=goalForWeek(w)){
-      climbed++;
-      const by={};
-      for(let i=0;i<7;i++) (DAY_LOG[addDays(w,i)]||[]).forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; });
-      cats.push(Object.keys(by).map(key=>({key,xp:by[key]})));
-    }
-  }
-  return {total:weeks.length,climbed,cats};
+  const weeks=weeksOfMonth(mk);
+  const lit=[], pre=[], cats=[]; let cur=0;
+  weeks.forEach((w,i)=>{
+    pre[i]=dayDiff(start,addDays(w,6))<0; // 始める前の週
+    const come=dayDiff(w,thisMon)>=0;
+    if(come) cur=i+1;
+    lit[i]=come && !pre[i] && trainedDaysInWeek(w)>=goalForWeek(w);
+    const by={};
+    if(lit[i]) for(let d=0;d<7;d++) (DAY_LOG[addDays(w,d)]||[]).forEach(l=>{ by[l.key]=(by[l.key]||0)+l.xp; });
+    cats[i]=Object.keys(by).map(key=>({key,xp:by[key]}));
+  });
+  const total=weeks.length, reached=total>0 && !!lit[total-1];
+  const allLit=reached && lit.every((v,i)=>v||pre[i]);
+  return {total,lit,pre,cats,cur,reached,allLit,climbed:lit.filter(Boolean).length};
 }
 
 function recompute(){
@@ -818,7 +823,7 @@ function recompute(){
   weeklyGoalDays=goalForWeek(thisMon);
   const mt=mountainOf(weekMonth(thisMon));
   MOUNTAIN_STEP_CATS=mt.cats;
-  MTN={mk:weekMonth(thisMon),total:mt.total,climbed:Math.min(mt.climbed,mt.total),
+  MTN={mk:weekMonth(thisMon),total:mt.total,climbed:mt.climbed,lit:mt.lit,pre:mt.pre,cur:mt.cur,reached:mt.reached,allLit:mt.allLit,
     weekDone:trainedDaysInWeek(thisMon),weekGoal:weeklyGoalDays,weekCleared:trainedDaysInWeek(thisMon)>=weeklyGoalDays};
   // 印：始めた週の月から今月の山まで。頂上に着いた月だけ
   STAMPS=[];
@@ -826,7 +831,7 @@ function recompute(){
   const[fy,fm]=firstMk.split('-').map(Number), [ly,lm]=MTN.mk.split('-').map(Number);
   for(let d=new Date(fy,fm-1,1); d<=new Date(ly,lm-1,1); d=new Date(d.getFullYear(),d.getMonth()+1,1)){
     const m=monthKey(d), r=mountainOf(m);
-    STAMPS.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+(d.getFullYear()===now.getFullYear()?'':' '+d.getFullYear()),mtn:MOUNTAINS[d.getMonth()],got:r.total>0&&r.climbed>=r.total});
+    STAMPS.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+(d.getFullYear()===now.getFullYear()?'':' '+d.getFullYear()),mtn:MOUNTAINS[d.getMonth()],got:r.allLit});
   }
   // 巻物
   const keysDone=new Set(LOGS.map(g=>g.ex));
@@ -1071,7 +1076,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.8';
+const APP_VERSION='v0.19.9';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1337,20 +1342,20 @@ function viewHome(){
   checkStreakFreeze();
   const mMonth=Number(MTN.mk.split('-')[1]);   // 今週が属する月
   const total=MTN.total;      // その月の週の数＝マス数
-  const climbed=MTN.climbed;  // 登った数
-  const reached=total>0 && climbed>=total;
+  const cur=MTN.cur, isLit=i=>!!MTN.lit[i-1];  // 今の週・灯った週
+  const reached=MTN.reached;
   const weekTxt=MTN.weekCleared?'This week’s lantern is lit':`This week ${MTN.weekDone}/${MTN.weekGoal} days`;
 
   // マスを生成（下=1 .. 上=total）。登った=円グラフ（その日のカテゴリ配色）、次に登るマス=here、未踏=グレー
   let steps='';
   for(let i=1;i<=total;i++){
     let cls='';
-    if(i<=climbed) cls='done';
-    else if(i===climbed+1 && !reached) cls='here';
-    const flag = (cls==='here') ? `<span class="flag">${weekTxt} · ${total-climbed} to go</span>`
+    if(isLit(i)) cls='done';
+    if(i===cur && !MTN.weekCleared) cls='here';
+    const flag = (cls==='here') ? `<span class="flag">${weekTxt} · ${total-cur} to go</span>`
                : (i===total ? `<span class="flag">Summit Torii</span>` : '');
     let nodeInner, nodeStyle='', nodeClick='';
-    if(i<=climbed){
+    if(isLit(i)){
       const cats=MOUNTAIN_STEP_CATS[i-1]||[];
       const colors=cats.length?cats.map(c=>CAT_COLORS[c.key]):['var(--shu)'];
       nodeStyle='background:none;border-color:rgba(244,236,220,.25);overflow:hidden;position:relative;box-shadow:none;cursor:pointer';
@@ -1375,7 +1380,7 @@ function viewHome(){
   const head=`<div class="mtn-head">
     <div>
       <div class="mtn-name">${['January','February','March','April','May','June','July','August','September','October','November','December'][mMonth-1]}</div>
-      <div class="mtn-sub">Climb to the Summit Torii. Reach it to earn a Seal.</div>
+      <div class="mtn-sub">Clear the final week to pass the Torii. Light every lantern to earn a Seal.</div>
       <div class="ver">${APP_VERSION}</div>
     </div>
     <div class="mtn-streak">
@@ -1390,7 +1395,7 @@ function viewHome(){
     for(let i=1;i<=total;i++){
       const [x,y]=pathPoint(art.path,i/total*0.86); // 最後の灯籠は頂の鳥居の手前に置く
       // 石灯籠：登った週は灯がともり、まだの週は消えたまま。今の週の灯籠には自分が立つ
-      const lit=i<=climbed, here=!reached && i===climbed+1, me=here || (reached && i===total);
+      const lit=isLit(i), here=i===cur, me=here;
       // 自分が立つ灯籠をタップすると修行開始（今日済んでいても再度できる）
       const cls='lan '+(lit?'on':'off')+(me?' go':'');
       const side=x>55?'l':'r';
@@ -1405,18 +1410,18 @@ function viewHome(){
     }
     const [fx,fy]=pathPoint(art.path,0), [tx,ty]=pathPoint(art.path,1);
     const EN_MON=['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-    const curW=Math.min(total,climbed+(reached?0:1));
+    const curW=Math.max(1,cur);
     // 週の進み具合（登った週=金、今週=輪、まだ=白抜き）
     let dots='';
     for(let i=1;i<=total;i++){
-      const c=i<=climbed?'d':(i===climbed+1&&!reached?'c':'');
-      dots+=(i>1?`<i class="ln${i<=climbed+(reached?0:1)?' d':''}"></i>`:'')+`<b class="${c}"></b>`;
+      const c=isLit(i)?'d':(i===cur?'c':'');
+      dots+=(i>1?`<i class="ln${i<=cur?' d':''}"></i>`:'')+`<b class="${c}"></b>`;
     }
     const t=homeLine(), canRest=!trainedToday && CAL_DATA[todayStr()]!=='rest';
     return `
     <div class="mart v2">
       <div class="mart-in" style="background-image:url('${art.img}')">
-        ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">Summit reached! Share</div>`:''}
+        ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">${MTN.allLit?'Summit reached! Share':'Summit reached'}</div>`:''}
         ${nodes}
       </div>
       <div class="hx">
@@ -1511,7 +1516,7 @@ function homeLine(){
   // 今週の経験値が少ない種目（やっていない種目を優先）を次の修行に勧める
   const wk=weekCats(mondayOf(today)), xpOf=x=>(wk.find(c=>c.key===x)||{xp:0}).xp;
   const pick=EX.slice().sort((a,b)=>xpOf(a.key)-xpOf(b.key))[0];
-  const nearPeak=MTN.total>1 && MTN.climbed===MTN.total-1;
+  const nearPeak=MTN.total>1 && MTN.cur===MTN.total && !MTN.reached;
   // その日の状況に合うひと言（あれば一日おきに優先）
   const sit=[];
   if(missedYesterday) sit.push(t.back);
@@ -2492,6 +2497,7 @@ function openShareSunrise(text){
   buildShareCard('sunrise', short, 'Every step you stacked now catches the light');
 }
 function onPeakReached(){
+  if(!MTN.allLit){ toast('You passed the torii. Light every lantern to earn the Seal.'); return; }
   buildShareCard('sunrise', `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(MTN.mk.split('-')[1])-1]} · Summit reached`, 'Received the Seal at the summit torii');
 }
 function buildShareCard(kind,title,sub){
@@ -2704,7 +2710,7 @@ function stampInfo(month, got){
     <div style="text-align:center;margin-bottom:6px;opacity:${got?1:.4}"><img src="images/shirushi.webp" alt="Seal" style="width:72px;height:72px"></div>
     <h3 style="text-align:center">${month} Seal</h3>
     <p style="text-align:center;font-size:15px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ Achieved · Earned':'Not achieved'}</p>
-    <p style="text-align:center;font-size:14px;color:var(--sub);margin-top:6px">Earned by reaching that month’s summit</p>
+    <p style="text-align:center;font-size:14px;color:var(--sub);margin-top:6px">Earned by lighting every lantern that month</p>
     <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
@@ -3102,7 +3108,7 @@ const TUT=[
   {big:'📅', tt:'Set your weekly goal',
    speech:'How many days a week will you come to the Dojo?<br>Even one day is enough. Consistency is everything.<br>You can change your goal in Settings.', slider:true},
   {big:'⛩', tt:'Climb the mountain each month',
-   speech:'Tanrenji sits at the foot of a mountain. Each month, climb toward the Torii at the Summit.<br>Hit your weekly goal and a stone Lantern lights up as you advance.<br>Reach the Summit and you receive a Seal.'},
+   speech:'Tanrenji sits at the foot of a mountain. Each month, climb toward the Torii at the Summit.<br>Each week you stand at a new stone Lantern. Hit your weekly goal and it lights up.<br>Clear the final week to pass the Torii. Light every lantern to receive a Seal.'},
   {big:'⛰️', tt:'Choose your levels',
    speech:'Choose the starting level for each of the six trainings.<br>If unsure, start at Level 1.', steps:true},
   {big:'🔥', tt:'Time to begin',
