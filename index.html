@@ -694,6 +694,8 @@ let FB=null;        // Firebase操作（下の module スクリプトから注�
 let USER=null;      // users/{uid} の内容
 let LOGS=[];        // 記録（古い順）
 let READY=false;    // 読み込み完了して画面を出せる状態か
+// 経験値の表示：99,999まではそのまま、10万からは K、100万からは M で短くする
+function fmtXP(n){ n=Math.floor(n||0); if(n<100000) return n.toLocaleString('en-US'); const t=(v,u)=>(v<100?(Math.floor(v*10)/10).toFixed(1).replace(/\.0$/,''):String(Math.floor(v)))+u; return n<1e6?t(n/1e3,'K'):t(n/1e6,'M'); }
 let myName='', streakDays=0, maxStreak=0, totalDays=0, monthXP=0, PREV_MONTH_XP=0, TOTAL_XP=0, tokuEarned=0;
 let MTN={mk:'',total:0,climbed:0,weekDone:0,weekGoal:0,weekCleared:false}; // 今月の山の状態
 
@@ -1077,7 +1079,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.4';
+const APP_VERSION='v0.18.5';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1430,7 +1432,7 @@ function viewHome(){
         <div class="hx-stats">
           <div><b>${streakDays}</b><small>DAY STREAK</small></div>
           <div><b class="rk">${currentRank().en}</b><small class="jp">${currentRank().name}</small></div>
-          <div><b>${TOTAL_XP.toLocaleString()}</b><small>TOTAL XP</small></div>
+          <div><b>${fmtXP(TOTAL_XP)}</b><small>TOTAL XP</small></div>
         </div>
         <div class="hx-mon"><span>${EN_MON[mMonth]}</span><b>${MOUNTAINS[mMonth-1]}</b><em>${MOUNTAINS_EN[mMonth-1]}</em></div>
         ${banners}
@@ -1967,8 +1969,8 @@ function viewProfile(){
   </div>
   <div class="stat3">
     <div class="stat"><b>${totalDays}</b><small>Total training days</small></div>
-    <div class="stat"><b>${monthXP}</b><small>XP this month</small></div>
-    <div class="stat" onclick="showTotalXP()" style="cursor:pointer"><b>${PREV_MONTH_XP}</b><small>XP last month</small></div>
+    <div class="stat"><b>${fmtXP(monthXP)}</b><small>XP this month</small></div>
+    <div class="stat" onclick="showTotalXP()" style="cursor:pointer"><b>${fmtXP(PREV_MONTH_XP)}</b><small>XP last month</small></div>
   </div>
   <div class="h">Training Balance</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
@@ -2722,7 +2724,7 @@ function friendCompare(idx){
     <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
       ${[[`${FLAME} Streak`, me.streak+(me.streak===1?' day':' days'), f.streak+(f.streak===1?' day':' days')],
          ['XP this month', me.monthXP, f.monthXP],
-         ['Total XP', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
+         ['Total XP', fmtXP(me.totalXP), fmtXP(f.totalXP)]
         ].map(([label,mv,fv])=>`
         <div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;border-bottom:1px solid var(--line)">
           <div style="padding:12px 8px;text-align:center;font-size:16px;font-weight:700;color:var(--kin)">${mv}</div>
