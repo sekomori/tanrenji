@@ -1077,7 +1077,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.3';
+const APP_VERSION='v0.18.4';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1820,9 +1820,12 @@ function viewAchieve(){
     </div>
     <div style="flex:1;font-size:14px;line-height:1.6;color:var(--washi)">
       <div style="font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.2em;color:var(--sub);margin-bottom:4px">HOW TO GET</div>
-      <div><b style="color:var(--kin2)">30 Virtue → 1 Talisman</b><br>Tap the Talisman to exchange.</div>
-      <div style="margin-top:8px">Earn <b>1 Virtue</b> for each day you train.</div>
-      <div style="margin-top:8px">Send a Talisman to a friend and get <b>10 Virtue</b> back.</div>
+      <div><b style="color:var(--kin2)">30 Virtue → 1 Talisman</b></div>
+      <div style="margin-top:8px;font-size:13px;color:var(--sub)">Earn Virtue by:</div>
+      <div>Training: <b>+1</b> per day</div>
+      <div>Small Vow: <b>+2</b></div>
+      <div>Party Training goal: <b>+3</b></div>
+      <div>Sending a friend a Talisman: <b>+10</b></div>
     </div>
     </div>
   </div>
