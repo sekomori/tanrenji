@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
     /* 墨 — warm ink, not neutral black */
@@ -201,10 +201,12 @@
 
   /* ── タブバー ── */
   .tabbar{ position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;display:flex;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom));background:rgba(18,15,13,.92);backdrop-filter:blur(16px);border-top:1px solid var(--line);z-index:20; }
-  .tab{ width:56px;height:44px;display:grid;place-items:center;cursor:pointer;color:var(--sub);border-radius:14px;transition:all .18s; }
+  .tab{ width:62px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--sub);border-radius:14px;transition:all .18s;position:relative; }
+  .tab .tl{ font-size:11px;font-weight:700;letter-spacing:.12em; }
   .tab svg{ width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
-  .tab .ti{ width:30px;height:30px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat; }
-  .tab.on{ color:var(--shu);background:rgba(229,72,46,.14); }
+  .tab .ti{ width:26px;height:26px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat; }
+  .tab.on{ color:var(--shu); }
+  .tab.on::after{ content:'';position:absolute;bottom:-6px;left:14px;right:14px;height:2px;background:var(--shu);border-radius:2px; }
   .tab:active{ transform:scale(.9); }
 
   /* ── シート/モーダル ── */
@@ -320,6 +322,52 @@
   .mstep.here .node{ width:52px;height:52px;font-size:24px;background:radial-gradient(circle at 40% 35%,var(--kin2),var(--kin));border-color:var(--kin2);color:#1a1206;box-shadow:0 0 0 5px rgba(217,172,82,.16),0 6px 20px rgba(217,172,82,.4);animation:hereBob 2.2s ease-in-out infinite; }
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   /* 山の絵（絵の山道の上にマスを並べる） */
+  .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw); }
+  .mart.v2::before{ content:'';position:absolute;inset:0 0 auto 0;height:58%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(12,10,9,.92) 0%,rgba(12,10,9,.7) 45%,rgba(12,10,9,0) 100%); }
+  .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:44%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 55%,rgba(12,10,9,0) 100%); }
+  .hx{ position:absolute;left:20px;right:20px;top:16px;z-index:4; }
+  .hx-top{ display:flex;justify-content:space-between;align-items:center; }
+  .brand{ font-family:'Oswald',var(--sans);font-weight:700;font-size:18px;letter-spacing:.32em;color:var(--washi); }
+  .brand span{ font-family:var(--serif);font-size:14px;letter-spacing:.1em;margin-left:4px; }
+  .hstreak{ font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.12em;color:var(--kin2);display:flex;align-items:center;gap:6px; }
+  .hstreak span{ font-size:20px;font-weight:700; }
+  .hx-h{ margin:14px 0 0;font-family:'Oswald',var(--sans);font-weight:700;font-size:min(12vw,50px);line-height:1.05;color:#fff;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  .hx-sub{ font-family:var(--sans);font-size:16px;color:var(--washi);margin-top:6px;text-shadow:0 1px 6px #000; }
+  .hx-stats{ display:flex;margin-top:12px;padding-top:12px;border-top:1px solid rgba(244,236,220,.25);max-width:340px; }
+  .hx-stats>div{ flex:1;padding:0 10px;border-left:1px solid rgba(244,236,220,.25); }
+  .hx-stats>div:first-child{ padding-left:0;border-left:none; }
+  .hx-stats b{ display:block;font-family:'Oswald',var(--sans);font-size:24px;font-weight:700;color:#fff;line-height:1.1;white-space:nowrap; }
+  .hx-stats small{ display:block;font-size:12px;color:var(--sub);letter-spacing:.1em;margin-top:3px; }
+  .hx-mon{ margin-top:14px;font-size:13px;letter-spacing:.2em;color:var(--washi); }
+  .hx-mon span{ font-family:'Oswald',var(--sans);font-weight:700;letter-spacing:.3em; }
+  .hx-stats b.jp{ font-family:var(--serif);font-size:20px;font-weight:800;padding-top:3px; }
+  .hx-mon em{ font-style:normal;display:block;font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.25em;color:rgba(244,236,220,.7);margin-top:2px; }
+  .hx-mon b{ display:block;font-family:var(--serif);font-size:22px;font-weight:800;letter-spacing:.15em;color:#fff;margin-top:2px; }
+  .hx .ver{ font-size:11px;color:var(--faint);margin-top:4px; }
+  .hb{ position:absolute;left:20px;right:20px;bottom:8px;z-index:4;text-align:center; }
+  @container (max-height:720px){ .hx-sub{ display:none; } .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw + 20px); } .hx-h{ font-size:min(11vw,44px); } .hx-stats{ margin-top:10px;padding-top:10px; } .hx-mon{ margin-top:10px; } }
+  .hb-wk{ font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.2em;color:var(--washi);font-weight:700; }
+  .hb-row{ display:flex;align-items:center;gap:16px; }
+  .mart.v2 .mnode.lan .mflag small{ display:block;font-size:12px;letter-spacing:.12em;color:var(--washi);margin-top:1px; }
+  .hb-dots{ flex:1;display:flex;align-items:center; }
+  .hb-dots b{ width:12px;height:12px;border-radius:50%;border:2px solid rgba(244,236,220,.6);flex:0 0 auto;box-sizing:border-box; }
+  .hb-dots b.d{ background:var(--kin2);border-color:var(--kin2); }
+  .hb-dots b.c{ width:22px;height:22px;border:2.5px solid var(--kin2);background:radial-gradient(circle,var(--kin2) 0 4px,transparent 5px); }
+  .hb-dots i{ flex:1;height:2px;background:rgba(244,236,220,.4); }
+  .hb-dots i.d{ background:var(--kin2); }
+  .hb-line{ font-family:var(--serif);font-size:15px;color:var(--washi);margin:10px 0 0;line-height:1.5;cursor:pointer;text-align:left;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+  .hb-line small{ font-family:var(--sans);font-size:12px;color:var(--kin);letter-spacing:.1em;margin-right:8px; }
+  .hb-go{ margin-top:12px;width:100%;height:58px;border:none;border-radius:14px;background:var(--shu);color:#fff;font-family:'Oswald',var(--sans);font-size:20px;font-weight:700;letter-spacing:.18em;display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px rgba(229,72,46,.35); }
+  .hb-go svg{ width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round; }
+  .hb-go:active{ transform:scale(.98); }
+  .hb-rest{ margin-top:4px;background:none;border:none;color:var(--sub);font-family:var(--sans);font-size:15px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:6px 12px; }
+  .mart.v2 .mnode.lan{ background:none;border:none;box-shadow:none;width:50px;height:50px; }
+  .mart.v2 .mnode.lan img{ width:100%;height:100%; }
+  .mart.v2 .mnode.lan.on img{ filter:brightness(1.2) drop-shadow(0 0 10px rgba(255,190,90,.95)); }
+  .mart.v2 .mnode.lan.off img{ filter:brightness(.75) saturate(.5) drop-shadow(0 2px 4px #000); }
+  .mart.v2 .mnode.lan.go{ width:64px;height:64px;border:2px solid var(--kin2);border-radius:50%;background:rgba(20,17,16,.35);animation:goPulse 2.4s ease-in-out infinite; }
+  .mart.v2 .mnode.lan .mring{ inset:-4px;-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px)); }
+  .mart.v2 .mnode.lan .mflag{ top:50%;left:calc(100% + 10px);transform:translateY(-50%);background:none;border:none;font-family:'Oswald',var(--sans);letter-spacing:.2em;font-size:14px;text-shadow:0 1px 6px #000;padding:0; }
   .mtalk{ position:absolute;left:10px;right:12px;bottom:8px;z-index:6;display:flex;align-items:flex-end;gap:6px;pointer-events:none; }
   .mtalk img{ height:min(19cqh,150px);width:auto;max-width:34%;object-fit:contain;object-position:bottom;flex:0 0 auto;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
   .mtalk .bub{ pointer-events:auto;flex:1;margin-bottom:14px;background:rgba(20,17,16,.9);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;font-size:15px;line-height:1.55;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.6); }
@@ -945,7 +993,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.16.23';
+const APP_VERSION='v0.17.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1029,11 +1077,11 @@ function nav(view,data){
 window.addEventListener('popstate',e=>{ if(e.state){state=e.state;render();} else{state={view:'home'};render();} });
 
 const TABS=[
-  {id:'home',   icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
-  {id:'quest',  icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
-  {id:'board',  icon:'<rect x="3" y="4" width="18" height="14" rx="1"/><path d="M7 8h10M7 12h6"/>'},
-  {id:'friends',icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="8" r="3"/><path d="M14 21c0-2.5 1.5-4.5 3-5.5"/>'},
-  {id:'profile',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
+  {id:'home', lb:'DOJO',   icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
+  {id:'quest', lb:'TRIALS',  icon:'<path d="M6 4h11a1 1 0 011 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 011-1z"/>'},
+  {id:'board', lb:'BOARD',  icon:'<rect x="3" y="4" width="18" height="14" rx="1"/><path d="M7 8h10M7 12h6"/>'},
+  {id:'friends', lb:'FRIENDS',icon:'<circle cx="9" cy="8" r="3"/><path d="M3 21c0-4 3-6 6-6s6 2 6 6"/><circle cx="17" cy="8" r="3"/><path d="M14 21c0-2.5 1.5-4.5 3-5.5"/>'},
+  {id:'profile', lb:'SELF',icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'},
 ];
 /* ══ UIヘルパー ══ */
 // 円相リング（進捗）
@@ -1057,7 +1105,7 @@ function renderTabs(){
   const cur=['home','choose','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
     `<div class="tab ${t.id===cur?'on':''}" onclick="vib(10);${t.id==='profile'?'openSelfMenu()':`nav('${t.id}')`}">
-       <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div></div>`).join('');
+       <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div><div class="tl">${t.lb}</div></div>`).join('');
 }
 function openSelfMenu(){
   closeSelfMenu();
@@ -1269,20 +1317,47 @@ function viewHome(){
       // 休むボタンは一つ下の灯籠と反対側に出して重ならないようにする
       const px=i>1?pathPoint(art.path,(i-1)/total*0.86)[0]:(x>55?100:0), restSide=px<x?'r':'l';
       const rk=lit?(MOUNTAIN_STEP_CATS[i-1]||[]):(here?weekCats(mondayOf(todayStr())):[]);
-      const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">${canRest?`<button class="mrest ${restSide}" onclick="event.stopPropagation();restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>`:''}`;
+      const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
-      const flag=here?`<span class="mflag ${side}">${weekTxt}</span>`:'';
+      const flag=here?`<span class="mflag ${side}">THIS WEEK<small>${MTN.weekCleared?'CLEARED':`${MTN.weekDone} / ${MTN.weekGoal} DAYS`}</small></span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
     }
     const [fx,fy]=pathPoint(art.path,0), [tx,ty]=pathPoint(art.path,1);
+    const MTN_NAMES=['',['初雪山','THE FIRST SNOW'],['梅香山','PLUM BLOSSOMS'],['春霞山','SPRING MIST'],['桜峰','CHERRY BLOSSOMS'],['若葉山','NEW LEAVES'],['五月雨山','EARLY RAINS'],['蝉時雨山','CICADA SONG'],['雲海山','SEA OF CLOUDS'],['月見山','HARVEST MOON'],['紅葉山','AUTUMN LEAVES'],['初霜山','FIRST FROST'],['雪嶺','DEEP WINTER']];
+    const EN_MON=['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+    const curW=Math.min(total,climbed+(reached?0:1));
+    // 週の進み具合（登った週=金、今週=輪、まだ=白抜き）
+    let dots='';
+    for(let i=1;i<=total;i++){
+      const c=i<=climbed?'d':(i===climbed+1&&!reached?'c':'');
+      dots+=(i>1?`<i class="ln${i<=climbed+(reached?0:1)?' d':''}"></i>`:'')+`<b class="${c}"></b>`;
+    }
+    const t=homeLine(), canRest=!trainedToday && CAL_DATA[todayStr()]!=='rest';
     return `
-    <div class="mart">
+    <div class="mart v2">
       <div class="mart-in" style="background-image:url('${art.img}')">
-        <div class="mlabel peak${reached?' reached':''}" style="left:${tx}%;top:${ty-7}%" ${reached?'onclick="onPeakReached()"':''}>${reached?'⛩ 登頂！分かち合う':'頂の鳥居'}</div>
+        ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">登頂！分かち合う</div>`:''}
         ${nodes}
       </div>
-      <div class="mart-head">${head}${banners}</div>
-      ${homeTalk()}
+      <div class="hx">
+        <div class="hx-top"><div class="brand">TANRENJI <span>鍛錬寺</span></div><div class="hstreak">${FLAME}<span>${streakDays}</span>DAY STREAK</div></div>
+        <h1 class="hx-h">SHOW UP.<br>GROW STRONG.</h1>
+        <div class="hx-sub">Your next step starts here.</div>
+        <div class="hx-stats">
+          <div><b>${streakDays}</b><small>DAY STREAK</small></div>
+          <div><b class="jp">${rankOf(SUM).name}</b><small>RANK</small></div>
+          <div><b>${TOTAL_XP.toLocaleString()}</b><small>TOTAL XP</small></div>
+        </div>
+        <div class="hx-mon"><span>${EN_MON[mMonth]}</span><em>${MTN_NAMES[mMonth][1]}</em><b>${MTN_NAMES[mMonth][0]}</b></div>
+        ${banners}
+        <div class="ver">${APP_VERSION}</div>
+      </div>
+      <div class="hb">
+        <div class="hb-row"><div class="hb-wk">WEEK ${curW} OF ${total}</div><div class="hb-dots">${dots}</div></div>
+        <div class="hb-line"${t.go}><small>${t.who}</small>${t.line}</div>
+        <button class="hb-go" onclick="tapFlash(this,()=>nav('choose'))">${trainedToday?'TRAIN AGAIN':'START TRAINING'}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        ${canRest?`<button class="hb-rest" onclick="restToday()">Take a rest day</button>`:'<div class="hb-rest" style="visibility:hidden">-</div>'}
+      </div>
     </div>`;
   }
 
@@ -1348,7 +1423,7 @@ const HOME_TALK={
     done:['今日もお疲れさまです！明日も応援してます！','見てました！今日の動き、すごく綺麗でした！','今日の修行、記念日にしたいくらいです！'],
     streak:d=>`もう${d}日続いてるんですね！私も頑張らなきゃ！`, back:'昨日はお休みでしたね。今日また会えてうれしいです！', peak:'もうすぐ頂上ですね！どきどきします！', week:'今週の一基、達成ですね！おめでとうございます！'},
 };
-function homeTalk(){
+function homeLine(){
   const today=todayStr(), dn=Math.floor(parseDay(today).getTime()/864e5);
   // キャラは日替わりで順番に。同じキャラが次に出る時は、次のセリフに進むので続けて同じ言葉にならない
   const ch=CHARS[dn%CHARS.length], t=HOME_TALK[ch.img]; if(!t) return '';
@@ -1368,7 +1443,7 @@ function homeTalk(){
   else if(sit.length && dn%2===0) line=sit[k%sit.length];
   else if(dn%3===2) line=at(t.cheer);
   else { line=at(t.next)(pick.name.replace(/（.*）/,'')); go=` onclick="tapFlash(this,()=>nav('steps',{exKey:'${pick.key}'}))"`; }
-  return `<div class="mtalk"><img src="images/${ch.img}" alt=""><div class="bub"${go}><div class="who">${ch.name}</div>${line}${go?'<div class="go">この修行へ ›</div>':''}</div></div>`;
+  return {who:ch.name, line, go};
 }
 
 /* 種目を選ぶ画面（旧ホームの六種の修行） */
