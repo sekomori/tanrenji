@@ -269,6 +269,7 @@
 
   .react-btns{ display:flex;gap:10px;margin-top:14px; }
   .react-btns button{ flex:1;padding:13px 6px;border-radius:14px;border:1px solid var(--line2);background:var(--card2);color:var(--washi);font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans); }
+  .react-btns.sent button{ filter:grayscale(1);opacity:.35;pointer-events:none; }
   .react-btns button:active{ background:rgba(229,72,46,.2);transform:scale(.96); }
 
   /* 指南 */
@@ -1106,7 +1107,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.2';
+const APP_VERSION='v0.20.3';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1333,10 +1334,10 @@ let trainedToday=false; // 今日修行したか（recompute()で計算）
 const MTN_PATH=[[54.7,70.6],[53.2,67.7],[45.9,62.5],[37.1,57.3],[43,52.1],[54.7,50.5],[62,49.5],[68.4,47.9],[70.8,46.2],[69.3,44.6],[66.4,43.3],[61,42.3],[57.6,40.7],[56.6,39.1],[55.2,37.1],[52.2,34.8],[51.3,33.8]];
 const MTN_ART={};
 for(let m=1;m<=12;m++) MTN_ART[m]={img:`images/mtn-${String(m).padStart(2,'0')}.jpg`,path:MTN_PATH};
-// 新しい山の絵（鳥居が右上）。道の形は2種類：まっすぐ（1〜5・10・12月）とジグザグ（6〜9月）。11月はまだ古い絵
+// 新しい山の絵（鳥居が右上）。道の形は2種類：まっすぐ（1〜5・10・12月）とジグザグ（6〜9・11月）
 const MTN_PATH2=[[20,70],[29,63.5],[39,59],[49,54.4],[58.6,49.9],[68,46],[76,42],[84,37.5],[88,33],[86,27.7],[81,23.2],[79.5,21.5]];
 const MTN_PATH2_JUN=[[18.5,70.7],[25.4,64.8],[37,59],[47,55],[54.7,51.8],[62.5,47.3],[72,44.7],[80,40.7],[86,36.2],[89,31.6],[84,27.7],[80,24.5],[79.5,22]];
-[1,2,3,4,5,6,7,8,9,10,12].forEach(m=>Object.assign(MTN_ART[m],{path:(m>=6&&m<=9)?MTN_PATH2_JUN:MTN_PATH2,v:2}));
+for(let m=1;m<=12;m++) Object.assign(MTN_ART[m],{path:((m>=6&&m<=9)||m===11)?MTN_PATH2_JUN:MTN_PATH2,v:2});
 // 山道の折れ線上で、麓からの道のり t（0〜1）にある点を返す（%座標）
 function pathPoint(pts,t){
   // 画像は縦長(2:3)なので、長さは実寸比で測る
@@ -2822,12 +2823,19 @@ function friendCompare(idx){
         </div>`).join('')}
     </div>
     <p style="font-size:14px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'Trained today ✓':'Hasn’t trained yet today'}</p>
-    <div class="react-btns">${reactBtns}</div>
+    <div class="react-btns${sentToday(f.name)?' sent':''}">${reactBtns}</div>
+    ${sentToday(f.name)?'<p style="font-size:14px;color:var(--sub);text-align:center;margin-top:6px">Sent today. You can send again tomorrow.</p>':''}
     ${!trained?'<p style="font-size:14px;color:var(--sub);text-align:center;margin-top:6px">On days they’ve trained, you can send any reaction</p>':''}
     <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
+// 友だち1人につき1日1回まで（端末に記録）
+function sentKey(){ return 'tanren_sent_'+todayStr(); }
+function sentToday(name){ try{ return (JSON.parse(localStorage.getItem(sentKey())||'[]')).includes(name); }catch(e){ return false; } }
+function markSent(name){ try{ const a=JSON.parse(localStorage.getItem(sentKey())||'[]'); if(!a.includes(name)) a.push(name); localStorage.setItem(sentKey(),JSON.stringify(a)); }catch(e){} }
 function sendReact(icon, name){
+  if(sentToday(name)) return;
+  markSent(name);
   const serif=randomSerif(icon);
   closeModal();
   const lb={'🔥':'Fire!','💪':'Strong!','💙':'Encourage','👊':'Kiai!'}[icon]||'Cheer';
