@@ -1077,7 +1077,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.2';
+const APP_VERSION='v0.18.3';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1811,11 +1811,19 @@ function viewAchieve(){
   </div>
   <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
     <p style="font-size:15px;margin:0 0 10px">Earn Virtue to receive Talismans from Sensei</p>
-    <div onclick="openFudaExchange()" style="text-align:center;padding:14px;border-radius:10px;border:1px solid var(--line);cursor:pointer;max-width:200px">
+    <div style="display:flex;gap:14px;align-items:center">
+    <div onclick="openFudaExchange()" style="text-align:center;padding:14px;border-radius:10px;border:1px solid var(--line);cursor:pointer;flex:0 0 44%;max-width:200px">
       <img src="images/fuda.webp" alt="Talisman" style="width:100%;height:150px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(217,172,82,.45))">
       <div style="font-size:15px;margin-top:6px;font-weight:700">Talisman</div>
       <div style="font-size:14px;color:var(--kin);margin-top:2px">30 Virtue</div>
       <div style="font-size:13px;color:var(--sub);margin-top:4px">Owned: ${fudaCount}</div>
+    </div>
+    <div style="flex:1;font-size:14px;line-height:1.6;color:var(--washi)">
+      <div style="font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.2em;color:var(--sub);margin-bottom:4px">HOW TO GET</div>
+      <div><b style="color:var(--kin2)">30 Virtue → 1 Talisman</b><br>Tap the Talisman to exchange.</div>
+      <div style="margin-top:8px">Earn <b>1 Virtue</b> for each day you train.</div>
+      <div style="margin-top:8px">Send a Talisman to a friend and get <b>10 Virtue</b> back.</div>
+    </div>
     </div>
   </div>
   <div class="h">Seals</div>
@@ -2932,7 +2940,10 @@ function openSettings(){
   modal(`<div class="sheet" style="border-radius:18px 18px 0 0;max-height:100vh;height:90vh">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0">Settings</h3>
-      <span style="font-size:15px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">Guide ›</span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:15px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">Guide ›</span>
+        <button onclick="closeModal()" aria-label="Close" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:none;color:var(--washi);font-size:22px;line-height:1;cursor:pointer">×</button>
+      </div>
     </div>
     <label>Weekly goal: <span id="goalv">${nextGoal}</span> days</label>
     <input type="range" min="1" max="7" id="weeklyGoalInput" value="${nextGoal}" oninput="document.getElementById('goalv').textContent=this.value">
@@ -2943,6 +2954,7 @@ function openSettings(){
     <input type="text" value="${escHtml(myName)}" id="unameInput" maxlength="12">
     <button class="btnprime" onclick="saveSettings()">Save</button>
     <button class="btnghost" onclick="openFeedback()">✉ Send feedback</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
     <button class="btnghost" style="margin-top:22px;color:var(--sub)" onclick="confirmSignOut()">Log out</button>
     <div style="text-align:center;font-size:13px;color:var(--faint);margin-top:12px">${APP_VERSION}</div>
   </div>`);
