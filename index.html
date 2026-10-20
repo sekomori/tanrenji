@@ -446,8 +446,7 @@
   .hb-go svg{ width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round; }
   .hb-go:active{ transform:scale(.98); }
   .hb-rest{ margin-top:4px;background:none;border:none;color:var(--sub);font-family:var(--sans);font-size:15px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:6px 12px; }
-  .mart.v2 .mnode.lan{ background:rgba(20,17,16,.35);border:2px solid var(--kin2);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.5);width:50px;height:50px; }
-  .mart.v2 .mnode.lan img{ border-radius:50%; }
+  .mart.v2 .mnode.lan{ background:none;border:none;box-shadow:none;width:50px;height:50px; }
   .mart.v2 .mnode.lan img{ width:100%;height:100%; }
   .mart.v2 .mnode.lan.on img{ filter:brightness(1.2) drop-shadow(0 0 10px rgba(255,190,90,.95)); }
   .mart.v2 .mnode.lan.off img{ filter:brightness(.75) saturate(.5) drop-shadow(0 2px 4px #000); }
@@ -1117,7 +1116,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.8';
+const APP_VERSION='v0.20.9';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1454,7 +1453,7 @@ function viewHome(){
       const px=i>1?lanPos(art,i-1,total)[0]:(x>55?100:0), restSide=px<x?'r':'l';
       const rk=lit?(MOUNTAIN_STEP_CATS[i-1]||[]):(here?weekCats(mondayOf(todayStr())):[]);
       const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">`;
-      const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
+      const click=` onclick="weekDetail(${i})"`; // どの灯籠でもタップでその週の修行内容
       const flag=here?`<span class="mflag ${side}">THIS WEEK<small>${MTN.weekCleared?'CLEARED':`${MTN.weekDone} / ${MTN.weekGoal} DAYS`}</small></span>`:'';
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
     }
@@ -1582,6 +1581,35 @@ function homeLine(){
 }
 
 /* 種目を選ぶ画面（旧ホームの六種の修行） */
+// 灯籠タップ：その週（月〜日）の修行内容を日ごとに見せる。今週なら修行開始ボタンも
+function weekDetail(i){
+  const mon=weeksOfMonth(MTN.mk)[i-1]; if(!mon) return;
+  const today=todayStr(), thisMon=mondayOf(today);
+  if(dayDiff(thisMon,mon)>0){ toast(`Week ${i} hasn’t started yet`); return; }
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], DW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const fmt=k=>{ const d=parseDay(k); return `${MO[d.getMonth()]} ${d.getDate()}`; };
+  const isNow=mon===thisMon, done=trainedDaysInWeek(mon), goal=goalForWeek(mon), lit=!!MTN.lit[i-1];
+  let total=0;
+  const days=DW.map((w,k)=>{
+    const dk=addDays(mon,k), logs=DAY_LOG[dk]||[];
+    if(dayDiff(dk,today)<0) return '';
+    const xp=logs.reduce((a,l)=>a+l.xp,0); total+=xp;
+    const body=logs.length
+      ? logs.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:10px;height:10px;border-radius:3px;background:${CAT_COLORS[l.key]};flex:0 0 auto"></span><span style="flex:1;font-size:15px">${l.ex} <small style="color:var(--sub)">Lv.${l.step} · ${l.detail}</small></span><span style="font-size:14px;color:var(--kin2);font-weight:700">+${l.xp}</span></div>`).join('')
+      : `<div style="font-size:14px;color:var(--faint);padding:3px 0">${CAL_DATA[dk]==='rest'?'🌙 Rest day':'—'}</div>`;
+    return `<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <div style="width:54px;flex:0 0 auto;font-family:'Oswald',var(--sans);letter-spacing:.08em;font-size:14px;color:${logs.length?'var(--washi)':'var(--sub)'}">${w}<br><small style="color:var(--sub);font-size:12px">${fmt(dk)}</small></div>
+      <div style="flex:1">${body}</div></div>`;
+  }).join('');
+  modal(`<div class="sheet">
+    <div style="font-family:'Oswald',var(--sans);letter-spacing:.2em;font-size:13px;color:var(--kin2)">WEEK ${i} · ${fmt(mon)} – ${fmt(addDays(mon,6))}</div>
+    <h3 style="margin-top:4px">${lit?'Lantern lit':isNow?'This week':'Lantern not lit'}</h3>
+    <p class="sub">${done} / ${goal} days trained · ${total.toLocaleString()} XP</p>
+    ${days}
+    ${isNow?`<button class="btnprime" style="margin-top:14px" onclick="closeModal();nav('choose')">START TRAINING</button>`:''}
+    <button class="btnghost" onclick="closeModal()">Close</button>
+  </div>`);
+}
 function stepDetail(i){
   const cats=MOUNTAIN_STEP_CATS[i-1]||[];
   if(!cats.length){ toast('No records'); return; }
