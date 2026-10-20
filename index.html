@@ -216,6 +216,19 @@
   .tab svg{ width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
   .tab .ti{ width:26px;height:26px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat; }
   .tab.on{ color:var(--shu); }
+  .sfx{ position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,7,.78);animation:fade .15s;overflow:hidden; }
+  .sfx.out{ opacity:0;transition:opacity .35s; }
+  .sfx-ic{ width:68vw;max-width:340px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 0 30px rgba(229,72,46,.55));animation:sfxIc 1.7s cubic-bezier(.2,1.4,.4,1) forwards; }
+  .sfx-ring{ position:absolute;left:50%;top:44%;width:60vw;height:60vw;margin:-30vw 0 0 -30vw;border:3px solid var(--kin2);border-radius:50%;opacity:0;animation:sfxRing .8s .12s ease-out forwards; }
+  .sfx-sp{ position:absolute;left:50%;top:44%; }
+  .sfx-sp i{ position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--kin2);opacity:0;animation:sfxSp .8s .12s ease-out forwards; }
+  .sfx-sp i:nth-child(even){ background:var(--shu); width:7px;height:7px; }
+  .sfx-t{ margin-top:14px;font-family:'Oswald',var(--sans);font-weight:700;font-size:44px;letter-spacing:.1em;color:#fff;animation:sfxUp .4s .2s both; }
+  .sfx-s{ margin-top:6px;font-family:'Oswald',var(--sans);font-size:16px;letter-spacing:.3em;color:var(--kin2);animation:sfxUp .4s .35s both; }
+  @keyframes sfxIc{ 0%{ transform:scale(.2) rotate(-12deg);opacity:0 } 22%{ transform:scale(1.12) rotate(4deg);opacity:1 } 32%{ transform:scale(1) rotate(0) } 72%{ transform:scale(1) translateY(0);opacity:1 } 100%{ transform:scale(.35) translateY(-120vh);opacity:.8 } }
+  @keyframes sfxRing{ 0%{ transform:scale(.3);opacity:.9 } 100%{ transform:scale(1.5);opacity:0 } }
+  @keyframes sfxSp{ 0%{ transform:translate(0,0);opacity:1 } 100%{ transform:translate(var(--x),var(--y));opacity:0 } }
+  @keyframes sfxUp{ from{ transform:translateY(14px);opacity:0 } to{ transform:none;opacity:1 } }
   .tab .tdot{ position:absolute;top:4px;right:12px;width:10px;height:10px;border-radius:50%;background:var(--shu);box-shadow:0 0 0 2px var(--sumi); }
   .pclear{ position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(10,8,7,.72);backdrop-filter:blur(3px);animation:fade .25s;cursor:pointer; }
   .pclear.out{ opacity:0;transition:opacity .4s; }
@@ -1093,7 +1106,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.1';
+const APP_VERSION='v0.20.2';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2818,7 +2831,19 @@ function sendReact(icon, name){
   const serif=randomSerif(icon);
   closeModal();
   const lb={'🔥':'Fire!','💪':'Strong!','💙':'Encourage','👊':'Kiai!'}[icon]||'Cheer';
-  toast(`Sent "${lb}" to ${name}`);
+  sendFx(icon,lb,name);
+}
+// 送った演出：アイコンが画面いっぱいに出て、光の輪と粒が広がり、上へ飛んでいく
+function sendFx(icon,lb,name){
+  const old=document.getElementById('sendFx'); if(old) old.remove();
+  const src=icon==='🔥'?'images/flame.webp':`images/react-${REACT_IMG[icon]}.webp`;
+  const d=document.createElement('div'); d.id='sendFx'; d.className='sfx';
+  let sp=''; for(let i=0;i<14;i++){ const a=i/14*2*Math.PI; sp+=`<i style="--x:${Math.round(Math.cos(a)*44)}vw;--y:${Math.round(Math.sin(a)*44)}vw"></i>`; }
+  d.innerHTML=`<div class="sfx-ring"></div><div class="sfx-sp">${sp}</div><img class="sfx-ic" src="${src}" alt=""><div class="sfx-t">${lb.replace('!','').toUpperCase()}!</div><div class="sfx-s">SENT TO ${name.toUpperCase()}</div>`;
+  d.onclick=()=>d.remove();
+  document.getElementById('app').appendChild(d);
+  vib(icon==='👊'?[40,30,80]:[20,20,40]);
+  setTimeout(()=>{ if(d.isConnected){ d.classList.add('out'); setTimeout(()=>d.remove(),350); } },1700);
 }
 
 function addFriend(){
