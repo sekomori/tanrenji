@@ -383,22 +383,22 @@
   .brand span{ font-family:var(--serif);font-size:14px;letter-spacing:.1em;margin-left:4px; }
   .hstreak{ font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.12em;color:var(--kin2);display:flex;align-items:center;gap:6px; }
   .hstreak span{ font-size:20px;font-weight:700; }
-  .hx-h{ margin:14px 0 0;font-family:'Oswald',var(--sans);font-weight:700;font-size:min(12vw,50px);line-height:1.05;color:#fff;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.6); }
-  .hx-sub{ font-family:var(--sans);font-size:16px;color:var(--washi);margin-top:6px;text-shadow:0 1px 6px #000; }
-  .hx-stats{ display:flex;margin-top:12px;padding-top:12px;border-top:1px solid rgba(244,236,220,.25);max-width:340px; }
+  .hx-h{ margin:10px 0 0;font-family:'Oswald',var(--sans);font-weight:700;font-size:min(9vw,38px);line-height:1.05;color:#fff;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  .hx-sub{ font-family:var(--sans);font-size:14px;color:var(--washi);margin-top:4px;text-shadow:0 1px 6px #000; }
+  .hx-stats{ display:flex;margin-top:10px;padding-top:9px;border-top:1px solid rgba(244,236,220,.25);max-width:310px; }
   .hx-stats>div{ flex:1;padding:0 10px;border-left:1px solid rgba(244,236,220,.25); }
   .hx-stats>div:first-child{ padding-left:0;border-left:none; }
-  .hx-stats b{ display:block;font-family:'Oswald',var(--sans);font-size:24px;font-weight:700;color:#fff;line-height:1.1;white-space:nowrap; }
-  .hx-stats small{ display:block;font-size:12px;color:var(--sub);letter-spacing:.1em;margin-top:3px; }
-  .hx-mon{ margin-top:14px;font-size:13px;letter-spacing:.2em;color:var(--washi); }
+  .hx-stats b{ display:block;font-family:'Oswald',var(--sans);font-size:20px;font-weight:700;color:#fff;line-height:1.1;white-space:nowrap;text-shadow:0 1px 6px #000; }
+  .hx-stats small{ display:block;font-size:12px;color:var(--sub);letter-spacing:.08em;white-space:nowrap;margin-top:2px;text-shadow:0 1px 6px #000; }
+  .hx-mon{ margin-top:10px;text-shadow:0 1px 6px #000;font-size:13px;letter-spacing:.2em;color:var(--washi); }
   .hx-mon span{ font-family:'Oswald',var(--sans);font-weight:700;letter-spacing:.3em; }
   .hx-stats small.jp{ font-family:var(--serif);letter-spacing:.15em;color:var(--washi); }
-  .hx-stats b.rk{ font-size:min(5vw,20px);padding-top:3px;letter-spacing:.04em; }
+  .hx-stats b.rk{ font-size:min(4.3vw,17px);padding-top:3px;letter-spacing:.04em; }
   .hx-mon em{ font-style:normal;display:block;text-shadow:0 1px 6px #000;font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.25em;color:rgba(244,236,220,.7);margin-top:2px; }
-  .hx-mon b{ display:block;font-family:var(--serif);font-size:30px;font-weight:800;letter-spacing:.15em;color:#fff;margin-top:4px;line-height:1.2; }
+  .hx-mon b{ display:block;font-family:var(--serif);font-size:24px;font-weight:800;letter-spacing:.15em;color:#fff;margin-top:3px;line-height:1.2;text-shadow:0 2px 8px #000; }
   .hx .ver{ font-size:11px;color:var(--faint);margin-top:4px; }
   .hb{ position:absolute;left:20px;right:20px;bottom:8px;z-index:4;text-align:center; }
-  @container (max-height:720px){ .hx-sub{ display:none; } .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw + 20px); } .hx-h{ font-size:min(11vw,44px); } .hx-stats{ margin-top:10px;padding-top:10px; } .hx-mon{ margin-top:10px; } }
+  @container (max-height:720px){ .hx-sub{ display:none; } .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw + 20px); } .hx-h{ font-size:min(8.5vw,34px); } .hx-stats{ margin-top:10px;padding-top:10px; } .hx-mon{ margin-top:10px; } }
   .hb-wk{ font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.2em;color:var(--washi);font-weight:700; }
   .hb-row{ display:flex;align-items:center;gap:16px; }
   .mart.v2 .mnode.lan .mflag small{ display:block;font-size:12px;letter-spacing:.12em;color:var(--washi);margin-top:1px; }
@@ -1076,7 +1076,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.9';
+const APP_VERSION='v0.19.10';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
