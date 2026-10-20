@@ -189,6 +189,13 @@
   /* ── 己 ── */
   .prof-top{ display:flex;align-items:center;gap:14px;margin-bottom:16px; }
   .avatar{ width:76px;height:76px;flex:0 0 auto;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--sumi3),var(--sumi2));border:2.5px solid var(--kin);display:grid;place-items:center;font-size:34px;cursor:pointer; }
+  .avimg{ width:100%;height:100%;object-fit:cover;border-radius:50%;display:block; }
+  .avatar,.pav{ overflow:hidden; }
+  .avgrid{ display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 4px;max-height:62vh;overflow:auto; }
+  .avcell{ position:relative;aspect-ratio:1;border-radius:50%;border:2px solid var(--line2);cursor:pointer; }
+  .avcell.cur{ border-color:var(--kin2);box-shadow:0 0 0 3px rgba(217,172,82,.25); }
+  .avcell.lock .avimg{ filter:grayscale(1) brightness(.55); }
+  .avcost{ position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);font-size:12px;font-weight:700;color:#1a1206;background:var(--kin2);border-radius:8px;padding:1px 7px;white-space:nowrap; }
   .avatar:active{ transform:scale(.95); }
   .prof-info{ flex:1;min-width:0; }
   .prof-info .pname{ font-family:var(--serif);font-size:23px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
@@ -795,7 +802,9 @@ function recompute(){
   avatarSel=Object.assign({hair:0,eye:0,nose:0,mouth:0,skin:0},u.avatarSel||{});
   avatarUnlocked={hair:[0,1],eye:[0,1],nose:[0,1],mouth:[0,1],skin:[0,1]};
   ledger.filter(l=>l.k==='avatar').forEach(l=>{ if(avatarUnlocked[l.part]&&!avatarUnlocked[l.part].includes(l.idx)) avatarUnlocked[l.part].push(l.idx); });
-  currentAvatar=u.avatarSel?getAvatarEmoji():'🧘';
+  avatarNo=u.avatarNo||0;
+  avatarOwned=new Set([...Array(AV_FREE).keys()].map(i=>i+1).concat(ledger.filter(l=>l.k==='avatarImg').map(l=>l.n)));
+  currentAvatar=avatarNo?avImg(avatarNo):'🧘';
   // 今月・前月・累計
   const now=new Date(), mk=monthKey(now), pmk=monthKey(new Date(now.getFullYear(),now.getMonth()-1,1));
   const inMonth=(k,m)=>{ const[y,mo]=k.split('-'); return `${y}-${mo}`===m; };
@@ -1059,7 +1068,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.9';
+const APP_VERSION='v0.19.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2797,7 +2806,38 @@ let avatarSel={hair:0,eye:0,nose:0,mouth:0,skin:0};
 let avatarTab='hair';
 let avatarUnlocked={hair:[0,1],eye:[0,1],nose:[0,1],mouth:[0,1],skin:[0,1]};
 
+/* アバター（完成した絵から選ぶ）：01〜12は最初から選べる、13〜24は徳20で解放 */
+const AV_COUNT=24, AV_FREE=12, AV_COST=20;
+let avatarNo=0, avatarOwned=new Set();
+function avImg(n){ return `<img class="avimg" src="images/avatar-${String(n).padStart(2,'0')}.webp" alt="">`; }
 function openAvatarSelect(){
+  const cells=[...Array(AV_COUNT).keys()].map(i=>{ const n=i+1, own=avatarOwned.has(n), cur=n===avatarNo;
+    return `<div class="avcell${cur?' cur':''}${own?'':' lock'}" onclick="pickAvatar(${n})">${avImg(n)}${own?'':`<span class="avcost">徳 ${AV_COST}</span>`}</div>`; }).join('');
+  modal(`<div class="sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Choose Your Avatar</h3>
+      <button onclick="closeModal()" aria-label="Close" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:none;color:var(--washi);font-size:22px;cursor:pointer">×</button>
+    </div>
+    <p class="sub">The first ${AV_FREE} are free. Unlock the rest with ${AV_COST} Virtue each. You have ${toku} Virtue.</p>
+    <div class="avgrid">${cells}</div>
+  </div>`);
+}
+function pickAvatar(n){
+  if(avatarOwned.has(n)){ avatarNo=n; currentAvatar=avImg(n); saveUser({avatarNo:n}); closeModal(); vib(20); toast('Avatar updated'); render(); return; }
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <div style="width:120px;height:120px;margin:0 auto 10px">${avImg(n)}</div>
+    <h3>Unlock this avatar?</h3>
+    <p class="sub" style="text-align:center">${AV_COST} Virtue · You have ${toku}</p>
+    ${toku>=AV_COST?`<button class="btnprime" onclick="unlockAvatar(${n})">Unlock and use</button>`:`<p class="sub" style="text-align:center;color:var(--shu2)">Not enough Virtue yet</p>`}
+    <button class="btnghost" onclick="openAvatarSelect()">Back</button>
+  </div>`,true);
+}
+function unlockAvatar(n){
+  if(toku<AV_COST){ toast('Not enough Virtue'); return; }
+  addLedger({k:'avatarImg',amt:-AV_COST,n}); avatarOwned.add(n); toku-=AV_COST;
+  avatarNo=n; currentAvatar=avImg(n); saveUser({avatarNo:n}); closeModal(); vib([30,20,60]); toast('Avatar unlocked'); render();
+}
+function openAvatarEditorOld(){
   avatarTab='hair';
   const d=document.createElement('div');
   d.id='avatarEditor';
@@ -3142,7 +3182,7 @@ function safeRender(){
 let lastPublic='';
 function publishProfile(){
   if(!FB||!USER) return;
-  const p={name:myName,avatar:currentAvatar,rank:currentRank().en,rankJa:currentRank().name,sum:SUM,vals:EX.map(e=>e.cur),
+  const p={name:myName,avatar:avatarNo?`av:${avatarNo}`:'🧘',rank:currentRank().en,rankJa:currentRank().name,sum:SUM,vals:EX.map(e=>e.cur),
     streak:streakDays,monthXP,totalXP:TOTAL_XP,lastTrained:Object.keys(DAY_LOG).sort((a,b)=>dayDiff(b,a))[0]||null};
   const js=JSON.stringify(p);
   if(js===lastPublic) return;
