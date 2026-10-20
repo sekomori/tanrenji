@@ -375,6 +375,8 @@
   @keyframes hereBob{ 0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);} }
   /* 山の絵（絵の山道の上にマスを並べる） */
   .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw); }
+  /* 新しい山の絵：道の麓が下の操作パネルの上、鳥居が見出しの下に収まる大きさ */
+  .mart.v2 .mart-in.p2{ --H:max(150cqw, min(171cqw, calc((100cqh - 470px) * 2.06))); height:var(--H);width:calc(var(--H) / 1.5);left:calc(50cqw - var(--H) / 3);top:calc(100cqh - 205px - .707 * var(--H)); }
   .mart.v2::before{ content:'';position:absolute;inset:0 0 auto 0;height:58%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(12,10,9,.92) 0%,rgba(12,10,9,.7) 45%,rgba(12,10,9,0) 100%); }
   .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:44%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 55%,rgba(12,10,9,0) 100%); }
   .hx{ position:absolute;left:20px;right:20px;top:16px;z-index:4; }
@@ -1076,7 +1078,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.11';
+const APP_VERSION='v0.20.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1303,6 +1305,10 @@ let trainedToday=false; // 今日修行したか（recompute()で計算）
 const MTN_PATH=[[54.7,70.6],[53.2,67.7],[45.9,62.5],[37.1,57.3],[43,52.1],[54.7,50.5],[62,49.5],[68.4,47.9],[70.8,46.2],[69.3,44.6],[66.4,43.3],[61,42.3],[57.6,40.7],[56.6,39.1],[55.2,37.1],[52.2,34.8],[51.3,33.8]];
 const MTN_ART={};
 for(let m=1;m<=12;m++) MTN_ART[m]={img:`images/mtn-${String(m).padStart(2,'0')}.jpg`,path:MTN_PATH};
+// 新しい山の絵（鳥居が右上）。1〜5月は同じ道、6月は道の形が少し違う
+const MTN_PATH2=[[20,70],[29,63.5],[39,59],[49,54.4],[58.6,49.9],[68,46],[76,42],[84,37.5],[88,33],[86,27.7],[81,23.2],[79.5,21.5]];
+const MTN_PATH2_JUN=[[18.5,70.7],[25.4,64.8],[37,59],[47,55],[54.7,51.8],[62.5,47.3],[72,44.7],[80,40.7],[86,36.2],[89,31.6],[84,27.7],[80,24.5],[79.5,22]];
+for(let m=1;m<=6;m++) Object.assign(MTN_ART[m],{path:m===6?MTN_PATH2_JUN:MTN_PATH2,v:2});
 // 山道の折れ線上で、麓からの道のり t（0〜1）にある点を返す（%座標）
 function pathPoint(pts,t){
   // 画像は縦長(2:3)なので、長さは実寸比で測る
@@ -1420,7 +1426,7 @@ function viewHome(){
     const t=homeLine(), canRest=!trainedToday && CAL_DATA[todayStr()]!=='rest';
     return `
     <div class="mart v2">
-      <div class="mart-in" style="background-image:url('${art.img}')">
+      <div class="mart-in${art.v===2?' p2':''}" style="background-image:url('${art.img}')">
         ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">${MTN.allLit?'Summit reached! Share':'Summit reached'}</div>`:''}
         ${nodes}
       </div>
