@@ -470,6 +470,7 @@
   .pchar .pav img{ width:100%;height:100%;object-fit:cover;object-position:50% 12%;border-radius:50%; }
   .npcgrid{ display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 14px; }
   .npc{ text-align:center;cursor:pointer;font-size:13px;color:var(--washi); }
+  .npc small{ display:block;font-size:12px;color:var(--kin2); }
   .npc img{ width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 12%;border-radius:50%;background:var(--sumi2);border:1px solid var(--line2);margin-bottom:4px; }
   .pchar .pname{ text-align:center;font-family:var(--serif);font-weight:800;font-size:16px;margin-top:8px; }
   .pchar .pmeta{ text-align:center;font-size:13px;color:var(--sub);margin-top:2px; }
@@ -1083,7 +1084,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.7';
+const APP_VERSION='v0.18.8';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1691,7 +1692,12 @@ function viewQuest(){
   }
   // 状態B：パーティー結成済み
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
-  const cur=Math.round(goal*0.62);
+  // 自分＝今週の実績、仲間キャラ＝自分が修行した日の経験値×キャラごとの割合、友だち＝モック
+  const mon=mondayOf(todayStr()); let myWk=0; const npcWk={};
+  for(let k=0;k<7;k++){ const dk=addDays(mon,k), x=(DAY_LOG[dk]||[]).reduce((a,l)=>a+l.xp,0); if(!x) continue; myWk+=x;
+    PARTY.forEach(p=>{ if(p.npc) npcWk[p.img]=(npcWk[p.img]||0)+Math.floor(x*npcRate(p.img,dk)); }); }
+  PARTY.forEach(p=>{ p.wk=p.me?myWk:p.npc?(npcWk[p.img]||0):Math.round(p.lvxp*p.week*0.62); });
+  const cur=PARTY.reduce((a,p)=>a+p.wk,0);
   const pct=Math.min(100,Math.round(cur/goal*100));
   if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; addLedger({k:'party',amt:3}); vib([30,20,60]); toast('Party Training complete! Virtue +3'); }
   PARTY[0].name=myName||'You'; PARTY[0].em=currentAvatar;
@@ -1727,11 +1733,20 @@ function inviteFriend(){
       <div class="chev">›</div>
     </div>`).join(''):'<p class="sub">No friends left to invite</p>'}
     <div class="h" style="margin-top:18px">Or train with a companion</div>
-    <p class="sub" style="margin-top:-4px">No friends here yet? A dojo companion can join your party.</p>
-    <div class="npcgrid">${CHARS.map((c,i)=>PARTY.some(p=>p.img===c.img)?'':`<div class="npc" onclick="doInviteChar(${i})"><img src="images/${c.img}" alt=""><div>${c.name}</div></div>`).join('')}</div>
+    <p class="sub" style="margin-top:-4px">No friends here yet? A dojo companion can join. On days you train, they add a share of your XP to the team.</p>
+    <div class="npcgrid">${CHARS.map((c,i)=>PARTY.some(p=>p.img===c.img)?'':`<div class="npc" onclick="doInviteChar(${i})"><img src="images/${c.img}" alt=""><div>${c.name}</div><small>${npcRateTxt(c.img).replace(' of your XP','')}</small></div>`).join('')}</div>
     <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
+// 仲間キャラの経験値：自分が修行した日だけ、自分の経験値×割合。弟弟子・妹弟子は日によって20〜80%
+function npcRate(img,dk){
+  if(/^shihan/.test(img)) return .4;
+  if(/^senpai/.test(img)) return .5;
+  if(/^rival/.test(img)) return .7;
+  let h=0; for(const c of dk+img) h=(h*31+c.charCodeAt(0))>>>0;
+  return .2+(h%61)/100;
+}
+function npcRateTxt(img){ return /^deshi/.test(img)?'20–80% of your XP':`${Math.round(npcRate(img,'')*100)}% of your XP`; }
 function doInviteChar(i){
   if(PARTY.length>=3){ toast('Party is full'); closeModal(); return; }
   const c=CHARS[i];
@@ -1755,7 +1770,7 @@ function renderParty(){
   partyPos=partyFront;
   stage.innerHTML=PARTY.map((p,i)=>`<div class="pchar" data-i="${i}" onclick="partyTap(${i})" style="cursor:pointer">
       <div class="pav">${p.img?`<img src="images/${p.img}" alt="">`:p.em}</div>
-      <div class="plbl"><div class="pname">${p.name}${p.me?' (you)':''}${p.npc?' <span style="font-size:12px;color:var(--sub)">· COMPANION</span>':''}</div><div class="pmeta">Weekly goal ${(p.lvxp*p.week).toLocaleString()} XP</div></div>
+      <div class="plbl"><div class="pname">${p.name}${p.me?' (you)':''}${p.npc?' <span style="font-size:12px;color:var(--sub)">· COMPANION</span>':''}</div><div class="pmeta">${p.npc?`${npcRateTxt(p.img)} · ${(p.wk||0).toLocaleString()} XP this week`:`Weekly goal ${(p.lvxp*p.week).toLocaleString()} XP`}</div></div>
     </div>`).join('');
   layoutParty(false);
 }
@@ -1790,6 +1805,7 @@ function partyTap(idx){
   if(Math.abs(d)>.5){ vib(10); snapParty(Math.round(partyPos+d)); return; }
   const p=PARTY[idx];
   if(p.me){ toast('See your stats in the Self tab'); return; }
+  if(p.npc){ toast(`${p.name} earns ${npcRateTxt(p.img)} on days you train`); return; }
   if(p.npc){ toast(`${p.name} trains alongside you`); return; }
   const fi=FRIENDS.findIndex(f=>f.name===p.name);
   if(fi>=0) friendCompare(fi);
