@@ -873,6 +873,8 @@ function recompute(){
   SCROLLS[5].got=tokuEarned>=10000;
   // 小さな誓い
   microGoal=u.microGoal?Object.assign({},u.microGoal):(microGoal||pickNewMicroGoalCandidate());
+  // まだ始めていない候補が今の週の目標日数に合わなければ引き直す
+  if(READY && !microGoal.active && !vowFits(microGoalDef())){ microGoal=pickNewMicroGoalCandidate(microGoal.defId); saveMicroGoal(); }
   if(READY) microGoalProgress();
 }
 
@@ -1007,9 +1009,9 @@ function vowDays(){ return [...new Set(vowLogs().map(g=>g.date))].sort((a,b)=>da
 function vowRun(){ let best=0,run=0,prev=null; vowDays().forEach(d=>{ run=(prev&&dayDiff(prev,d)===1)?run+1:1; best=Math.max(best,run); prev=d; }); return best; }
 function lastDoneDays(key){ const ls=LOGS.filter(g=>g.ex===key); if(!ls.length) return 9999; return dayDiff(ls.map(g=>g.date).sort((a,b)=>dayDiff(b,a)).pop(),todayStr()); }
 const MICRO_GOAL_DEFS=[
-  {id:'streak2', icon:'🔥', label:'2-Day Streak', unit:'days', streak:true, target:2,
+  {id:'streak2', icon:'🔥', label:'2-Day Streak', unit:'days', streak:true, days:2, target:2,
     desc:'Train two days in a row.', cur:()=>vowRun()},
-  {id:'streak3', icon:'🔥', label:'3-Day Streak', unit:'days', streak:true, target:3,
+  {id:'streak3', icon:'🔥', label:'3-Day Streak', unit:'days', streak:true, days:3, target:3,
     desc:'Train three days in a row.', cur:()=>vowRun()},
   {id:'variety3', icon:'🥋', label:'Three Paths', unit:'exercises', target:3,
     desc:'Train three or more different exercises.', cur:()=>new Set(vowLogs().map(g=>g.ex)).size},
@@ -1028,9 +1030,11 @@ const MICRO_GOAL_DEFS=[
     desc:'Write a note after a training session.', cur:()=>vowLogs().some(g=>g.note)?1:0},
 ];
 function comebackEx(){ const c=EX.filter(e=>lastDoneDays(e.key)>=14 && LOGS.some(g=>g.ex===e.key)); return c.length?c[Math.floor(Math.random()*c.length)].key:null; }
+// 週の目標日数より多い日数を求める誓いは出さない（週2日の人に3日連続など）
+function vowFits(d){ return !d.days || d.days<=weeklyGoalDays; }
 function pickNewMicroGoalCandidate(skip){
   const ex=comebackEx();
-  const pool=MICRO_GOAL_DEFS.filter(d=>d.id!==skip && (!d.streak||weeklyGoalDays>=2) && (!d.needsEx||ex));
+  const pool=MICRO_GOAL_DEFS.filter(d=>d.id!==skip && vowFits(d) && (!d.needsEx||ex));
   const pick=pool[Math.floor(Math.random()*pool.length)];
   return {defId:pick.id, ex:pick.needsEx?ex:null, cur:0, target:pick.target, active:false, startedAt:null, deadline:null, done:false, failed:false};
 }
@@ -1107,7 +1111,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.3';
+const APP_VERSION='v0.20.4';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
