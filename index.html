@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&text=%E9%96%80%E5%89%8D%E6%89%95%E3%81%84%E4%B8%81%E7%A8%9A%E5%85%A5%E8%80%85%E8%A1%8C%E9%8D%9B%E9%8C%AC%E8%8D%92%E6%B3%95%E5%B8%AB%E9%81%94%E4%BA%BA%E5%A4%A9%E7%8B%97%E6%98%87&display=swap" rel="stylesheet">
 <style>
   :root{
     /* 墨 — warm ink, not neutral black */
@@ -301,6 +302,34 @@
   #clearFx{ position:fixed;inset:0;z-index:92;display:none;align-items:center;justify-content:center;background:rgba(10,8,7,.86);backdrop-filter:blur(4px); }
   #clearFx .seal{ width:min(230px,20vh);height:min(230px,20vh);border-radius:14px;border:none;background:var(--shu);transform:rotate(-4deg);box-shadow:0 10px 40px rgba(229,72,46,.5);display:grid;place-items:center;position:relative;margin:0 auto;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
   .rkseal{ display:inline-block;margin-top:18px;padding:16px 18px;background:var(--shu);color:#fff;font-family:var(--serif);font-weight:800;font-size:min(64px,7vh);line-height:1.1;border-radius:8px;transform:rotate(-4deg);box-shadow:0 0 0 4px rgba(229,72,46,.35),0 10px 40px rgba(229,72,46,.5);animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
+  #rankFx{ position:fixed;inset:0;z-index:95;background:#0b0908;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .45s;overflow:hidden; }
+  #rankFx.on{ opacity:1; } #rankFx.out{ opacity:0;transition:opacity .3s; }
+  .ru-in{ position:relative;z-index:2;text-align:center;width:min(86vw,360px); }
+  .ru-stage{ position:relative;height:min(36vh,260px);display:grid;place-items:center; }
+  .ru-seal{ width:min(150px,17vh);height:min(150px,17vh);display:grid;place-items:center;background:var(--shu);color:#fff;font-family:var(--serif);font-weight:800;font-size:min(96px,11vh);border-radius:12px;transform:rotate(-5deg) scale(2.6);opacity:0;box-shadow:0 12px 50px rgba(229,72,46,.55); }
+  #rankFx.hit .ru-seal{ animation:ruStamp .28s cubic-bezier(.3,1.6,.5,1) forwards; }
+  #rankFx.rev .ru-seal{ animation:ruStamp .28s forwards, ruAway .6s .1s ease-in forwards; }
+  @keyframes ruStamp{ 0%{transform:rotate(-5deg) scale(2.6);opacity:0;} 100%{transform:rotate(-5deg) scale(1);opacity:1;} }
+  @keyframes ruAway{ to{ transform:rotate(-5deg) scale(.55) translateY(130%);opacity:0; } }
+  .ru-ring{ position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;border-radius:50%;border:2px solid var(--kin2);opacity:0; }
+  #rankFx.hit .ru-ring{ animation:ruRing 1s ease-out forwards; } #rankFx.hit .ru-ring.r2{ animation-delay:.15s; }
+  @keyframes ruRing{ 0%{transform:scale(.6);opacity:.9;} 100%{transform:scale(2.6);opacity:0;} }
+  .ru-ja{ position:absolute;inset:0;display:grid;place-items:center;font-family:'Yuji Syuku',var(--serif);font-size:min(92px,10vh);color:#fff;opacity:0;letter-spacing:.06em;text-shadow:0 4px 30px rgba(0,0,0,.8); }
+  #rankFx.rev .ru-ja{ animation:ruIn .7s .25s ease-out forwards; }
+  .ru-en{ font-family:'Oswald',var(--sans);font-weight:700;font-size:min(13vw,52px);letter-spacing:.06em;color:#fff;line-height:1.05;opacity:0;margin-top:4px; }
+  #rankFx.rev .ru-en{ animation:ruIn .6s .5s ease-out forwards; }
+  .ru-belt{ width:140px;height:10px;border-radius:5px;outline:1px solid rgba(244,236,220,.35);outline-offset:1px;margin:16px auto 0;transition:background .8s ease;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); }
+  .ru-lbl{ font-family:'Oswald',var(--sans);font-size:14px;letter-spacing:.45em;color:var(--sub);margin-top:14px;opacity:0; }
+  #rankFx.rev .ru-lbl{ animation:ruIn .5s .8s forwards; }
+  .ru-go{ margin-top:30px;opacity:0;pointer-events:none; }
+  #rankFx.rev .ru-go{ animation:ruIn .5s 1.5s forwards;pointer-events:auto; }
+  @keyframes ruIn{ from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:none;} }
+  .ru-gold{ position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:var(--kin2);box-shadow:0 0 8px var(--kin2);opacity:0;animation:ruGold linear infinite; }
+  @keyframes ruGold{ 0%{transform:translateY(0);opacity:0;} 15%{opacity:1;} 100%{transform:translateY(-105vh);opacity:0;} }
+  .ru-wind{ position:absolute;left:-60%;width:60%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);opacity:0;animation:ruWind .7s ease-out forwards; }
+  @keyframes ruWind{ 0%{transform:translateX(0);opacity:0;} 20%{opacity:1;} 100%{transform:translateX(280%);opacity:0;} }
+  .ru-feather{ position:absolute;width:10px;height:30px;border-radius:50% 50% 50% 50%/80% 80% 20% 20%;background:linear-gradient(180deg,#e0453a,#8f1d16);opacity:0;animation:ruFeather 2.6s ease-out forwards; }
+  @keyframes ruFeather{ 0%{transform:translate(0,0) rotate(0);opacity:0;} 10%{opacity:1;} 100%{transform:translate(var(--fx),var(--fy)) rotate(var(--fr));opacity:0;} }
   .rkcard{ margin:4px 0 16px;padding:18px 18px 16px;border-radius:16px;background:var(--card);cursor:pointer; }
   .rk-en{ font-family:'Oswald',var(--sans);font-size:38px;font-weight:700;letter-spacing:.06em;line-height:1;color:#fff; }
   .rk-ja{ font-family:var(--serif);font-size:16px;color:var(--washi);letter-spacing:.2em;margin-top:6px; }
@@ -548,21 +577,36 @@ function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } re
 // 名前を決めてから最初の3日間は強制的に「門前払い」
 let daysSinceStart=8; // モック：開始からの日数（3未満なら門前払い固定）
 function currentRank(){ return daysSinceStart<3 ? RANKS[0] : rankOf(SUM); }
-let lastRankIdx=null, RANK_UP=null; // 昇格した瞬間だけ大きな称号を出す
+let lastRankIdx=null, RANK_UP=null, RANK_FROM=0; // 昇格した瞬間だけ大きな称号を出す
 function beltBar(r,h){ return `<div style="height:${h||8}px;border-radius:4px;background:${r.belt};box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)"></div>`; }
 function showRankUp(){
-  const r=RANKS[RANK_UP]; RANK_UP=null; if(!r) return;
-  const fx=document.getElementById('clearFx'); fx.style.display='flex';
-  fx.innerHTML=`<div style="text-align:center;padding:0 30px;position:relative">
-    <div class="shock"></div><div class="shock s2"></div>
-    <div style="font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.4em;color:var(--kin2)">RANK UP</div>
-    <div class="rkseal">${r.name.split('').join('<br>')}</div>
-    <div style="font-family:'Oswald',var(--sans);font-size:44px;font-weight:700;letter-spacing:.08em;color:#fff;margin-top:18px">${r.en}</div>
-    <div style="width:120px;margin:12px auto 0">${beltBar(r,10)}</div>
-    <button class="btnprime" style="margin-top:26px" onclick="document.getElementById('clearFx').style.display='none'">CONTINUE</button>
+  // 約3秒：墨で静まり（0–0.5s）→ 朱印「昇」が打たれ（0.5–1.2s）→ 新しい帯と称号（1.2–3s）
+  const ri=RANK_UP; RANK_UP=null; const r=RANKS[ri], from=RANKS[RANK_FROM]||RANKS[0]; if(!r) return;
+  const top=ri===RANKS.length-1, master=ri>=RANKS.length-2;
+  let extra='';
+  if(master){ for(let k=0;k<26;k++) extra+=`<i class="ru-gold" style="left:${Math.random()*100}%;animation-delay:${1.2+Math.random()*1.4}s;animation-duration:${2.4+Math.random()*1.6}s"></i>`; }
+  if(top){
+    for(let k=0;k<5;k++) extra+=`<i class="ru-wind" style="top:${15+k*16+Math.random()*6}%;animation-delay:${1.05+k*.07}s"></i>`;
+    for(let k=0;k<14;k++) extra+=`<i class="ru-feather" style="left:${-10+Math.random()*60}%;top:${Math.random()*70}%;--fx:${260+Math.random()*260}px;--fy:${80+Math.random()*220}px;--fr:${200+Math.random()*400}deg;animation-delay:${1.1+Math.random()*.6}s"></i>`;
+  }
+  const d=document.createElement('div'); d.id='rankFx';
+  d.innerHTML=`${extra}<div class="ru-in">
+    <div class="ru-stage">
+      <div class="ru-ja">${r.name}</div>
+      <div class="ru-seal">昇</div>
+      <i class="ru-ring"></i><i class="ru-ring r2"></i>
+    </div>
+    <div class="ru-en">${r.en}</div>
+    <div class="ru-belt" style="background:${from.belt}"></div>
+    <div class="ru-lbl">RANK UP</div>
+    <button class="btnprime ru-go" onclick="closeRankUp()">CONTINUE</button>
   </div>`;
-  vib([80,40,80,40,200]);
+  document.body.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('on'));
+  setTimeout(()=>{ try{ const a=new Audio('sound/sound_reward.mp3'); a.play().catch(()=>{}); }catch(e){} vib(60); d.classList.add('hit'); },500);
+  setTimeout(()=>{ d.classList.add('rev'); d.querySelector('.ru-belt').style.background=r.belt; if(top) vib([30,30,30]); },1200);
 }
+function closeRankUp(){ const d=document.getElementById('rankFx'); if(!d) return; d.classList.add('out'); setTimeout(()=>d.remove(),350); }
 
 const EX=[
   {key:'push',  name:'Push-up',       cur:5, sys:'upper'},
@@ -702,7 +746,7 @@ function recompute(){
     e.cur=cur;
   });
   SUM=EX.reduce((a,e)=>a+e.cur,0);
-  { const ri=RANKS.indexOf(currentRank()); if(READY && lastRankIdx!==null && ri>lastRankIdx) RANK_UP=ri; lastRankIdx=ri; }
+  { const ri=RANKS.indexOf(currentRank()); if(READY && lastRankIdx!==null && ri>lastRankIdx){ RANK_UP=ri; RANK_FROM=lastRankIdx; } lastRankIdx=ri; }
   // 日ごとの状態
   CAL_DATA={}; DAY_LOG={};
   (u.rests||[]).forEach(k=>{ CAL_DATA[k]='rest'; });
@@ -1021,7 +1065,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.0';
+const APP_VERSION='v0.18.1';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
