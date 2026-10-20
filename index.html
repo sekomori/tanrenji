@@ -1071,7 +1071,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.6';
+const APP_VERSION='v0.19.7';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2846,7 +2846,16 @@ function pickAvatar(n){
   if(avatarOwned.has(n)){ setAvatar(n); vib(20); toast('Avatar updated'); return; }
   const t=avTier(n), c=avCost(n);
   if(t && !avOpen(t)) return;
-  if(!c){ avatarFree=n; avatarOwned.add(n); setAvatar(n,{avatarFree:n}); vib([30,20,60]); toast('Avatar chosen'); return; }
+  if(!c){ // 最初の無料の1枚は取り消せないので、本当にいいか確認する
+    modal(`<div class="sheet card-c" style="text-align:center">
+      <div style="width:140px;height:140px;margin:0 auto 12px">${avImg(n)}</div>
+      <h3>Choose this avatar?</h3>
+      <p class="sub" style="text-align:center">Only one avatar is free.<br>After this, each new one costs ${AV_COST} Virtue.</p>
+      <button class="btnprime" onclick="confirmFreeAvatar(${n})">Yes, this is me</button>
+      <button class="btnghost" onclick="openAvatarSelect()">Look again</button>
+    </div>`,true);
+    return;
+  }
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="width:120px;height:120px;margin:0 auto 10px">${avImg(n)}</div>
     <h3>Unlock this avatar?</h3>
@@ -2855,6 +2864,7 @@ function pickAvatar(n){
     <button class="btnghost" onclick="openAvatarSelect()">Back</button>
   </div>`,true);
 }
+function confirmFreeAvatar(n){ if(avatarFree) return; avatarFree=n; avatarOwned.add(n); setAvatar(n,{avatarFree:n}); vib([30,20,60]); toast('Avatar chosen'); }
 function unlockAvatar(n){
   const c=avCost(n);
   if(toku<c){ toast('Not enough Virtue'); return; }
