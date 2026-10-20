@@ -1071,7 +1071,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.2';
+const APP_VERSION='v0.19.3';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2810,19 +2810,23 @@ let avatarTab='hair';
 let avatarUnlocked={hair:[0,1],eye:[0,1],nose:[0,1],mouth:[0,1],skin:[0,1]};
 
 /* アバター（完成した絵から選ぶ）
-   ・01〜36から最初の1枚は無料。2枚目からは徳20で解放
-   ・37〜42（天狗の面）は階級が天狗になってから、徳100で解放 */
-const AV_BASE=36, AV_COUNT=42, AV_COST=20, AV_TENGU_COST=100;
+   ・01〜36から最初の1枚は無料。2枚目からは徳20で解放（未解放はグレー表示だけ）
+   ・37〜42（達人）は達人以上で徳80、43〜48（天狗の面）は天狗で徳100。その階級になるまで欄ごと出さない */
+const AV_BASE=36, AV_COUNT=48, AV_COST=20;
+const AV_TIERS=[{from:37,to:42,rank:6,cost:80,title:'Master Avatars',sub:'For those who reached MASTER · 達人.'},
+                {from:43,to:48,rank:7,cost:100,title:'Tengu Masks',sub:'For those who reached TENGU · 天狗.'}];
 let avatarNo=0, avatarFree=0, avatarOwned=new Set();
 function avImg(n){ return `<img class="avimg" src="images/avatar-${String(n).padStart(2,'0')}.webp" alt="">`; }
-function isTengu(){ return currentRank()===RANKS[RANKS.length-1]; }
-function avCost(n){ return n>AV_BASE?AV_TENGU_COST:(avatarFree?AV_COST:0); }
+function avTier(n){ return AV_TIERS.find(t=>n>=t.from&&n<=t.to); }
+function avOpen(t){ return RANKS.indexOf(currentRank())>=t.rank; }
+function avCost(n){ const t=avTier(n); return t?t.cost:(avatarFree?AV_COST:0); }
 function openAvatarSelect(){
-  const cell=n=>{ const own=avatarOwned.has(n), cur=n===avatarNo, tg=n>AV_BASE, c=avCost(n);
-    const badge=own?'':(tg&&!isTengu()?'<span class="avcost lockt">TENGU</span>':(c?`<span class="avcost">徳 ${c}</span>`:''));
-    return `<div class="avcell${cur?' cur':''}${own||!c?'':' lock'}" onclick="pickAvatar(${n})">${avImg(n)}${badge}</div>`; };
-  const base=[...Array(AV_BASE).keys()].map(i=>cell(i+1)).join('');
-  const tengu=[...Array(AV_COUNT-AV_BASE).keys()].map(i=>cell(AV_BASE+i+1)).join('');
+  const cell=n=>{ const own=avatarOwned.has(n), cur=n===avatarNo, c=avCost(n);
+    return `<div class="avcell${cur?' cur':''}${own||!c?'':' lock'}" onclick="pickAvatar(${n})">${avImg(n)}</div>`; };
+  const range=(a,b)=>[...Array(b-a+1).keys()].map(i=>cell(a+i)).join('');
+  const tiers=AV_TIERS.filter(avOpen).map(t=>`<div class="h" style="margin-top:16px">${t.title}</div>
+      <p class="sub" style="margin-top:-4px">${t.sub} ${t.cost} Virtue each.</p>
+      <div class="avgrid">${range(t.from,t.to)}</div>`).join('');
   modal(`<div class="sheet">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h3 style="margin:0">Choose Your Avatar</h3>
@@ -2830,18 +2834,16 @@ function openAvatarSelect(){
     </div>
     <p class="sub">${avatarFree?`Unlock more with ${AV_COST} Virtue each.`:'Your first avatar is free. After that, each one costs '+AV_COST+' Virtue.'} You have ${toku} Virtue.</p>
     <div class="avscroll">
-      <div class="avgrid">${base}</div>
-      <div class="h" style="margin-top:16px">Tengu Masks</div>
-      <p class="sub" style="margin-top:-4px">Only for those who reach the rank of TENGU · 天狗. ${AV_TENGU_COST} Virtue each.</p>
-      <div class="avgrid">${tengu}</div>
+      <div class="avgrid">${range(1,AV_BASE)}</div>
+      ${tiers}
     </div>
   </div>`);
 }
 function setAvatar(n,extra){ avatarNo=n; currentAvatar=avImg(n); saveUser(Object.assign({avatarNo:n},extra||{})); closeModal(); render(); }
 function pickAvatar(n){
   if(avatarOwned.has(n)){ setAvatar(n); vib(20); toast('Avatar updated'); return; }
-  const tg=n>AV_BASE, c=avCost(n);
-  if(tg && !isTengu()){ toast('Reach the rank of TENGU to unlock the masks'); return; }
+  const t=avTier(n), c=avCost(n);
+  if(t && !avOpen(t)) return;
   if(!c){ avatarFree=n; avatarOwned.add(n); setAvatar(n,{avatarFree:n}); vib([30,20,60]); toast('Avatar chosen'); return; }
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="width:120px;height:120px;margin:0 auto 10px">${avImg(n)}</div>
@@ -2854,7 +2856,7 @@ function pickAvatar(n){
 function unlockAvatar(n){
   const c=avCost(n);
   if(toku<c){ toast('Not enough Virtue'); return; }
-  if(n>AV_BASE && !isTengu()) return;
+  const t=avTier(n); if(t && !avOpen(t)) return;
   addLedger({k:'avatarImg',amt:-c,n}); avatarOwned.add(n); toku-=c;
   setAvatar(n); vib([30,20,60]); toast('Avatar unlocked');
 }
