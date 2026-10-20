@@ -311,15 +311,20 @@
   #rankFx.rev .ru-seal{ animation:ruStamp .28s forwards, ruAway .6s .1s ease-in forwards; }
   @keyframes ruStamp{ 0%{transform:rotate(-5deg) scale(2.6);opacity:0;} 100%{transform:rotate(-5deg) scale(1);opacity:1;} }
   @keyframes ruAway{ to{ transform:rotate(-5deg) scale(.55) translateY(130%);opacity:0; } }
-  .ru-ring{ position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;border-radius:50%;border:2px solid var(--kin2);opacity:0; }
+  .ru-ring{ position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;border-radius:50%;border:2px solid var(--ac);opacity:0; }
   #rankFx.hit .ru-ring{ animation:ruRing 1s ease-out forwards; } #rankFx.hit .ru-ring.r2{ animation-delay:.15s; }
   @keyframes ruRing{ 0%{transform:scale(.6);opacity:.9;} 100%{transform:scale(2.6);opacity:0;} }
-  .ru-ja{ position:absolute;inset:0;display:grid;place-items:center;font-family:'Yuji Syuku',var(--serif);font-size:min(92px,10vh);color:#fff;opacity:0;letter-spacing:.06em;text-shadow:0 4px 30px rgba(0,0,0,.8); }
+  .ru-ja{ position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Yuji Syuku',var(--serif);font-size:min(92px,10vh);color:#fff;opacity:0;letter-spacing:.06em;text-shadow:0 4px 30px rgba(0,0,0,.8); }
   #rankFx.rev .ru-ja{ animation:ruIn .7s .25s ease-out forwards; }
-  .ru-en{ font-family:'Oswald',var(--sans);font-weight:700;font-size:min(13vw,52px);letter-spacing:.06em;color:#fff;line-height:1.05;opacity:0;margin-top:4px; }
+  .ru-en{ font-family:'Oswald',var(--sans);font-weight:700;font-size:min(10.5vw,48px);letter-spacing:.06em;color:#fff;line-height:1.05;white-space:nowrap;opacity:0;margin-top:4px; }
   #rankFx.rev .ru-en{ animation:ruIn .6s .5s ease-out forwards; }
-  .ru-belt{ width:140px;height:10px;border-radius:5px;outline:1px solid rgba(244,236,220,.35);outline-offset:1px;margin:16px auto 0;transition:background .8s ease;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); }
-  .ru-lbl{ font-family:'Oswald',var(--sans);font-size:14px;letter-spacing:.45em;color:var(--sub);margin-top:14px;opacity:0; }
+  .ru-lbl{ font-family:'Oswald',var(--sans);font-size:14px;letter-spacing:.45em;color:var(--ac);margin-top:14px;opacity:0; }
+  .ru-in-seal{ display:inline-grid;place-items:center;font-size:.3em;width:1.3em;height:1.3em;margin:.9em 0 0 .3em;background:var(--shu);color:#fff;font-family:var(--serif);font-weight:800;border-radius:3px;line-height:1;letter-spacing:0;text-shadow:none;transform:rotate(4deg); }
+  .ru-ink{ position:absolute;left:50%;top:50%;border-radius:50%;background:#000;box-shadow:0 0 0 1px rgba(244,236,220,.15);opacity:0;transform:translate(-50%,-50%); }
+  #rankFx.hit .ru-ink{ animation:ruBurst .5s ease-out forwards; }
+  .ru-spark{ position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;opacity:0; }
+  #rankFx.hit .ru-spark{ animation:ruBurst .7s ease-out forwards; }
+  @keyframes ruBurst{ 0%{transform:translate(-50%,-50%);opacity:1;} 100%{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.6);opacity:0;} }
   #rankFx.rev .ru-lbl{ animation:ruIn .5s .8s forwards; }
   .ru-go{ margin-top:30px;opacity:0;pointer-events:none; }
   #rankFx.rev .ru-go{ animation:ruIn .5s 1.5s forwards;pointer-events:auto; }
@@ -567,44 +572,51 @@
 </div>
 <script>
 /* ══ マスターデータ ══ */
-const RANKS=[
-  {min:6, name:'門前払い',en:'OUTSIDER',    belt:'#E8E4DA'},{min:14,name:'丁稚',  en:'APPRENTICE',  belt:'#E8C547'},
-  {min:22,name:'入門者',  en:'INITIATE',    belt:'#E08A3C'},{min:31,name:'行者',  en:'ASCETIC',     belt:'#4E9A5B'},
-  {min:40,name:'鍛錬者',  en:'ADEPT',       belt:'#3D6FB6'},{min:49,name:'荒法師',en:'WARRIOR MONK',belt:'#7A4FA0'},
-  {min:67,name:'達人',    en:'MASTER',      belt:'#16130F'},{min:84,name:'天狗',  en:'TENGU',       belt:'#C8372D'}
+const RANKS=[ // 昇格演出で階級ごとに変える部分：称号(name/en)・印(seal)・差し色(accent)・小さな効果(fx)
+  {min:6, name:'門前払い',en:'OUTSIDER',    seal:'門',accent:'#E8E4DA',fx:''},
+  {min:14,name:'丁稚',    en:'APPRENTICE',  seal:'丁',accent:'#E8C547',fx:''},
+  {min:22,name:'入門者',  en:'INITIATE',    seal:'入',accent:'#E08A3C',fx:''},
+  {min:31,name:'行者',    en:'ASCETIC',     seal:'行',accent:'#6FB27A',fx:''},
+  {min:40,name:'鍛錬者',  en:'ADEPT',       seal:'鍛',accent:'#5B8FD6',fx:''},
+  {min:49,name:'荒法師',  en:'WARRIOR MONK',seal:'荒',accent:'#E5482E',fx:'shu'},
+  {min:67,name:'達人',    en:'MASTER',      seal:'達',accent:'#D9AC52',fx:'gold'},
+  {min:84,name:'天狗',    en:'TENGU',       seal:'天',accent:'#E0453A',fx:'tengu'}
 ];
 function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
 // 名前を決めてから最初の3日間は強制的に「門前払い」
 let daysSinceStart=8; // モック：開始からの日数（3未満なら門前払い固定）
 function currentRank(){ return daysSinceStart<3 ? RANKS[0] : rankOf(SUM); }
 let lastRankIdx=null, RANK_UP=null, RANK_FROM=0; // 昇格した瞬間だけ大きな称号を出す
-function beltBar(r,h){ return `<div style="height:${h||8}px;border-radius:4px;background:${r.belt};box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)"></div>`; }
 function showRankUp(){
-  // 約3秒：墨で静まり（0–0.5s）→ 朱印「昇」が打たれ（0.5–1.2s）→ 新しい帯と称号（1.2–3s）
-  const ri=RANK_UP; RANK_UP=null; const r=RANKS[ri], from=RANKS[RANK_FROM]||RANKS[0]; if(!r) return;
-  const top=ri===RANKS.length-1, master=ri>=RANKS.length-2;
-  let extra='';
-  if(master){ for(let k=0;k<26;k++) extra+=`<i class="ru-gold" style="left:${Math.random()*100}%;animation-delay:${1.2+Math.random()*1.4}s;animation-duration:${2.4+Math.random()*1.6}s"></i>`; }
-  if(top){
-    for(let k=0;k<5;k++) extra+=`<i class="ru-wind" style="top:${15+k*16+Math.random()*6}%;animation-delay:${1.05+k*.07}s"></i>`;
-    for(let k=0;k<14;k++) extra+=`<i class="ru-feather" style="left:${-10+Math.random()*60}%;top:${Math.random()*70}%;--fx:${260+Math.random()*260}px;--fy:${80+Math.random()*220}px;--fr:${200+Math.random()*400}deg;animation-delay:${1.1+Math.random()*.6}s"></i>`;
+  // 共通：暗転（0–0.5s）→ 太鼓と朱印「昇」（0.5s）→ 称号の登場（1.2–3s）。階級ごとに称号・印・差し色・小さな効果を変える
+  const ri=RANK_UP; RANK_UP=null; const r=RANKS[ri]; if(!r) return;
+  const R=(a,b)=>a+Math.random()*(b-a), c=r.accent;
+  let fx='';
+  if(r.fx==='shu') for(let k=0;k<30;k++){ const a=R(0,6.28),d=R(120,240); fx+=`<i class="ru-spark" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;width:${R(4,9)}px;height:${R(4,9)}px;background:var(--shu);box-shadow:0 0 10px var(--shu)"></i>`; }
+  if(r.fx==='ink') for(let k=0;k<9;k++){ const a=R(0,6.28),d=R(90,170); fx+=`<i class="ru-ink" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;width:${R(10,26)}px;height:${R(10,26)}px"></i>`; }
+  if(r.fx==='sparks') for(let k=0;k<22;k++){ const a=R(0,6.28),d=R(110,200); fx+=`<i class="ru-spark" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;background:${c};box-shadow:0 0 8px ${c}"></i>`; }
+  let bg='';
+  if(r.fx==='leaves') for(let k=0;k<12;k++) bg+=`<i class="ru-feather" style="left:${R(0,100)}%;top:-6%;--fx:${R(-80,80)}px;--fy:${R(60,90)}vh;--fr:${R(180,540)}deg;background:${c};animation-delay:${R(1.1,2)}s;animation-duration:${R(2.6,3.6)}s"></i>`;
+  if(r.fx==='gold') for(let k=0;k<26;k++) bg+=`<i class="ru-gold" style="left:${R(0,100)}%;animation-delay:${R(1.2,2.6)}s;animation-duration:${R(2.4,4)}s"></i>`;
+  if(r.fx==='tengu'){
+    for(let k=0;k<5;k++) bg+=`<i class="ru-wind" style="top:${15+k*16+R(0,6)}%;animation-delay:${1.05+k*.07}s"></i>`;
+    for(let k=0;k<14;k++) bg+=`<i class="ru-feather" style="left:${R(-10,50)}%;top:${R(0,70)}%;--fx:${R(260,520)}px;--fy:${R(80,300)}px;--fr:${R(200,600)}deg;animation-delay:${R(1.1,1.7)}s"></i>`;
   }
-  const d=document.createElement('div'); d.id='rankFx';
-  d.innerHTML=`${extra}<div class="ru-in">
+  const d=document.createElement('div'); d.id='rankFx'; d.style.setProperty('--ac',c);
+  d.innerHTML=`${bg}<div class="ru-in">
     <div class="ru-stage">
-      <div class="ru-ja">${r.name}</div>
-      <div class="ru-seal">昇</div>
+      <div class="ru-ja">${r.name}<span class="ru-in-seal">${r.seal}</span></div>
+      <div class="ru-seal">昇</div>${fx}
       <i class="ru-ring"></i><i class="ru-ring r2"></i>
     </div>
     <div class="ru-en">${r.en}</div>
-    <div class="ru-belt" style="background:${from.belt}"></div>
     <div class="ru-lbl">RANK UP</div>
     <button class="btnprime ru-go" onclick="closeRankUp()">CONTINUE</button>
   </div>`;
   document.body.appendChild(d);
   requestAnimationFrame(()=>d.classList.add('on'));
   setTimeout(()=>{ try{ const a=new Audio('sound/sound_reward.mp3'); a.play().catch(()=>{}); }catch(e){} vib(60); d.classList.add('hit'); },500);
-  setTimeout(()=>{ d.classList.add('rev'); d.querySelector('.ru-belt').style.background=r.belt; if(top) vib([30,30,30]); },1200);
+  setTimeout(()=>{ d.classList.add('rev'); if(r.fx==='tengu') vib([30,30,30]); },1200);
 }
 function closeRankUp(){ const d=document.getElementById('rankFx'); if(!d) return; d.classList.add('out'); setTimeout(()=>d.remove(),350); }
 
@@ -1065,7 +1077,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.1';
+const APP_VERSION='v0.18.2';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1935,7 +1947,7 @@ function viewProfile(){
     <div style="flex:1"></div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
-  <div class="rkcard" onclick="rankList()" style="border-left:8px solid ${r.belt}">
+  <div class="rkcard" onclick="rankList()" style="border-left:8px solid ${r.accent}">
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
       <div><div class="rk-en">${r.en}</div><div class="rk-ja">${r.name}</div></div>
       <div class="rk-lbl">RANK ${RANKS.indexOf(r)+1} / ${RANKS.length}</div>
@@ -2867,7 +2879,7 @@ function rankList(){
     const isCur=r.name===cur.name;
     return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(217,172,82,.14)':'rgba(255,255,255,.02)'}">
       <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin2)':'var(--sub)'};font-size:16px">${i+1}</div>
-      <div style="width:6px;align-self:stretch;border-radius:3px;background:${r.belt}"></div>
+      <div style="width:6px;align-self:stretch;border-radius:3px;background:${r.accent}"></div>
       <div style="flex:1"><div style="font-family:'Oswald',var(--sans);font-size:17px;letter-spacing:.06em;color:${isCur?'#fff':'var(--washi)'}">${r.en}</div><div style="font-family:var(--serif);font-size:13px;color:var(--sub)">${r.name}</div></div>
       <div style="font-size:14px;color:var(--sub)">Total ${range}</div>
       ${isCur?'<div style="font-size:14px;color:var(--kin);font-weight:700">YOU</div>':''}
