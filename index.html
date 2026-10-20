@@ -299,8 +299,17 @@
   .cdpop{ animation:cdpop .3s ease; }
   /* 段クリア大演出 */
   #clearFx{ position:fixed;inset:0;z-index:92;display:none;align-items:center;justify-content:center;background:rgba(10,8,7,.86);backdrop-filter:blur(4px); }
-  #clearFx .seal{ width:min(230px,20vh);height:min(230px,20vh);border-radius:50%;border:4px solid var(--shu);display:grid;place-items:center;position:relative;margin:0 auto;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
-  #clearFx .seal .k{ font-family:var(--serif);font-size:min(88px,8vh);font-weight:800;color:var(--shu2); }
+  #clearFx .seal{ width:min(230px,20vh);height:min(230px,20vh);border-radius:14px;border:none;background:var(--shu);transform:rotate(-4deg);box-shadow:0 10px 40px rgba(229,72,46,.5);display:grid;place-items:center;position:relative;margin:0 auto;animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
+  .rkseal{ display:inline-block;margin-top:18px;padding:16px 18px;background:var(--shu);color:#fff;font-family:var(--serif);font-weight:800;font-size:min(64px,7vh);line-height:1.1;border-radius:8px;transform:rotate(-4deg);box-shadow:0 0 0 4px rgba(229,72,46,.35),0 10px 40px rgba(229,72,46,.5);animation:sealIn .6s cubic-bezier(.2,.9,.3,1.3); }
+  .rkcard{ margin:4px 0 16px;padding:18px 18px 16px;border-radius:16px;background:var(--card);cursor:pointer; }
+  .rk-en{ font-family:'Oswald',var(--sans);font-size:38px;font-weight:700;letter-spacing:.06em;line-height:1;color:#fff; }
+  .rk-ja{ font-family:var(--serif);font-size:16px;color:var(--washi);letter-spacing:.2em;margin-top:6px; }
+  .rk-lbl{ font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.2em;color:var(--sub);white-space:nowrap; }
+  .rk-bar{ height:6px;border-radius:3px;background:rgba(244,236,220,.12);margin-top:14px;overflow:hidden; }
+  .rk-bar i{ display:block;height:100%;background:var(--washi); }
+  .rk-next{ font-size:14px;color:var(--sub);margin-top:8px; }
+  .rk-next b{ color:#fff;font-family:'Oswald',var(--sans);letter-spacing:.08em; }
+  #clearFx .seal .k{ font-family:var(--serif);font-size:min(120px,12vh);font-weight:800;color:#fff; }
   @keyframes sealIn{ 0%{transform:scale(0) rotate(-40deg);opacity:0;}100%{transform:scale(1) rotate(0);opacity:1;} }
   /* ── 修行の山道（双六ホーム） ── */
   .mtn-head{ display:flex;justify-content:space-between;align-items:flex-start;margin:2px 2px 8px; }
@@ -340,9 +349,10 @@
   .hx-stats small{ display:block;font-size:12px;color:var(--sub);letter-spacing:.1em;margin-top:3px; }
   .hx-mon{ margin-top:14px;font-size:13px;letter-spacing:.2em;color:var(--washi); }
   .hx-mon span{ font-family:'Oswald',var(--sans);font-weight:700;letter-spacing:.3em; }
-  .hx-stats b.jp{ font-family:var(--serif);font-size:20px;font-weight:800;padding-top:3px; }
-  .hx-mon em{ font-style:normal;display:block;font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.25em;color:rgba(244,236,220,.7);margin-top:2px; }
-  .hx-mon b{ display:block;font-family:var(--serif);font-size:22px;font-weight:800;letter-spacing:.15em;color:#fff;margin-top:2px; }
+  .hx-stats small.jp{ font-family:var(--serif);letter-spacing:.15em;color:var(--washi); }
+  .hx-stats b.rk{ font-size:min(5vw,20px);padding-top:3px;letter-spacing:.04em; }
+  .hx-mon em{ font-style:normal;display:block;text-shadow:0 1px 6px #000;font-family:'Oswald',var(--sans);font-size:13px;letter-spacing:.25em;color:rgba(244,236,220,.7);margin-top:2px; }
+  .hx-mon b{ display:block;font-family:var(--serif);font-size:30px;font-weight:800;letter-spacing:.15em;color:#fff;margin-top:4px;line-height:1.2; }
   .hx .ver{ font-size:11px;color:var(--faint);margin-top:4px; }
   .hb{ position:absolute;left:20px;right:20px;bottom:8px;z-index:4;text-align:center; }
   @container (max-height:720px){ .hx-sub{ display:none; } .mart.v2 .mart-in{ top:calc(100cqh - 202.5cqw + 13cqw + 20px); } .hx-h{ font-size:min(11vw,44px); } .hx-stats{ margin-top:10px;padding-top:10px; } .hx-mon{ margin-top:10px; } }
@@ -496,7 +506,7 @@
   </div>
   <div id="main"></div>
   <div id="dojo">
-    <div class="dtop"><div class="dset" id="dSet"></div><div class="dquit" onclick="quitWorkout()">やめる</div></div>
+    <div class="dtop"><div class="dset" id="dSet"></div><div class="dquit" onclick="quitWorkout()">QUIT</div></div>
     <div class="dstage" id="dStage"></div>
     <div class="dbtns" id="dBtns"></div>
   </div>
@@ -509,83 +519,100 @@
   </div>
   <div class="tabbar" id="tabbar"></div>
 </div>
-<div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">練度上昇！</div></div>
+<div id="xpPop"><div class="xpnum" id="xpNum"></div><div class="xplabel">LEVEL UP!</div></div>
 <div id="login">
   <div class="lstage">
     <div class="ltt">鍛錬寺</div>
-    <img class="lshihan" src="images/shihan.webp" alt="師範">
-    <div class="lspeech">修行を志す者よ、門を叩け。<br>お前の歩みは、ここにすべて記される。</div>
+    <img class="lshihan" src="images/shihan.webp" alt="Sensei">
+    <div class="lspeech">You who seek training — knock on the gate.<br>Every step you take will be recorded here.</div>
   </div>
-  <button class="btnprime" id="loginBtn" onclick="doSignIn()">Googleで入門する</button>
-  <div class="lnote">記録はGoogleアカウントに保存され、機種変更しても引き継げます</div>
+  <button class="btnprime" id="loginBtn" onclick="doSignIn()">Enter with Google</button>
+  <div class="lnote">Your records are saved to your Google account and follow you to any device.</div>
   <div class="lerr" id="loginErr"></div>
 </div>
 <div id="tut">
-  <div class="skip" onclick="closeTut()">省略</div>
+  <div class="skip" onclick="closeTut()">SKIP</div>
   <div class="stage" id="tutStage"></div>
   <div class="dots" id="tutDots"></div>
-  <button class="btnprime" id="tutNext" onclick="tutNext()">進む</button>
+  <button class="btnprime" id="tutNext" onclick="tutNext()">NEXT</button>
 </div>
 <script>
 /* ══ マスターデータ ══ */
 const RANKS=[
-  {min:6,name:'門前払い'},{min:14,name:'丁稚'},{min:22,name:'入門者'},{min:31,name:'行者'},
-  {min:40,name:'鍛錬者'},{min:49,name:'荒法師'},{min:67,name:'達人'},{min:84,name:'天狗'}
+  {min:6, name:'門前払い',en:'OUTSIDER',    belt:'#E8E4DA'},{min:14,name:'丁稚',  en:'APPRENTICE',  belt:'#E8C547'},
+  {min:22,name:'入門者',  en:'INITIATE',    belt:'#E08A3C'},{min:31,name:'行者',  en:'ASCETIC',     belt:'#4E9A5B'},
+  {min:40,name:'鍛錬者',  en:'ADEPT',       belt:'#3D6FB6'},{min:49,name:'荒法師',en:'WARRIOR MONK',belt:'#7A4FA0'},
+  {min:67,name:'達人',    en:'MASTER',      belt:'#16130F'},{min:84,name:'天狗',  en:'TENGU',       belt:'#C8372D'}
 ];
 function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
 // 名前を決めてから最初の3日間は強制的に「門前払い」
 let daysSinceStart=8; // モック：開始からの日数（3未満なら門前払い固定）
 function currentRank(){ return daysSinceStart<3 ? RANKS[0] : rankOf(SUM); }
+let lastRankIdx=null, RANK_UP=null; // 昇格した瞬間だけ大きな称号を出す
+function beltBar(r,h){ return `<div style="height:${h||8}px;border-radius:4px;background:${r.belt};box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)"></div>`; }
+function showRankUp(){
+  const r=RANKS[RANK_UP]; RANK_UP=null; if(!r) return;
+  const fx=document.getElementById('clearFx'); fx.style.display='flex';
+  fx.innerHTML=`<div style="text-align:center;padding:0 30px;position:relative">
+    <div class="shock"></div><div class="shock s2"></div>
+    <div style="font-family:'Oswald',var(--sans);font-size:15px;letter-spacing:.4em;color:var(--kin2)">RANK UP</div>
+    <div class="rkseal">${r.name.split('').join('<br>')}</div>
+    <div style="font-family:'Oswald',var(--sans);font-size:44px;font-weight:700;letter-spacing:.08em;color:#fff;margin-top:18px">${r.en}</div>
+    <div style="width:120px;margin:12px auto 0">${beltBar(r,10)}</div>
+    <button class="btnprime" style="margin-top:26px" onclick="document.getElementById('clearFx').style.display='none'">CONTINUE</button>
+  </div>`;
+  vib([80,40,80,40,200]);
+}
 
 const EX=[
-  {key:'push',  name:'プッシュアップ',       cur:5, sys:'upper'},
-  {key:'pull',  name:'プルアップ',           cur:5, sys:'upper'},
-  {key:'squat', name:'スクワット',           cur:3, sys:'lower'},
-  {key:'core',  name:'レッグレイズ（コア）', cur:5, sys:'core'},
-  {key:'bridge',name:'ブリッジ＆裏もも',     cur:2, sys:'lower'},
-  {key:'hand',  name:'ハンドスタンド',       cur:3, sys:'upper'},
+  {key:'push',  name:'Push-up',       cur:5, sys:'upper'},
+  {key:'pull',  name:'Pull-up',           cur:5, sys:'upper'},
+  {key:'squat', name:'Squat',           cur:3, sys:'lower'},
+  {key:'core',  name:'Leg Raise (Core)', cur:5, sys:'core'},
+  {key:'bridge',name:'Bridge & Hamstrings',     cur:2, sys:'lower'},
+  {key:'hand',  name:'Handstand',       cur:3, sys:'upper'},
 ];
 // [ステップ名, タイプ] タイプ: d=動的 s=静的 n=ネガティブ
 const STEPS={
   push:[
-    ['壁プッシュアップ','d'],['高インクライン・プッシュアップ','d'],['インクライン・プッシュアップ','d'],
-    ['膝つきプッシュアップ','d'],['フル・プッシュアップ','d'],['ダイヤモンド・プッシュアップ','d'],
-    ['ワイド・プッシュアップ','d'],['擬似プランシェ・プッシュアップ','d'],['アーチャー・プッシュアップ','d'],
-    ['片手腕立て・ネガティブ','n'],['インクライン・ワンアーム','d'],['ストラドル・ワンアーム','d'],
-    ['フル・ワンアーム・プッシュアップ','d'],['プランシェ・プッシュアップ','d'],
+    ['Wall Push-up','d'],['High Incline Push-up','d'],['Incline Push-up','d'],
+    ['Knee Push-up','d'],['Full Push-up','d'],['Diamond Push-up','d'],
+    ['Wide Push-up','d'],['Pseudo Planche Push-up','d'],['Archer Push-up','d'],
+    ['One-Arm Push-up Negative','n'],['Incline One-Arm Push-up','d'],['Straddle One-Arm Push-up','d'],
+    ['Full One-Arm Push-up','d'],['Planche Push-up','d'],
   ],
   pull:[
-    ['バーティカル・ロウ','d'],['インクライン・ロウ','d'],['ホリゾンタル・ロウ','d'],['スキャプラ・プル','d'],
-    ['プルアップ・ホールド','s'],['ジャンプ・ネガティブ懸垂','n'],['ハーフ・プルアップ','d'],['フル・プルアップ','d'],
-    ['ワイド・プルアップ','d'],['Lシット・プルアップ','d'],['アーチャー・プルアップ','d'],['ワンアーム・ネガティブ','n'],
-    ['補助付きワンアーム','d'],['ハーフ・ワンアーム','d'],['ワンアーム・チンアップ','d'],
+    ['Vertical Row','d'],['Incline Row','d'],['Horizontal Row','d'],['Scapula Pull','d'],
+    ['Pull-up Hold','s'],['Jumping Negative Pull-up','n'],['Half Pull-up','d'],['Full Pull-up','d'],
+    ['Wide Pull-up','d'],['L-Sit Pull-up','d'],['Archer Pull-up','d'],['One-Arm Pull-up Negative','n'],
+    ['Assisted One-Arm Pull-up','d'],['Half One-Arm Pull-up','d'],['One-Arm Chin-up','d'],
   ],
   squat:[
-    ['アシステッド・スクワット','d'],['ボックス・スクワット','d'],['フル・スクワット','d'],['スプリット・スクワット','d'],
-    ['ブルガリアン・スプリット','d'],['アシステッド・ピストル','d'],['ビギナー・シュリンプ','d'],['ボックス・ピストル','d'],
-    ['インターメディエイト・シュリンプ','d'],['エレベーテッド・ピストル','d'],['フル・ピストル・スクワット','d'],
-    ['アドバンスド・シュリンプ','d'],['ウェイテッド・ピストル','d'],['シシー・スクワット','d'],
+    ['Assisted Squat','d'],['Box Squat','d'],['Full Squat','d'],['Split Squat','d'],
+    ['Bulgarian Split Squat','d'],['Assisted Pistol','d'],['Beginner Shrimp Squat','d'],['Box Pistol','d'],
+    ['Intermediate Shrimp Squat','d'],['Elevated Pistol','d'],['Full Pistol Squat','d'],
+    ['Advanced Shrimp Squat','d'],['Weighted Pistol','d'],['Sissy Squat','d'],
   ],
   core:[
-    ['プランク','s'],['ホロウボディ・ホールド','s'],['フロア・ニーレイズ','d'],['フロア・ストレートレイズ','d'],
-    ['ハンギング・ニーレイズ','d'],['ハンギング・ベントレイズ','d'],['タック・Lシット','s'],['ハンギング・レッグレイズ','d'],
-    ['Lシット','s'],['トゥズ・トゥ・バー','d'],['Vシット','s'],['タック・ドラゴンフラッグ','d'],
-    ['ワンレッグ・ドラゴンフラッグ','d'],['フル・ドラゴンフラッグ','d'],
+    ['Plank','s'],['Hollow Body Hold','s'],['Lying Knee Raise','d'],['Lying Straight Leg Raise','d'],
+    ['Hanging Knee Raise','d'],['Hanging Bent-Leg Raise','d'],['Tuck L-Sit','s'],['Hanging Leg Raise','d'],
+    ['L-Sit','s'],['Toes-to-Bar','d'],['V-Sit','s'],['Tuck Dragon Flag','d'],
+    ['One-Leg Dragon Flag','d'],['Full Dragon Flag','d'],
   ],
   bridge:[
-    ['ショート・ブリッジ','d'],['エレベーテッド・ブリッジ','d'],['シングルレッグ・ブリッジ','d'],['テーブル・トップ','s'],
-    ['ヘッド・ブリッジ','s'],['フル・ブリッジ','s'],['シングルレッグ・デッドリフト','d'],['ワンレッグ／ワンアーム・ブリッジ','s'],
-    ['ウォール・ウォーク・ダウン','n'],['スタンド・トゥ・スタンド','d'],['ノルディックカール・ネガティブ','n'],
-    ['アシステッド・ノルディックカール','d'],['フル・ノルディックカール','d'],
+    ['Short Bridge','d'],['Elevated Bridge','d'],['Single-Leg Bridge','d'],['Tabletop','s'],
+    ['Head Bridge','s'],['Full Bridge','s'],['Single-Leg Deadlift','d'],['One-Leg / One-Arm Bridge','s'],
+    ['Wall Walk-Down','n'],['Stand-to-Stand Bridge','d'],['Nordic Curl Negative','n'],
+    ['Assisted Nordic Curl','d'],['Full Nordic Curl','d'],
   ],
   hand:[
-    ['パイク・ホールド','s'],['パイク・プッシュアップ','d'],['エレベーテッド・パイク','d'],['ウォール・ヘッドスタンド','s'],
-    ['ウォール・ハンドスタンド','s'],['壁倒立ネガティブ','n'],['ボックス・HSPU','d'],['パーシャル壁HSPU','d'],
-    ['フル壁HSPU','d'],['デフィシット壁HSPU','d'],['フリー・ハンドスタンド','s'],['フリーHSPU・ネガティブ','n'],
-    ['フル・フリーHSPU','d'],['90度HSPU','d'],['ワンアーム・ハンドスタンド','s'],
+    ['Pike Hold','s'],['Pike Push-up','d'],['Elevated Pike Push-up','d'],['Wall Headstand','s'],
+    ['Wall Handstand','s'],['Wall Handstand Negative','n'],['Box HSPU','d'],['Partial Wall HSPU','d'],
+    ['Full Wall HSPU','d'],['Deficit Wall HSPU','d'],['Freestanding Handstand','s'],['Freestanding HSPU Negative','n'],
+    ['Full Freestanding HSPU','d'],['90-Degree HSPU','d'],['One-Arm Handstand','s'],
   ],
 };
-const TYPE_LABEL={ d:'動的', s:'静的', n:'ネガティブ' };
+const TYPE_LABEL={ d:'Dynamic', s:'Static', n:'Negative' };
 function stepName(key,i){ return STEPS[key][i-1][0]; }
 function stepType(key,i){ return STEPS[key][i-1][1]; }
 function stepCount(key){ return STEPS[key].length; }
@@ -594,11 +621,11 @@ function exBy(key){ return EX.find(e=>e.key===key); }
 // 系統・タイプ別の基準（クリア閾値・初期値・インターバル秒）
 function criteria(key,i){
   const ty=stepType(key,i), sys=exBy(key).sys;
-  if(ty==='s') return {goal:30, start:12, unit:'秒', rest:105, tempo:null, clearTxt:'3組×30秒'};
-  if(ty==='n') return {goal:5,  start:3,  unit:'回', rest:210, tempo:'5秒かけて下降', clearTxt:'3組×5回'};
-  if(sys==='upper') return {goal:10, start:5, unit:'回', rest:150, tempo:'1-0-2-1', clearTxt:'3組×10回'};
-  if(sys==='lower') return {goal:15, start:8, unit:'回', rest:150, tempo:'1-0-2-1', clearTxt:'3組×15回'};
-  return {goal:15, start:8, unit:'回', rest:105, tempo:'1-0-2-1', clearTxt:'3組×15回'};
+  if(ty==='s') return {goal:30, start:12, unit:'sec', rest:105, tempo:null, clearTxt:'3 × 30 sec'};
+  if(ty==='n') return {goal:5,  start:3,  unit:'reps', rest:210, tempo:'5-sec descent', clearTxt:'3 × 5 reps'};
+  if(sys==='upper') return {goal:10, start:5, unit:'reps', rest:150, tempo:'1-0-2-1', clearTxt:'3 × 10 reps'};
+  if(sys==='lower') return {goal:15, start:8, unit:'reps', rest:150, tempo:'1-0-2-1', clearTxt:'3 × 15 reps'};
+  return {goal:15, start:8, unit:'reps', rest:105, tempo:'1-0-2-1', clearTxt:'3 × 15 reps'};
 }
 
 /* ══ 保存データ（Firebase）══
@@ -675,13 +702,14 @@ function recompute(){
     e.cur=cur;
   });
   SUM=EX.reduce((a,e)=>a+e.cur,0);
+  { const ri=RANKS.indexOf(currentRank()); if(READY && lastRankIdx!==null && ri>lastRankIdx) RANK_UP=ri; lastRankIdx=ri; }
   // 日ごとの状態
   CAL_DATA={}; DAY_LOG={};
   (u.rests||[]).forEach(k=>{ CAL_DATA[k]='rest'; });
   LOGS.forEach(g=>{
     CAL_DATA[g.date]='done';
     (DAY_LOG[g.date]=DAY_LOG[g.date]||[]).push({key:g.ex,ex:exBy(g.ex).name,step:g.step,
-      detail:`${g.sets.length}×${logAvg(g)}${stepType(g.ex,g.step)==='s'?'秒':''}`,xp:logXP(g)});
+      detail:`${g.sets.length}×${logAvg(g)}${stepType(g.ex,g.step)==='s'?' sec':''}`,xp:logXP(g)});
   });
   totalDays=Object.keys(DAY_LOG).length;
   trainedToday=!!DAY_LOG[today];
@@ -723,7 +751,7 @@ function recompute(){
   const[fy,fm]=firstMk.split('-').map(Number), [ly,lm]=MTN.mk.split('-').map(Number);
   for(let d=new Date(fy,fm-1,1); d<=new Date(ly,lm-1,1); d=new Date(d.getFullYear(),d.getMonth()+1,1)){
     const m=monthKey(d), r=mountainOf(m);
-    STAMPS.push({month:(d.getFullYear()===now.getFullYear()?'':d.getFullYear()+'年')+(d.getMonth()+1)+'月',mtn:MOUNTAINS[d.getMonth()],got:r.total>0&&r.climbed>=r.total});
+    STAMPS.push({month:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+(d.getFullYear()===now.getFullYear()?'':' '+d.getFullYear()),mtn:MOUNTAINS[d.getMonth()],got:r.total>0&&r.climbed>=r.total});
   }
   // 巻物
   const keysDone=new Set(LOGS.map(g=>g.ex));
@@ -738,7 +766,7 @@ function recompute(){
 }
 
 /* 書き込み（Firestoreの画面反映は onSnapshot 経由。電波がなくても端末に保存され、戻ったら送られる） */
-function saveUser(partial){ if(!FB) return; FB.saveUser(partial).catch(e=>{ console.warn(e); toast('保存に失敗しました'); }); }
+function saveUser(partial){ if(!FB) return; FB.saveUser(partial).catch(e=>{ console.warn(e); toast('Couldn’t save. Try again.'); }); }
 function addLedger(entry){ saveUser({ledger:FB.union(Object.assign({at:Date.now()},entry))}); }
 function saveMicroGoal(){ saveUser({microGoal:Object.assign({},microGoal)}); }
 function addLog(key,step,sets,noteIn){
@@ -746,15 +774,15 @@ function addLog(key,step,sets,noteIn){
   const note=noteIn!=null?String(noteIn).trim():(memoEl?memoEl.value.trim():'');
   if(note) microGoalProgress('memo',1);
   const p=FB.addLog({date:todayStr(),ts:Date.now(),ex:key,step,sets,note});
-  p.catch(e=>{ console.warn(e); toast('記録の保存に失敗しました'); });
+  p.catch(e=>{ console.warn(e); toast('Couldn’t save your training log.'); });
   return {id:p.id,note};
 }
 // 記録のあとで覚書を書き足す（次回に引き継ぎたいこと）
-const MEMO_ASK='次回に引き継ぎたいことがあれば、覚書に書いておこう';
+const MEMO_ASK='Anything to remember for next time? Jot it in your Notes.';
 function memoAskHtml(id,note,wide){
   return `<div style="width:100%;max-width:${wide?'none':'320px'};margin-top:18px;text-align:left">
     <div style="font-size:14px;color:var(--kin);margin-bottom:6px">📝 ${MEMO_ASK}</div>
-    <input type="text" id="${id}" maxlength="200" value="${escHtml(note||'')}" placeholder="例：3組目でひじが開いた" style="width:100%;box-sizing:border-box;background:var(--sumi3);border:1px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:16px;font-family:var(--sans)">
+    <input type="text" id="${id}" maxlength="200" value="${escHtml(note||'')}" placeholder="e.g. Elbows flared on set 3" style="width:100%;box-sizing:border-box;background:var(--sumi3);border:1px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:16px;font-family:var(--sans)">
   </div>`;
 }
 function saveLaterMemo(rec,inputId){
@@ -762,47 +790,47 @@ function saveLaterMemo(rec,inputId){
   const v=el.value.trim();
   if(v===rec.note) return;
   if(v && !rec.note) microGoalProgress('memo',1);
-  FB.updateLog(rec.id,{note:v}).catch(e=>{ console.warn(e); toast('覚書の保存に失敗しました'); });
+  FB.updateLog(rec.id,{note:v}).catch(e=>{ console.warn(e); toast('Couldn’t save your note.'); });
 }
 
 const FRIENDS=[
-  {name:'タカシ',em:'🧙',vals:[6,5,4,7,3,4],streak:18,monthXP:520,totalXP:2100,trained:true},
-  {name:'翔',    em:'⚔️',vals:[3,3,2,4,2,2],streak:7, monthXP:210,totalXP:890, trained:false},
+  {name:'Takashi',em:'🧙',vals:[6,5,4,7,3,4],streak:18,monthXP:520,totalXP:2100,trained:true},
+  {name:'Sho',    em:'⚔️',vals:[3,3,2,4,2,2],streak:7, monthXP:210,totalXP:890, trained:false},
 ];
 
 // リアクション種別ごとのランダムセリフ
 const REACT_SERIF={
   '👊':[
-    'まだ寝てるのか？弱いままでいるつもりかよ',
-    '言い訳は聞かん。できないんじゃなくて、やってないだけだ',
-    '今日もサボりか…草。情けねぇ',
-    'その程度か…？情けねぇな',
+    'Still asleep? You planning to stay weak forever?',
+    'No excuses. You’re not unable — you just didn’t do it.',
+    'Skipping again today? LOL. Pathetic.',
+    'That’s all you got…? Weak.',
   ],
   '🔥':[
-    'マジで強くなったな…お前、化けたぞ',
-    'その修行、尊すぎるわ。ガチで鳥肌立った',
-    'その記録、歴史に刻まれろ。今日のお前は最高だった',
-    '限界を超えた先に、本当の強さがある。お前は今それを証明した',
+    'You got seriously strong… you’ve leveled up for real.',
+    'That session was legendary. Gave me chills, no joke.',
+    'That record belongs in the history books. You were on fire today.',
+    'Real strength lives past your limits. You just proved it.',
   ],
   '💪':[
-    'お前と一緒なら、頂なんて余裕で取れるぜ。一緒にぶち上がろう！',
-    'お前の修行が俺の燃料だ。一緒に極致まで燃やし尽くそう',
-    'この道は一人じゃ味気ない。お前と一緒に極めたいんだよ',
-    '俺たちの青春、ここに燃やし尽くそうぜ',
+    'With you, the summit’s a cakewalk. Let’s climb it together!',
+    'Your training is my fuel. Let’s burn all the way to the top.',
+    'This path is no fun alone. I want to master it with you.',
+    'This is our prime. Let’s burn it all right here.',
   ],
   '💙':[
-    '今日も道場開けろ。逃げんなよ、ガチで',
-    '諦めたらそこで試合終了だよ（スラムダンク）',
-    'その努力、尊いわ。ちゃんと見てるぞ',
-    '一歩一歩でいい。百錬成鋼だ',
+    'Open the dojo today too. Don’t you dare run, for real.',
+    'Give up and the game’s over right there.',
+    'That effort is something else. I see you.',
+    'One step at a time is enough. A hundred forgings make steel.',
   ],
 };
 function randomSerif(icon){ const a=REACT_SERIF[icon]||[]; return a[Math.floor(Math.random()*a.length)]||''; }
 
 const REACT_HIST=[
-  {who:'タカシ',em:'🧙',react:'🔥',label:'熱い', serif:'その修行、尊すぎるわ。ガチで鳥肌立った', tm:'2時間前'},
-  {who:'翔',    em:'⚔️',react:'💪',label:'強い', serif:'お前の修行が俺の燃料だ。一緒に極致まで燃やし尽くそう', tm:'昨日'},
-  {who:'タカシ',em:'🧙',react:'👊',label:'喝',   serif:'今日もサボりか…草。情けねぇ', tm:'3日前'},
+  {who:'Takashi',em:'🧙',react:'🔥',label:'Fire!', serif:'That session was legendary. Gave me chills, no joke.', tm:'2h ago'},
+  {who:'Sho',    em:'⚔️',react:'💪',label:'Strong!', serif:'Your training is my fuel. Let’s burn all the way to the top.', tm:'Yesterday'},
+  {who:'Takashi',em:'🧙',react:'👊',label:'Kiai!',   serif:'Skipping again today? LOL. Pathetic.', tm:'3d ago'},
 ];
 let hasNewReact=true; // 未確認の通知があるか
 
@@ -810,21 +838,21 @@ let hasNewReact=true; // 未確認の通知があるか
 let STAMPS=[];
 // 巻物：取得分だけ表示、条件は最初から見える
 // 御札・巻物の絵（文字の大きさに合わせて表示）
-const FUDA=`<img src="images/fuda.webp" alt="御札" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
-const FLAME=`<img src="images/flame.webp" alt="炎" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
+const FUDA=`<img src="images/fuda.webp" alt="Talisman" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+const FLAME=`<img src="images/flame.webp" alt="Flame" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
 const REACT_IMG={'💪':'tsuyoi','💙':'hagemashi','👊':'katsu'};
 const reactImg=e=>`<img src="images/react-${REACT_IMG[e]}.webp" alt="${e}" style="width:1.15em;height:1.15em;object-fit:contain;vertical-align:-.22em">`;
 const emo=s=>String(s).replace(/🔥/g,FLAME).replace(/💪|💙|👊/g,reactImg);
-const MAKI=`<img src="images/makimono.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+const MAKI=`<img src="images/makimono.webp" alt="Scroll" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 // 巻物ごとに色を変える（images/maki-色.webp）。未使用の色：teal / ochre / slate / rose（今後の巻物用）
-const makiImg=c=>`<img src="images/maki-${c}.webp" alt="巻物" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
+const makiImg=c=>`<img src="images/maki-${c}.webp" alt="Scroll" style="width:1em;height:1em;object-fit:contain;vertical-align:-.15em">`;
 const SCROLLS=[
-  {c:'pine',      l:'初学の巻',  got:false, cond:'はじめて記録した'},
-  {c:'terracotta',l:'百錬の巻',  got:false, cond:'通算100回 修行する'},
-  {c:'indigo',    l:'継続の巻',  got:false, cond:'7日連続で修行した'},
-  {c:'plum',      l:'全種の巻',  got:false, cond:'六種の修行を全種目記録した'},
-  {c:'burgundy',  l:'精進の巻',  got:false, cond:'30日連続で修行した'},
-  {c:'midnight',  l:'秘伝の巻',  got:false, cond:'徳を10,000 積む', secret:true},
+  {c:'pine',      l:'Scroll of First Steps',  got:false, cond:'Logged your first training'},
+  {c:'terracotta',l:'Scroll of a Hundred Forgings',  got:false, cond:'Train on 100 days total'},
+  {c:'indigo',    l:'Scroll of Persistence',  got:false, cond:'Trained 7 days in a row'},
+  {c:'plum',      l:'Scroll of All Six',  got:false, cond:'Logged all six exercises'},
+  {c:'burgundy',  l:'Scroll of Devotion',  got:false, cond:'Trained 30 days in a row'},
+  {c:'midnight',  l:'Secret Scroll',  got:false, cond:'Earn 10,000 Virtue', secret:true},
 ];
 SCROLLS.forEach(r=>r.em=makiImg(r.c));
 
@@ -841,10 +869,10 @@ function checkStreakFreeze(){
   if(fudaCount>0){
     modal(`<div class="sheet card-c" style="text-align:center">
       <div style="font-size:40px">${FUDA}</div>
-      <h3>御札を使いますか？</h3>
-      <p class="sub" style="text-align:center">昨日は修行していないようです。御札を使うと連続記録の途切れを防げます。<br>手持ちの御札：${fudaCount}枚</p>
-      <button class="btnprime" onclick="useFudaForFreeze()">はい（御札を使う）</button>
-      <button class="btnghost" onclick="closeModal()">いいえ</button>
+      <h3>Use a Talisman?</h3>
+      <p class="sub" style="text-align:center">Looks like you didn’t train yesterday. Use a Talisman to protect your streak.<br>Talismans: ${fudaCount}</p>
+      <button class="btnprime" onclick="useFudaForFreeze()">Yes, use Talisman</button>
+      <button class="btnghost" onclick="closeModal()">No</button>
     </div>`,true);
   }
 }
@@ -853,7 +881,7 @@ function useFudaForFreeze(){
   saveUser({fudaUsed:FB.union(addDays(todayStr(),-1))});
   vib([20,20,40]);
   closeModal();
-  toast('御札を使い、連続記録の途切れを防いだ');
+  toast('Talisman used. Your streak is safe.');
   nav('home');
 }
 
@@ -866,8 +894,8 @@ function useFudaForFreeze(){
 */
 const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（将来の目標追加用に保持）
 const MICRO_GOAL_DEFS=[
-  {id:'streak2',  icon:'🔥', label:'2日連続修行',   unit:'日',   target:()=>2,
-    desc:'2日つづけて道場に立て'},
+  {id:'streak2',  icon:'🔥', label:'2-Day Streak',   unit:' days',   target:()=>2,
+    desc:'Show up at the dojo two days running.'},
 ];
 function pickNewMicroGoalCandidate(){
   const pick=MICRO_GOAL_DEFS[Math.floor(Math.random()*MICRO_GOAL_DEFS.length)];
@@ -895,14 +923,14 @@ function startMicroGoal(){
   microGoal.startedAt=Date.now();
   microGoal.deadline=Date.now()+7*24*60*60*1000; // 起算日から1週間
   saveMicroGoal();
-  vib(20); toast('小さな誓いに挑戦を開始した！1週間以内に達成しよう');
+  vib(20); toast('Small Vow started! Complete it within a week.');
   if(state.view==='quest') nav('quest');
 }
 // 連続が途切れた場合の再挑戦：起算日・期限はそのまま、進捗だけリセット
 function retryMicroGoal(){
   microGoal.cur=0; microGoal.failed=false; microGoal.active=true; microGoal.lastProgressDate=null;
   saveMicroGoal();
-  vib(20); toast('再挑戦を開始した（期限はそのまま）');
+  vib(20); toast('Retry started (same deadline)');
   if(state.view==='quest') nav('quest');
 }
 // 起算日から1週間の期限が過ぎた場合：新しい起算日でやり直す
@@ -910,7 +938,7 @@ function startFreshMicroGoal(){
   microGoal=pickNewMicroGoalCandidate();
   microGoal.active=true; microGoal.startedAt=Date.now(); microGoal.deadline=Date.now()+7*24*60*60*1000;
   saveMicroGoal();
-  vib(20); toast('新しい挑戦を開始した！');
+  vib(20); toast('New challenge started!');
   if(state.view==='quest') nav('quest');
 }
 function completeMicroGoal(){
@@ -919,7 +947,7 @@ function completeMicroGoal(){
   saveMicroGoal();
   addLedger({k:'micro',amt:2});
   vib([30,20,60]);
-  toast('小さな誓い 達成！徳+2');
+  toast('Small Vow complete! +2 Virtue');
   setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
 }
 // kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
@@ -946,8 +974,8 @@ function microGoalCard(){
   checkMicroGoalExpiry();
   if(!eligibleForMicroGoal()){
     return `<div class="mission" style="padding:16px;margin-bottom:14px;opacity:.75">
-      <div style="font-size:15px;color:var(--sub);line-height:1.6">週の目標日数が少ないため、小さな誓いには挑戦できません。<br>設定で週2日以上に変更すると挑戦できるようになります。</div>
-      <button class="btnghost" style="margin-top:10px" onclick="openSettings()">設定を開く</button>
+      <div style="font-size:15px;color:var(--sub);line-height:1.6">Your weekly goal is too low for a Small Vow.<br>Set it to 2+ days a week in Settings to unlock it.</div>
+      <button class="btnghost" style="margin-top:10px" onclick="openSettings()">Open Settings</button>
     </div>`;
   }
   const def=microGoalDef();
@@ -958,10 +986,10 @@ function microGoalCard(){
         <div style="font-size:26px">${emo(def.icon)}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
-          <div style="font-size:13px;color:${withinWindow?'var(--kin)':'var(--shu2)'};margin-top:2px">${withinWindow?'連続が途切れ、非クリアとなった（起算日から1週間以内はまだ再挑戦できます）':'1週間以内に達成できず、非クリアとなった'}</div>
+          <div style="font-size:13px;color:${withinWindow?'var(--kin)':'var(--shu2)'};margin-top:2px">${withinWindow?'Streak broken. Vow failed (you can still retry within 1 week of the start)':'Not completed within 1 week. Vow failed'}</div>
         </div>
       </div>
-      <button class="btnprime" style="margin-top:12px" onclick="${withinWindow?'retryMicroGoal()':'startFreshMicroGoal()'}">${withinWindow?'再挑戦する':'新しく挑戦する'}</button>
+      <button class="btnprime" style="margin-top:12px" onclick="${withinWindow?'retryMicroGoal()':'startFreshMicroGoal()'}">${withinWindow?'Retry':'Start a new Vow'}</button>
     </div>`;
   }
   if(!microGoal.active){
@@ -973,8 +1001,8 @@ function microGoalCard(){
           <div style="font-size:13px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
         </div>
       </div>
-      <div style="font-size:13px;color:var(--sub);margin-top:10px">好きなタイミングで開始できます。開始から1週間以内に達成しよう（達成で徳+2）</div>
-      <button class="btnprime" style="margin-top:12px" onclick="startMicroGoal()">この目標に挑戦する</button>
+      <div style="font-size:13px;color:var(--sub);margin-top:10px">Start anytime. Complete it within 1 week (+2 Virtue)</div>
+      <button class="btnprime" style="margin-top:12px" onclick="startMicroGoal()">Take this Vow</button>
     </div>`;
   }
   const pct=Math.min(100,Math.round(microGoal.cur/microGoal.target*100));
@@ -984,16 +1012,16 @@ function microGoalCard(){
       <div style="font-size:26px">${emo(def.icon)}</div>
       <div style="flex:1">
         <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
-        <div style="font-size:13px;color:var(--sub);margin-top:2px">残り${hoursLeft}時間</div>
+        <div style="font-size:13px;color:var(--sub);margin-top:2px">${hoursLeft}h left</div>
       </div>
     </div>
-    <div class="pr" style="margin-top:12px"><span>進捗</span><b>${microGoal.cur} / ${microGoal.target}${def.unit}</b></div>
+    <div class="pr" style="margin-top:12px"><span>Progress</span><b>${microGoal.cur} / ${microGoal.target} ${def.unit}</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>`;
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.17.0';
+const APP_VERSION='v0.18.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1009,7 +1037,7 @@ function vib(pattern){ try{ navigator.vibrate(pattern); }catch(e){} }
 
 /* ══ カレンダー（直近1週間） ══ */
 function buildWeekCal(){
-  const DAY_JP=['日','月','火','水','木','金','土'];
+  const DAY_JP=['S','M','T','W','T','F','S'];
   const today=new Date();
   let h=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">`;
   for(let i=6;i>=0;i--){
@@ -1026,9 +1054,9 @@ function buildWeekCal(){
   }
   h+=`</div>
   <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:14px;color:var(--sub)">
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>修行済み</span>
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>休養日</span>
-    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>未修行</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>Trained</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>Rest day</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>Missed</span>
   </div>`;
   return h;
 }
@@ -1040,26 +1068,26 @@ let DAY_LOG={};
 function dayDetail(key){
   const st=CAL_DATA[key]||'none';
   const [y,m,d]=key.split('-');
-  const title=`${m}月${d}日`;
+  const title=`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${d}`;
   let body='';
   if(st==='rest'){
-    body=`<div style="text-align:center;padding:20px;color:#ffb6c1;font-size:16px">🍵 休養日</div>
-      <p style="text-align:center;font-size:14px;color:var(--sub)">体を休めることも修行のうち</p>`;
+    body=`<div style="text-align:center;padding:20px;color:#ffb6c1;font-size:16px">🍵 Rest day</div>
+      <p style="text-align:center;font-size:14px;color:var(--sub)">Rest is part of training.</p>`;
   } else if(st==='none'){
-    body=`<div style="text-align:center;padding:20px;color:var(--sub);font-size:16px">記録なし</div>`;
+    body=`<div style="text-align:center;padding:20px;color:var(--sub);font-size:16px">No records</div>`;
   } else {
     const logs=DAY_LOG[key]||[];
     const total=logs.reduce((a,l)=>a+l.xp,0);
     body=logs.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)">
-        <div><div style="font-size:16px;font-weight:600">${l.ex}</div><div style="font-size:14px;color:var(--kin)">第${l.step}段 ／ ${l.detail}</div></div>
-        <div style="font-size:15px;color:var(--kin2);font-weight:700">+${l.xp} 経験値</div>
+        <div><div style="font-size:16px;font-weight:600">${l.ex}</div><div style="font-size:14px;color:var(--kin)">Lv.${l.step} / ${l.detail}</div></div>
+        <div style="font-size:15px;color:var(--kin2);font-weight:700">+${l.xp} XP</div>
       </div>`).join('')
-      +`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:16px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} 経験値</span></div>`;
+      +`<div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:16px"><span style="color:var(--sub)">Total</span><span style="color:var(--kin2);font-weight:700">+${total} XP</span></div>`;
   }
   modal(`<div class="sheet card-c">
-    <h3>${title} の修行</h3>
+    <h3>Training · ${title}</h3>
     ${body}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 
@@ -1113,9 +1141,9 @@ function openSelfMenu(){
   d.className='ovl'; d.id='selfMenuOvl';
   d.style.zIndex='18'; // タブバー(z-index:20)より下＝タブの裏から出てくる見た目に
   d.innerHTML=`<div class="sheet" style="padding-bottom:calc(96px + env(safe-area-inset-bottom))">
-    <button class="btnprime" onclick="closeSelfMenu();nav('profile')">己</button>
-    <button class="btnprime" style="margin-top:10px" onclick="closeSelfMenu();nav('achieve')">功績</button>
-    <button class="btnghost" style="margin-top:10px" onclick="closeSelfMenu();openFeedback()">✉ 開発者へ意見を送る</button>
+    <button class="btnprime" onclick="closeSelfMenu();nav('profile')">Self</button>
+    <button class="btnprime" style="margin-top:10px" onclick="closeSelfMenu();nav('achieve')">Achievements</button>
+    <button class="btnghost" style="margin-top:10px" onclick="closeSelfMenu();openFeedback()">✉ Send feedback to the developer</button>
   </div>`;
   d.onclick=e=>{ if(e.target===d) closeSelfMenu(); };
   document.getElementById('app').appendChild(d);
@@ -1125,7 +1153,7 @@ function closeSelfMenu(){ const d=document.getElementById('selfMenuOvl'); if(d) 
 function render(){
   closeSelfMenu();
   const tb=document.getElementById('tabbar');
-  if(!READY){ tb.style.display='none'; $main.innerHTML=`<div style="min-height:70vh;display:grid;place-items:center;color:var(--sub);font-size:15px;letter-spacing:.2em">読み込み中…</div>`; return; }
+  if(!READY){ tb.style.display='none'; $main.innerHTML=`<div style="min-height:70vh;display:grid;place-items:center;color:var(--sub);font-size:15px;letter-spacing:.2em">Loading…</div>`; return; }
   tb.style.display='';
   renderTabs();
   if(state.view!=='record'){ if(metroOn){toggleMetro();} stopRest(); }
@@ -1157,25 +1185,25 @@ function logById(id){ return LOGS.find(g=>g.id===id); }
 function logMenu(id){
   const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
-    <h3>記録の操作</h3>
-    <p class="sub">${logMD(g)}・${g.sets.length}×${logAvg(g)}</p>
-    <button class="btnprime" onclick="closeModal();editLog('${id}')">編集</button>
-    <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog('${id}')">削除</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <h3>Edit record</h3>
+    <p class="sub">${logMD(g)} · ${g.sets.length}×${logAvg(g)}</p>
+    <button class="btnprime" onclick="closeModal();editLog('${id}')">Edit</button>
+    <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog('${id}')">Delete</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 
 function editLog(id){
   const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
-    <h3>記録を編集</h3>
+    <h3>Edit record</h3>
     <div style="display:flex;gap:10px;margin-top:12px">
-      <div style="flex:1"><label>組数</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets.length}"></div>
-      <div style="flex:1"><label>回数 / 秒</label><input type="number" id="eReps" inputmode="numeric" value="${logAvg(g)}"></div>
+      <div style="flex:1"><label>Sets</label><input type="number" id="eSets" inputmode="numeric" value="${g.sets.length}"></div>
+      <div style="flex:1"><label>Reps / sec</label><input type="number" id="eReps" inputmode="numeric" value="${logAvg(g)}"></div>
     </div>
-    <label>覚書</label><input type="text" id="eMemo" value="${escHtml(g.note||'')}">
-    <button class="btnprime" onclick="saveEditLog('${id}')">保存する</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <label>Notes</label><input type="text" id="eMemo" value="${escHtml(g.note||'')}">
+    <button class="btnprime" onclick="saveEditLog('${id}')">Save</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 
@@ -1184,31 +1212,32 @@ function saveEditLog(id){
   const sets=parseInt(document.getElementById('eSets').value)||1;
   const reps=parseInt(document.getElementById('eReps').value)||0;
   const note=document.getElementById('eMemo').value.trim();
-  if(reps<=0){ toast('回数を入力してください'); return; }
+  if(reps<=0){ toast('Enter your reps'); return; }
   // 組数か平均回数が変わった時だけ、各組を同じ回数として書き直す
   const newSets=(sets===g.sets.length && reps===logAvg(g)) ? g.sets : Array(Math.min(sets,20)).fill(reps);
-  FB.updateLog(id,{sets:newSets,note}).catch(e=>{ console.warn(e); toast('保存に失敗しました'); });
-  closeModal(); toast('更新しました');
+  FB.updateLog(id,{sets:newSets,note}).catch(e=>{ console.warn(e); toast('Couldn’t save'); });
+  closeModal(); toast('Updated');
 }
 
 function confirmDeleteLog(id){
   const g=logById(id); if(!g) return;
   modal(`<div class="sheet">
-    <h3>削除しますか？</h3>
-    <p class="sub">${logMD(g)}・${g.sets.length}×${logAvg(g)} を削除します。元に戻せません。</p>
-    <button class="btnprime btndanger" onclick="doDeleteLog('${id}')" style="background:var(--shu);border-color:var(--shu)">削除する</button>
-    <button class="btnghost" onclick="closeModal()">やめる</button>
+    <h3>Delete this record?</h3>
+    <p class="sub">${logMD(g)} · ${g.sets.length}×${logAvg(g)} will be deleted. This can’t be undone.</p>
+    <button class="btnprime btndanger" onclick="doDeleteLog('${id}')" style="background:var(--shu);border-color:var(--shu)">Delete</button>
+    <button class="btnghost" onclick="closeModal()">Cancel</button>
   </div>`);
 }
 
 function doDeleteLog(id){
-  FB.deleteLog(id).catch(e=>{ console.warn(e); toast('削除に失敗しました'); });
-  closeModal(); toast('削除しました');
+  FB.deleteLog(id).catch(e=>{ console.warn(e); toast('Couldn’t delete'); });
+  closeModal(); toast('Deleted');
 }
 function escHtml(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ══ ホーム ══ */
 /* ══ 修行の山道（双六ホーム） ══ */
+const MOUNTAINS_EN=['First Snow Mountain','Ice Moon Peak','Budding Mountain','Blossom Haze Ridge','Fresh Green Peak','Rain Veil Mountain','Green Storm Peak','Blazing Sun Peak','Moon Viewing Mountain','Crimson Leaf Peak','Withered Field Ridge','Frost Pillar Mountain'];
 const MOUNTAINS=['初雪山','氷輪嶽','芽吹山','花霞嶺','新緑峰','雨籠山','翠嵐嶽','灼陽峰','月見山','紅葉嶽','枯野嶺','霜柱山'];
 let trainedToday=false; // 今日修行したか（recompute()で計算）
 
@@ -1258,7 +1287,7 @@ function viewHome(){
   const total=MTN.total;      // その月の週の数＝マス数
   const climbed=MTN.climbed;  // 登った数
   const reached=total>0 && climbed>=total;
-  const weekTxt=MTN.weekCleared?'今週の一基は登った':`今週 ${MTN.weekDone}/${MTN.weekGoal}日`;
+  const weekTxt=MTN.weekCleared?'This week’s lantern is lit':`This week ${MTN.weekDone}/${MTN.weekGoal} days`;
 
   // マスを生成（下=1 .. 上=total）。登った=円グラフ（その日のカテゴリ配色）、次に登るマス=here、未踏=グレー
   let steps='';
@@ -1266,8 +1295,8 @@ function viewHome(){
     let cls='';
     if(i<=climbed) cls='done';
     else if(i===climbed+1 && !reached) cls='here';
-    const flag = (cls==='here') ? `<span class="flag">${weekTxt}・あと${total-climbed}基</span>`
-               : (i===total ? `<span class="flag">頂の鳥居</span>` : '');
+    const flag = (cls==='here') ? `<span class="flag">${weekTxt} · ${total-climbed} to go</span>`
+               : (i===total ? `<span class="flag">Summit Torii</span>` : '');
     let nodeInner, nodeStyle='', nodeClick='';
     if(i<=climbed){
       const cats=MOUNTAIN_STEP_CATS[i-1]||[];
@@ -1283,23 +1312,23 @@ function viewHome(){
     steps+=`<div class="mstep ${cls}"><div class="rail"></div>${flag}<div class="node" style="${nodeStyle}"${nodeClick}>${nodeInner}</div></div>`;
   }
 
-  const banners=`${freezeUsedToday?`<div style="text-align:center;font-size:14px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">${FUDA} 御札を使い、連続記録を繋いだ</div>`:''}
-  ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:14px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ 昨日は修行しておらず、御札もありません（押下で功績画面へ）</div>`:''}`;
+  const banners=`${freezeUsedToday?`<div style="text-align:center;font-size:14px;color:var(--kin);background:rgba(217,172,82,.1);border:1px solid rgba(217,172,82,.3);border-radius:12px;padding:8px;margin-bottom:10px">${FUDA} Talisman used. Your streak lives on</div>`:''}
+  ${(missedYesterday && !freezeUsedToday && fudaCount<=0)?`<div style="text-align:center;font-size:14px;color:var(--shu2);background:rgba(229,72,46,.1);border:1px solid rgba(229,72,46,.3);border-radius:12px;padding:8px;margin-bottom:10px" onclick="nav('achieve')">⚠️ You missed yesterday and have no Talismans (tap for Achievements)</div>`:''}`;
   const todayBtns=trainedToday
-    ? `<div class="today-fixed"><div class="done-today">✓ 今日の修行は済んだ</div></div>`
+    ? `<div class="today-fixed"><div class="done-today">✓ Today’s training is done</div></div>`
     : `<div class="today-fixed">
-        <button class="tbtn rest" onclick="restToday()"><span class="ic">🌙</span><span class="lb">休む</span></button>
-        <button class="tbtn go" onclick="nav('choose')"><span class="ic">⚡</span><span class="lb">修行</span></button>
+        <button class="tbtn rest" onclick="restToday()"><span class="ic">🌙</span><span class="lb">REST</span></button>
+        <button class="tbtn go" onclick="nav('choose')"><span class="ic">⚡</span><span class="lb">TRAIN</span></button>
       </div>`;
   const head=`<div class="mtn-head">
     <div>
-      <div class="mtn-name">${mMonth}月</div>
-      <div class="mtn-sub">頂の鳥居を目指せ。登頂で「印」を授かる</div>
+      <div class="mtn-name">${['January','February','March','April','May','June','July','August','September','October','November','December'][mMonth-1]}</div>
+      <div class="mtn-sub">Climb to the Summit Torii. Reach it to earn a Seal.</div>
       <div class="ver">${APP_VERSION}</div>
     </div>
     <div class="mtn-streak">
       <div class="f">${FLAME}</div>
-      <div><div class="n">${streakDays}</div><div class="u">連続</div></div>
+      <div><div class="n">${streakDays}</div><div class="u">STREAK</div></div>
     </div>
   </div>`;
   // 山の絵がある月は、絵の山道の上にマスを並べる
@@ -1323,7 +1352,6 @@ function viewHome(){
       nodes+=`<div class="mnode ${cls}" style="left:${x}%;top:${y}%"${click}>${inner}${flag}</div>`;
     }
     const [fx,fy]=pathPoint(art.path,0), [tx,ty]=pathPoint(art.path,1);
-    const MTN_NAMES=['',['初雪山','THE FIRST SNOW'],['梅香山','PLUM BLOSSOMS'],['春霞山','SPRING MIST'],['桜峰','CHERRY BLOSSOMS'],['若葉山','NEW LEAVES'],['五月雨山','EARLY RAINS'],['蝉時雨山','CICADA SONG'],['雲海山','SEA OF CLOUDS'],['月見山','HARVEST MOON'],['紅葉山','AUTUMN LEAVES'],['初霜山','FIRST FROST'],['雪嶺','DEEP WINTER']];
     const EN_MON=['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
     const curW=Math.min(total,climbed+(reached?0:1));
     // 週の進み具合（登った週=金、今週=輪、まだ=白抜き）
@@ -1336,7 +1364,7 @@ function viewHome(){
     return `
     <div class="mart v2">
       <div class="mart-in" style="background-image:url('${art.img}')">
-        ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">登頂！分かち合う</div>`:''}
+        ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">Summit reached! Share</div>`:''}
         ${nodes}
       </div>
       <div class="hx">
@@ -1345,10 +1373,10 @@ function viewHome(){
         <div class="hx-sub">Your next step starts here.</div>
         <div class="hx-stats">
           <div><b>${streakDays}</b><small>DAY STREAK</small></div>
-          <div><b class="jp">${rankOf(SUM).name}</b><small>RANK</small></div>
+          <div><b class="rk">${currentRank().en}</b><small class="jp">${currentRank().name}</small></div>
           <div><b>${TOTAL_XP.toLocaleString()}</b><small>TOTAL XP</small></div>
         </div>
-        <div class="hx-mon"><span>${EN_MON[mMonth]}</span><em>${MTN_NAMES[mMonth][1]}</em><b>${MTN_NAMES[mMonth][0]}</b></div>
+        <div class="hx-mon"><span>${EN_MON[mMonth]}</span><b>${MOUNTAINS[mMonth-1]}</b><em>${MOUNTAINS_EN[mMonth-1]}</em></div>
         ${banners}
         <div class="ver">${APP_VERSION}</div>
       </div>
@@ -1371,7 +1399,7 @@ function viewHome(){
       <div class="peakl">頂</div>
     </div>
     <div class="msteps">${steps}</div>
-    <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--faint);letter-spacing:.1em">— 麓 —</div>
+    <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--faint);letter-spacing:.1em">— BASE —</div>
   </div>
 
   ${todayBtns}
@@ -1383,45 +1411,45 @@ function viewHome(){
    next=今週手薄な種目を勧める / cheer=励まし / done=修行した日 / streak=連続中 / back=昨日休んだ / peak=頂上が近い / week=今週の一基を登った */
 const HOME_TALK={
   'shihan.webp':{
-    next:[n=>`今週はまだ〈${n}〉に手を付けておらんな。今日はそれだ。`, n=>`偏りは弱さを生む。今日は〈${n}〉に向かえ。`, n=>`〈${n}〉を怠るな。体は一つにつながっておる。`],
-    cheer:['一日一歩。それで山は登れる。','休むのも修行のうち。だが、怠けるのとは違うぞ。','強さとは、今日も道場に立つことだ。','回数より、正しい形を守れ。','己に勝つ者が、真に強い。'],
-    done:['今日の修行、見事だった。明日もまた山に向かえ。','汗は嘘をつかぬ。よく励んだ。','今日はここまで。よく眠るのも修行だ。'],
-    streak:d=>`${d}日続いておるな。その歩みを止めるでないぞ。`, back:'昨日は休んだか。構わぬ、今日また始めればよい。', peak:'頂はすぐそこだ。最後の一基、気を抜くな。', week:'今週の一基は登った。残りの日は形を磨け。'},
+    next:[n=>`You haven’t touched ${n} this week. Today, that’s your work.`, n=>`Imbalance breeds weakness. Face ${n} today.`, n=>`Do not neglect ${n}. The body is one whole.`],
+    cheer:['One step a day. That is how mountains are climbed.', 'Rest is training. Laziness is not.', 'Strength is showing up at the dojo again today.', 'Guard your form before your reps.', 'Who conquers the self is truly strong.'],
+    done:['Fine work today. Face the mountain again tomorrow.', 'Sweat does not lie. You trained well.', 'Enough for today. Sleep well. That too is training.'],
+    streak:d=>`${d} day${d===1?'':'s'} straight. Do not break your stride.`, back:'You rested yesterday. No matter. Begin again today.', peak:'The summit is near. Last lantern. Stay sharp.', week:'This week’s lantern is lit. Polish your form the rest of the week.'},
   'shihan-f.webp':{
-    next:[n=>`〈${n}〉が手薄ね。今日はそこを鍛えなさい。`, n=>`今日は〈${n}〉。苦手なものほど、伸びしろがあるのよ。`, n=>`六種そろってこそ修行。〈${n}〉を忘れないで。`],
-    cheer:['焦らなくていい。続けることが一番の才能よ。','小さな積み重ねが、いずれ大きな力になる。','呼吸を整えて。動きはその後よ。','昨日の自分と比べなさい。他人ではなく。','疲れた日は、一組だけでもいいの。'],
-    done:['よく鍛えたわね。体を休めるのも忘れずに。','今日のあなた、いい顔をしているわ。','丁寧な修行だった。その心を明日も。'],
-    streak:d=>`${d}日続けたのね。もう習慣になってきたわ。`, back:'一日空いたくらいで道は途切れない。さあ、戻りましょう。', peak:'もうすぐ頂よ。ここからが本当の修行。', week:'今週の目標は果たしたわ。あとは楽しみなさい。'},
+    next:[n=>`${n} is lagging. Train it today.`, n=>`Today: ${n}. Your weakest areas have the most room to grow.`, n=>`Training means all six. Don’t forget ${n}.`],
+    cheer:['No need to rush. Consistency is the greatest talent.', 'Small efforts add up to great strength.', 'Steady your breath first. Movement follows.', 'Compare yourself to yesterday. Not to others.', 'On tired days, a single set is enough.'],
+    done:['Well trained. Don’t forget to rest.', 'You look good today. Strong.', 'Careful, honest training. Bring that heart tomorrow.'],
+    streak:d=>`${d} day${d===1?'':'s'} in a row. It’s becoming a habit.`, back:'One missed day doesn’t end the path. Come, let’s go back.', peak:'The summit is close. This is where real training begins.', week:'You met this week’s goal. Now enjoy it.'},
   'senpai-a.webp':{
-    next:[n=>`次は〈${n}〉はどうですか？今週はまだですよね。`, n=>`〈${n}〉、今週まだ手つかずですよ。一緒にやりましょう。`, n=>`今日は〈${n}〉の気分じゃないですか？`],
-    cheer:['昨日の自分より一回多く。それで十分です。','僕も最初は全然できませんでした。大丈夫ですよ。','フォームが崩れたら、一度休んでから。','続けている人は、それだけで強いです。','今日はどんな修行にしますか？'],
-    done:['今日もお疲れさまでした。いい流れですね。','見てましたよ。動きが良くなってます。','しっかり休んで、また明日。'],
-    streak:d=>`${d}日連続ですか。僕も負けていられませんね。`, back:'昨日はお休みでしたね。今日から仕切り直しましょう。', peak:'頂上まであと少しです。最後まで一緒に。', week:'今週の一基、達成ですね。さすがです。'},
+    next:[n=>`How about ${n} next? You haven’t done it this week.`, n=>`${n} is still untouched this week. Let’s do it together.`, n=>`Feeling like ${n} today?`],
+    cheer:['One more rep than yesterday. That’s plenty.', 'I couldn’t do any of this at first. You’ll be fine.', 'If your form slips, rest, then go again.', 'Just showing up makes you strong.', 'What will you train today?'],
+    done:['Great work today. Nice momentum.', 'I was watching. Your form is improving.', 'Rest well, and see you tomorrow.'],
+    streak:d=>`${d} day${d===1?'':'s'} straight? I can’t fall behind either.`, back:'You rested yesterday. Let’s reset from today.', peak:'Almost at the summit. With you to the end.', week:'This week’s lantern, done. Impressive.'},
   'senpai-b.webp':{
-    next:[n=>`今日は〈${n}〉をやりましょう。一緒に頑張りましょう。`, n=>`〈${n}〉、少しだけでもやっておくと楽になりますよ。`, n=>`今週の〈${n}〉、まだでしたよね。今日どうですか？`],
-    cheer:['無理せず、でも止まらずに。','水分、ちゃんと取ってますか？','できる日もできない日もあります。来たことが大事です。','一組目はゆっくり。体が温まってから。','あなたの頑張り、ちゃんと見てますよ。'],
-    done:['今日の分は済みましたね。明日もこの調子で。','いい汗でしたね。ストレッチも忘れずに。','今日のあなた、輝いてましたよ。'],
-    streak:d=>`${d}日も続いてるんですね。素敵です。`, back:'昨日はゆっくりできましたか？今日は軽めから始めましょう。', peak:'もうすぐ頂上ですね。わくわくします。', week:'今週の灯篭に灯がともりましたね。'},
+    next:[n=>`Let’s do ${n} today. We’ll push through together.`, n=>`Even a little ${n} makes it easier later.`, n=>`You haven’t done ${n} this week, right? How about today?`],
+    cheer:['Don’t push too hard, but don’t stop.', 'Are you drinking enough water?', 'Good days and bad days. What matters is you came.', 'Take the first set slow, until you’re warm.', 'I see how hard you work. I really do.'],
+    done:['Today’s done. Keep this pace tomorrow.', 'Good sweat. Don’t forget to stretch.', 'You were shining today.'],
+    streak:d=>`${d} day${d===1?'':'s'} in a row. That’s wonderful.`, back:'Did you rest well yesterday? Let’s start light today.', peak:'The summit is so close. How exciting.', week:'This week’s lantern is lit.'},
   'rival-m.webp':{
-    next:[n=>`〈${n}〉サボってんの、バレてるぞ。`, n=>`〈${n}〉から逃げてるだろ。今日やれよ。`, n=>`得意なのばっかやってても強くなんねえぞ。〈${n}〉だ。`],
-    cheer:['お前が休んでる間に、俺は一段上がるぜ。','ビビってんのか？さっさと始めろよ。','今日も俺のほうが先に終わらせたぜ。','口より体を動かせ。','強くなりてえなら、黙ってやれ。'],
-    done:['へぇ、今日もやったのか。……まあ、悪くねえ。','ちっ、今日はお前の勝ちってことにしといてやる。','明日も同じことできんのか？見ててやるよ。'],
-    streak:d=>`${d}日連続？ふん、俺はもっと続いてるけどな。`, back:'昨日サボったな。差、開いちまったぜ。', peak:'頂上は俺が先にもらう。悔しかったら追いついてみろ。', week:'今週分は終わったって？俺はまだやるけどな。'},
+    next:[n=>`Skipping ${n}? Yeah, I noticed.`, n=>`You’re running from ${n}. Do it today.`, n=>`Only doing what you’re good at? Weak. Do ${n}.`],
+    cheer:['While you rest, I level up.', 'Scared? Just get started.', 'Beat you to it again today.', 'Less talk. More work.', 'Want to get strong? Shut up and train.'],
+    done:['Huh, you trained today. ...Not bad.', 'Tch. Fine, you win today.', 'Can you do it again tomorrow? I’ll be watching.'],
+    streak:d=>`${d} day${d===1?'':'s'}? Hmph. My streak’s longer.`, back:'Skipped yesterday, huh? The gap just got bigger.', peak:'The summit’s mine first. Catch me if you can.', week:'Done for the week? I’m still going.'},
   'rival-f.webp':{
-    next:[n=>`まだ〈${n}〉やってないの？置いてくわよ。`, n=>`〈${n}〉、苦手なんでしょ。顔に書いてあるわよ。`, n=>`今日は〈${n}〉ね。逃げたら笑ってあげる。`],
-    cheer:['今日もやらないなら、差は開く一方ね。','私に勝ちたいなら、今すぐ始めることね。','その程度で満足してるの？','やる気は出すものじゃなくて、動けば出てくるのよ。','あなたの本気、そろそろ見せてくれる？'],
-    done:['今日はやったのね。明日も同じことができるかしら？','……まあ、褒めてあげなくもないわ。','今日のところは引き分けにしてあげる。'],
-    streak:d=>`${d}日続いてるの？少しは見直したわ。`, back:'昨日はお休み？私は休んでないけど。', peak:'頂上は目の前ね。最後に転ばないように。', week:'今週の一基はクリアね。で、まだ動けるでしょ？'},
+    next:[n=>`Still no ${n}? I’m leaving you behind.`, n=>`You hate ${n}, don’t you? It’s all over your face.`, n=>`${n} today. Run away and I’ll laugh.`],
+    cheer:['Skip today and the gap only grows.', 'Want to beat me? Start right now.', 'Satisfied with that? Really?', 'Motivation doesn’t come first. It comes once you move.', 'Ready to show me what you’ve really got?'],
+    done:['So you trained. Can you do it again tomorrow?', '...Fine. I suppose that deserves some praise.', 'I’ll call today a draw.'],
+    streak:d=>`${d} day${d===1?'':'s'} straight? I’m a little impressed.`, back:'Rested yesterday? I didn’t.', peak:'The summit is right there. Don’t trip at the end.', week:'Week cleared. But you can still move, can’t you?'},
   'deshi-m.webp':{
-    next:[n=>`今日は〈${n}〉ですか？僕も一緒にやります！`, n=>`〈${n}〉のお手本、見せてもらえませんか？`, n=>`今週まだ〈${n}〉やってないですよね。僕、数えてました！`],
-    cheer:['今日の修行、見てていいですか？','僕もいつか、そんなふうに強くなりたいです！','一緒にやると、なんだか頑張れます！','今日は何からやりますか？','昨日より一回多くできたら、すごいですよね！'],
-    done:['今日もやり切りましたね！かっこいいです！','お疲れさまです！僕も見習います！','すごい汗……本気の修行でしたね！'],
-    streak:d=>`${d}日連続なんて、本当にすごいです！`, back:'昨日はお休みでしたね。今日は一緒にやりましょう！', peak:'頂上まであと少しですよ！見届けます！', week:'今週の灯篭、灯りましたね！やった！'},
+    next:[n=>`Is it ${n} today? I’ll do it with you!`, n=>`Can you show me how ${n} is done?`, n=>`You haven’t done ${n} this week, right? I was counting!`],
+    cheer:['Can I watch you train today?', 'Someday I want to be strong like you!', 'Training together makes me try harder!', 'What are we starting with today?', 'One more rep than yesterday would be amazing!'],
+    done:['You finished it all again! So cool!', 'Great work! I’ll follow your lead!', 'So much sweat... that was serious training!'],
+    streak:d=>`${d} day${d===1?'':'s'} in a row? That’s amazing!`, back:'You rested yesterday. Let’s train together today!', peak:'Almost at the summit! I’ll be watching!', week:'This week’s lantern is lit! Yes!'},
   'deshi-f.webp':{
-    next:[n=>`次は〈${n}〉ですよね！応援してます！`, n=>`〈${n}〉の日にしませんか？私もやります！`, n=>`今週の〈${n}〉、まだみたいです。一緒にどうですか？`],
-    cheer:['毎日続けてるの、本当にすごいです！','今日もここで待ってました！','少しだけでも、やった日は特別です！','疲れてたら、ゆっくりでいいんですよ。','今日のあなたも、きっとできます！'],
-    done:['今日もお疲れさまです！明日も応援してます！','見てました！今日の動き、すごく綺麗でした！','今日の修行、記念日にしたいくらいです！'],
-    streak:d=>`もう${d}日続いてるんですね！私も頑張らなきゃ！`, back:'昨日はお休みでしたね。今日また会えてうれしいです！', peak:'もうすぐ頂上ですね！どきどきします！', week:'今週の一基、達成ですね！おめでとうございます！'},
+    next:[n=>`${n} is next, right? I’m cheering for you!`, n=>`Make it a ${n} day? I’ll do it too!`, n=>`No ${n} yet this week. Want to do it together?`],
+    cheer:['Training every day? That’s amazing!', 'I was waiting here for you today!', 'Any day you train, even a little, is special!', 'If you’re tired, take it slow. That’s okay.', 'You can do it today too, I know it!'],
+    done:['Great work today! I’ll cheer for you tomorrow too!', 'I saw that! Your form was beautiful today!', 'Today’s training deserves to be a holiday!'],
+    streak:d=>`${d} day${d===1?'':'s'} already! I need to try harder too!`, back:'You rested yesterday. So happy to see you today!', peak:'Almost at the summit! My heart’s racing!', week:'This week’s lantern, done! Congratulations!'},
 };
 function homeLine(){
   const today=todayStr(), dn=Math.floor(parseDay(today).getTime()/864e5);
@@ -1442,14 +1470,14 @@ function homeLine(){
   if(trainedToday) line=(sit.length&&dn%2)?sit[k%sit.length]:at(t.done);
   else if(sit.length && dn%2===0) line=sit[k%sit.length];
   else if(dn%3===2) line=at(t.cheer);
-  else { line=at(t.next)(pick.name.replace(/（.*）/,'')); go=` onclick="tapFlash(this,()=>nav('steps',{exKey:'${pick.key}'}))"`; }
+  else { line=at(t.next)(pick.name.replace(/\s*[（(].*[）)]/,'')); go=` onclick="tapFlash(this,()=>nav('steps',{exKey:'${pick.key}'}))"`; }
   return {who:ch.name, line, go};
 }
 
 /* 種目を選ぶ画面（旧ホームの六種の修行） */
 function stepDetail(i){
   const cats=MOUNTAIN_STEP_CATS[i-1]||[];
-  if(!cats.length){ toast('記録がありません'); return; }
+  if(!cats.length){ toast('No records'); return; }
   const total=cats.reduce((a,c)=>a+c.xp,0);
   const rows=cats.map(c=>{
     const ex=exBy(c.key);
@@ -1460,16 +1488,16 @@ function stepDetail(i){
     </div>`;
   }).join('');
   modal(`<div class="sheet card-c">
-    <h3>${i}基目の修行</h3>
+    <h3>Lantern ${i} training</h3>
     ${rows}
-    <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:16px"><span style="color:var(--sub)">合計</span><span style="color:var(--kin2);font-weight:700">+${total} 経験値</span></div>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <div style="display:flex;justify-content:space-between;padding:12px 0 0;font-size:16px"><span style="color:var(--sub)">Total</span><span style="color:var(--kin2);font-weight:700">+${total} XP</span></div>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 function viewChoose(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">修行を選ぶ<small>六種のうち ひとつを選べ</small></div></div>
+    <div class="ttl">Choose Training<small>Pick one of the six</small></div></div>
   <div class="stack chs">
     ${EX.map(e=>{
       const total=stepCount(e.key);
@@ -1477,7 +1505,7 @@ function viewChoose(){
       const nm=stepName(e.key,e.cur);
       return `<div class="card ${cls}" onclick="tapFlash(this,()=>nav('steps',{exKey:'${e.key}'}))">
         <div class="picw"><img class="pic" src="images/ex-${e.key}.webp" alt=""><div class="ring">${ring(e.cur,total,44,CAT_COLORS[e.key])}</div></div>
-        <div class="body"><div class="nm">${e.name}</div><div class="st"><b>第${e.cur}段</b> <span class="of">／全${total}段</span><br>${nm}</div></div>
+        <div class="body"><div class="nm">${e.name}</div><div class="st"><b>Lv.${e.cur}</b> <span class="of">/ ${total}</span><br>${nm}</div></div>
         <div class="chev">›</div></div>`;
     }).join('')}
   </div>`;
@@ -1489,9 +1517,9 @@ function restToday(){
   const fx=document.getElementById('restFx');
   fx.style.display='flex';
   fx.innerHTML=`
-    <div class="zzz">休 息</div>
-    <div class="rsub">体を癒すのも修行のうち。<br>明日、また山に向かおう。</div>
-    <button class="btnghost" style="width:auto;padding:12px 28px;margin-top:10px" onclick="document.getElementById('restFx').style.display='none'">閉じる</button>`;
+    <div class="zzz">REST</div>
+    <div class="rsub">Recovery is part of training.<br>Back to the mountain tomorrow.</div>
+    <button class="btnghost" style="width:auto;padding:12px 28px;margin-top:10px" onclick="document.getElementById('restFx').style.display='none'">Close</button>`;
   vib(20);
 }
 
@@ -1508,7 +1536,7 @@ function viewSteps(){
     const nm=stepName(e.key,i), ty=stepType(e.key,i), isCur=i===e.cur, isDone=i<e.cur;
     rows+=`<div class="srow${isCur?' current':''}${isDone?' cleared':''}" style="${isCur?`border:1.5px solid ${col};background:linear-gradient(145deg,${col}22,var(--card))`:''}" onclick="tapStep(this,'${e.key}',${i})">
       <div class="txt">
-        <div class="n">${isDone?'✓ ':''}第${i}段${isCur?`<span class="badge" style="background:${col}">現在</span>`:''} <span style="color:var(--faint);font-weight:500">・${TYPE_LABEL[ty]}</span></div>
+        <div class="n">${isDone?'✓ ':''}Lv.${i}${isCur?`<span class="badge" style="background:${col}">NOW</span>`:''} <span style="color:var(--faint);font-weight:500">· ${TYPE_LABEL[ty]}</span></div>
         <div class="nm">${nm}</div>
       </div>
       <div class="th" style="${isCur?`border-color:${col}`:''}"><img src="${stepImg(e.key,i)}" alt="" style="width:86%;height:86%;object-fit:contain"></div>
@@ -1516,7 +1544,7 @@ function viewSteps(){
   }
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">${e.name}<small>全${n}段 — 第${e.cur}段 修行中</small></div></div>
+    <div class="ttl">${e.name}<small>${n} levels — training Lv.${e.cur}</small></div></div>
   <div id="steplist">${rows}</div>`;
 }
 
@@ -1527,59 +1555,59 @@ function viewRecord(){
   const nm=stepName(e.key,i), ty=stepType(e.key,i);
   const c=criteria(e.key,i);
   const isTime=(ty==='s');
-  const unitLabel=isTime?'秒数':'回数';
-  const tempoJP = ty==='n' ? '下げ5秒かけてゆっくり' : (ty==='s' ? 'キープ姿勢を保つ' : '上げ1秒・下げ2秒・キープ1秒');
+  const unitLabel=isTime?'Seconds':'Reps';
+  const tempoJP = ty==='n' ? 'Lower slowly over 5 sec' : (ty==='s' ? 'Hold the position' : 'Up 1 sec · down 2 sec · hold 1 sec');
   const recs=stepRecords(e.key,i);
   const prevMemo=(recs.slice().reverse().find(r=>r.note)||{}).note||'';
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
-    <div class="ttl">第${i}段 ／ ${nm}<small>${e.name}・クリア基準 ${c.clearTxt}</small></div></div>
+    <div class="ttl">Lv.${i} / ${nm}<small>${e.name} · Clear: ${c.clearTxt}</small></div></div>
   <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid ${col}55;background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
     <img src="${stepImg(e.key,i)}" alt="${nm}" style="position:absolute;inset:8%;width:84%;height:84%;object-fit:contain">
-    <div style="position:absolute;bottom:10px;right:12px;font-size:14px;color:${col}">押下で拡大</div>
+    <div style="position:absolute;bottom:10px;right:12px;font-size:14px;color:${col}">Tap to enlarge</div>
   </div>
   <div style="text-align:center;font-size:15px;color:${col};margin-bottom:14px">🥋 ${tempoJP}</div>
 
   <div style="border:1px solid var(--line2);border-radius:18px;background:var(--card);padding:16px;margin-bottom:14px">
     <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:14px">
-      <div style="flex:1"><label style="font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">組数</label>
+      <div style="flex:1"><label style="font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">Sets</label>
         <input id="inGoalSets" type="number" inputmode="numeric" value="3" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:13px;font-size:17px;font-weight:700;text-align:center;font-family:var(--sans)"></div>
-      <div style="flex:1"><label style="font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">1組の${unitLabel}</label>
+      <div style="flex:1"><label style="font-size:13px;color:var(--sub);font-weight:700;letter-spacing:.06em;display:block;margin-bottom:5px">${unitLabel} per set</label>
         <input id="inGoalReps" type="number" inputmode="numeric" value="${c.goal}" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:13px;font-size:17px;font-weight:700;text-align:center;font-family:var(--sans)"></div>
     </div>
-    <button class="recbtn" style="width:100%;height:56px;font-size:16px;letter-spacing:.2em" onclick="startWorkout('${e.key}',${i})">修行を始める</button>
-    <div style="text-align:center;margin-top:10px"><span onclick="quickRecordSheet('${e.key}',${i})" style="font-size:14px;color:var(--sub);cursor:pointer;font-weight:500">実演なしで記録する ›</span></div>
+    <button class="recbtn" style="width:100%;height:56px;font-size:16px;letter-spacing:.2em" onclick="startWorkout('${e.key}',${i})">START TRAINING</button>
+    <div style="text-align:center;margin-top:10px"><span onclick="quickRecordSheet('${e.key}',${i})" style="font-size:14px;color:var(--sub);cursor:pointer;font-weight:500">Quick log (no guided session) ›</span></div>
   </div>
 
   ${prevMemo?`<div class="memo-prev">
-    <div class="lbl" onclick="toggleMemo(this)"><span>📝 前回の覚書</span><span id="memoTog">▾</span></div>
-    <div class="bd" id="memoBody">「${escHtml(prevMemo)}」</div>
+    <div class="lbl" onclick="toggleMemo(this)"><span>📝 Last notes</span><span id="memoTog">▾</span></div>
+    <div class="bd" id="memoBody">“${escHtml(prevMemo)}”</div>
   </div>`:''}
   <div class="memrow">
-    <input type="text" id="memoInput" placeholder="覚書（次の記録と一緒に残る）">
+    <input type="text" id="memoInput" placeholder="Notes (saved with your next log)">
     <button class="histbtn" onclick="memoHistory()">📋</button>
   </div>
   <div class="divider"></div>
-  <div class="h">練度推移</div>
+  <div class="h">Progress</div>
   <div class="chartbox">${lineChart(recs)}</div>
-  <div class="h">過去の足跡 <span style="font-size:14px;color:var(--sub);font-family:var(--sans)">（長押しで編集・削除）</span></div>
+  <div class="h">History <span style="font-size:14px;color:var(--sub);font-family:var(--sans)">(long-press to edit or delete)</span></div>
   <div id="logList">${recs.length?recs.slice().reverse().map(g=>{
     const score=+(loadScore(state.step||1,g.sets,g.reps)).toFixed(1);
     return `<div class="log" data-id="${g.id}" onclick="toggleLog(this)" oncontextmenu="return false">
       <div class="lr">
-        <span class="d">${g.date}<span class="itag" style="background:var(--kin);color:#1a1407">負荷 ${score}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
+        <span class="d">${g.date}<span class="itag" style="background:var(--kin);color:#1a1407">Load ${score}</span>${g.note?'<span class="memo-hint">📝</span>':''}</span>
         <span class="r">${g.sets}×${g.reps}</span>
       </div>
       ${g.note?`<div class="ln">📝 ${escHtml(g.note)}</div>`:''}
     </div>`;
-  }).join(''):'<div style="text-align:center;color:var(--sub);padding:14px;font-size:14px">まだ足跡はない。最初の一歩を刻め</div>'}</div>`;
+  }).join(''):'<div style="text-align:center;color:var(--sub);padding:14px;font-size:14px">No history yet. Make your first mark.</div>'}</div>`;
 }
 
 /* ══ 試練（道連れ修行） ══ */
 const PARTY=[
-  {name:'ノリ',   em:'🧘', lvxp:50, week:18, me:true},
-  {name:'タカシ', em:'🧙', lvxp:40, week:15, me:false},
-  {name:'翔',     em:'⚔️', lvxp:30, week:12, me:false},
+  {name:'Nori',   em:'🧘', lvxp:50, week:18, me:true},
+  {name:'Takashi', em:'🧙', lvxp:40, week:15, me:false},
+  {name:'Sho',     em:'⚔️', lvxp:30, week:12, me:false},
 ];
 let partyFront=0;
 let hasParty=true; // モック：パーティー結成済みか（falseで未結成状態を確認できる）
@@ -1589,37 +1617,37 @@ function viewQuest(){
   if(!hasParty){
     // 状態A：パーティー未結成
     return `
-    ${pageHead('TRIALS · TOGETHER','道連れ修行')}
+    ${pageHead('TRIALS · TOGETHER','Party Training')}
     <div style="text-align:center;padding:50px 20px 30px">
       <div style="font-size:56px;margin-bottom:14px">🤝</div>
-      <div style="font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.06em">まだ誰とも組んでいない</div>
-      <p style="font-size:15px;color:var(--sub);line-height:1.8;margin-top:10px">門下生を誘うか、誘われると<br>今週の道連れ修行が始まる（最大3名）</p>
-      <button class="btnprime" style="max-width:280px;margin:22px auto 0" onclick="inviteFriend()">門下生を誘う</button>
+      <div style="font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.06em">No party yet</div>
+      <p style="font-size:15px;color:var(--sub);line-height:1.8;margin-top:10px">Invite friends or get invited<br>to start this week’s Party Training (up to 3)</p>
+      <button class="btnprime" style="max-width:280px;margin:22px auto 0" onclick="inviteFriend()">Invite a Friend</button>
     </div>
-    <div class="h">小さな誓い</div>
+    <div class="h">Small Vow</div>
     ${microGoalCard()}`;
   }
   // 状態B：パーティー結成済み
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const cur=Math.round(goal*0.62);
   const pct=Math.min(100,Math.round(cur/goal*100));
-  if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; addLedger({k:'party',amt:3}); vib([30,20,60]); toast('道連れ修行 成就！徳+3'); }
-  PARTY[0].name=myName||'己'; PARTY[0].em=currentAvatar;
+  if(cur>=goal && !partyGoalAwarded){ partyGoalAwarded=true; addLedger({k:'party',amt:3}); vib([30,20,60]); toast('Party Training complete! Virtue +3'); }
+  PARTY[0].name=myName||'You'; PARTY[0].em=currentAvatar;
   return `
-  ${pageHead('TRIALS · TOGETHER','道連れ修行')}
-  <p style="font-size:14px;color:var(--sub);margin:0 2px 14px">門下生と力を合わせ、目標の経験値を積む（週替わり）</p>
+  ${pageHead('TRIALS · TOGETHER','Party Training')}
+  <p style="font-size:14px;color:var(--sub);margin:0 2px 14px">Team up with friends to hit a shared XP goal (resets weekly)</p>
 
-  <div class="pswipe">◄ スワイプで回す・押下で比較 ►</div>
+  <div class="pswipe">◄ Swipe to rotate · Tap to compare ►</div>
   <div class="party-stage" id="partyStage"></div>
   <div class="pdots" id="partyDots"></div>
 
   <div class="mission">
-    <div class="t" style="margin:0 0 10px">今週の合力</div>
-    <div class="pr"><span>みんなの経験値</span><b>${cur.toLocaleString()} / ${goal.toLocaleString()}</b></div>
+    <div class="t" style="margin:0 0 10px">This Week’s Team Power</div>
+    <div class="pr"><span>Team XP</span><b>${cur.toLocaleString()} / ${goal.toLocaleString()}</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>
-  ${PARTY.length<3?`<button class="btnghost" style="margin-top:4px" onclick="inviteFriend()">＋ 門下生を誘う（あと${3-PARTY.length}名）</button>`:''}
-  <div class="h">小さな誓い</div>
+  ${PARTY.length<3?`<button class="btnghost" style="margin-top:4px" onclick="inviteFriend()">+ Invite a Friend (${3-PARTY.length} spot${3-PARTY.length===1?'':'s'} left)</button>`:''}
+  <div class="h">Small Vow</div>
   ${microGoalCard()}
 `;
 }
@@ -1627,23 +1655,23 @@ function viewQuest(){
 /* 招待（門下生リストから選ぶ・呼ばれた側は強制参加、早い者勝ち） */
 function inviteFriend(){
   const inParty=PARTY.map(p=>p.name);
-  const候補=FRIENDS.filter(f=>!inParty.includes(f.name));
+  const cand=FRIENDS.filter(f=>!inParty.includes(f.name));
   modal(`<div class="sheet">
-    <h3>門下生を誘う</h3>
-    <p class="sub">誘われた門下生はそのまま参加する（先に誘った者勝ち）</p>
-    ${候補.length?候補.map(f=>`<div class="friend" onclick="doInvite('${f.name}','${f.em}')">
+    <h3>Invite a Friend</h3>
+    <p class="sub">Invited friends join right away (first come, first served)</p>
+    ${cand.length?cand.map(f=>`<div class="friend" onclick="doInvite('${f.name}','${f.em}')">
       <div class="av">${f.em}</div>
-      <div><div class="nm">${f.name}</div><div class="sk">${FLAME} 修行${f.streak}日目</div></div>
+      <div><div class="nm">${f.name}</div><div class="sk">${FLAME} ${f.streak}-day streak</div></div>
       <div class="chev">›</div>
-    </div>`).join(''):'<p class="sub">誘える門下生がいません</p>'}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    </div>`).join(''):'<p class="sub">No friends left to invite</p>'}
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 function doInvite(name,em){
-  if(PARTY.length>=3){ toast('パーティーは満員です'); closeModal(); return; }
+  if(PARTY.length>=3){ toast('Party is full'); closeModal(); return; }
   PARTY.push({name,em,lvxp:35,week:10,me:false});
   hasParty=true;
-  closeModal(); vib(30); toast(`${name} が加わった！`);
+  closeModal(); vib(30); toast(`${name} joined!`);
   nav('quest');
 }
 
@@ -1654,7 +1682,7 @@ function renderParty(){
   partyPos=partyFront;
   stage.innerHTML=PARTY.map((p,i)=>`<div class="pchar" data-i="${i}" onclick="partyTap(${i})" style="cursor:pointer">
       <div class="pav">${p.em}</div>
-      <div class="plbl"><div class="pname">${p.name}${p.me?'（自分）':''}</div><div class="pmeta">今週の目標 ${(p.lvxp*p.week).toLocaleString()} 経験値</div></div>
+      <div class="plbl"><div class="pname">${p.name}${p.me?' (you)':''}</div><div class="pmeta">Weekly goal ${(p.lvxp*p.week).toLocaleString()} XP</div></div>
     </div>`).join('');
   layoutParty(false);
 }
@@ -1688,10 +1716,10 @@ function partyTap(idx){
   let d=idx-partyPos; d=((d%n)+n)%n; if(d>n/2) d-=n;
   if(Math.abs(d)>.5){ vib(10); snapParty(Math.round(partyPos+d)); return; }
   const p=PARTY[idx];
-  if(p.me){ toast('己は「己」タブで見られる'); return; }
+  if(p.me){ toast('See your stats in the Self tab'); return; }
   const fi=FRIENDS.findIndex(f=>f.name===p.name);
   if(fi>=0) friendCompare(fi);
-  else toast('この門下生の情報はまだない');
+  else toast('No info on this friend yet');
 }
 function rotateParty(dir){ vib(10); snapParty(Math.round(partyPos)+dir); }
 function bindPartySwipe(){
@@ -1721,30 +1749,30 @@ function bindPartySwipe(){
 /* ══ 功績 ══ */
 function viewAchieve(){
   return `
-  ${pageHead('HONORS','功績')}
+  ${pageHead('HONORS','Achievements')}
   <div class="h" style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-    <span>徳</span><span style="font-size:15px;color:var(--kin)">現在 <b>${toku}</b> 徳</span>
+    <span>VIRTUE</span><span style="font-size:15px;color:var(--kin)"><b>${toku}</b> Virtue</span>
   </div>
   <div style="padding:14px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px">
-    <p style="font-size:15px;margin:0 0 10px">徳を積むと、師匠より御札を授かる</p>
+    <p style="font-size:15px;margin:0 0 10px">Earn Virtue to receive Talismans from Sensei</p>
     <div onclick="openFudaExchange()" style="text-align:center;padding:14px;border-radius:10px;border:1px solid var(--line);cursor:pointer;max-width:200px">
-      <img src="images/fuda.webp" alt="御札" style="width:100%;height:150px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(217,172,82,.45))">
-      <div style="font-size:15px;margin-top:6px;font-weight:700">御札</div>
-      <div style="font-size:14px;color:var(--kin);margin-top:2px">30徳</div>
-      <div style="font-size:13px;color:var(--sub);margin-top:4px">所有数: ${fudaCount}</div>
+      <img src="images/fuda.webp" alt="Talisman" style="width:100%;height:150px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(217,172,82,.45))">
+      <div style="font-size:15px;margin-top:6px;font-weight:700">Talisman</div>
+      <div style="font-size:14px;color:var(--kin);margin-top:2px">30 Virtue</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:4px">Owned: ${fudaCount}</div>
     </div>
   </div>
-  <div class="h">印</div>
+  <div class="h">Seals</div>
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px">
     ${STAMPS.map(s=>`<div style="text-align:center;padding:10px 14px;border-radius:12px;border:1px solid ${s.got?'var(--kin)':'var(--line)'};background:${s.got?'rgba(200,162,76,.12)':'var(--glass)'};opacity:${s.got?1:.4};min-width:76px">
       <div style="font-size:13px;color:${s.got?'var(--kin)':'var(--sub)'};font-weight:700">${s.month}</div>
-      <img src="images/shirushi.webp" alt="印" style="width:40px;height:40px;margin-top:4px;${s.got?'':'filter:grayscale(1)'}">
+      <img src="images/shirushi.webp" alt="Seal" style="width:40px;height:40px;margin-top:4px;${s.got?'':'filter:grayscale(1)'}"><div style="font-family:var(--serif);font-size:14px;margin-top:4px">${s.mtn}</div>
     </div>`).join('')}
   </div>
-  <div class="h">巻物</div>
+  <div class="h">Scrolls</div>
   <div class="relics">
     ${SCROLLS.filter(r=>r.got).map(r=>`<div class="relic got" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))"><img class="rimg" src="images/maki-${r.c}.webp" alt=""><div class="rname">${r.l}</div></div>`).join('')}
-    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))">${r.secret?'<div class="em" style="position:absolute;opacity:.5">🗝️</div>':`<img class="rimg" src="images/maki-${r.c}.webp" alt="" style="filter:grayscale(1)">`}<div class="rname">${r.secret?'？？？':r.l}</div></div>`).join('')}
+    ${SCROLLS.filter(r=>!r.got).map(r=>`<div class="relic locked" onclick="tapFlash(this,()=>scrollInfo(${SCROLLS.indexOf(r)}))">${r.secret?'<div class="em" style="position:absolute;opacity:.5">🗝️</div>':`<img class="rimg" src="images/maki-${r.c}.webp" alt="" style="filter:grayscale(1)">`}<div class="rname">${r.secret?'???':r.l}</div></div>`).join('')}
   </div>`;
 }
 
@@ -1752,51 +1780,51 @@ function viewAchieve(){
 function openFudaExchange(){
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:40px">${FUDA}</div>
-    <h3>御札と交換しますか？</h3>
-    <p class="sub" style="text-align:center">御札はストリークの途切れを防ぐお守り。<br>自分にも使え、門下生に送ることもできる。<br>30徳と交換して師匠より授かります。<br>現在の徳：${toku}　／　所有数：${fudaCount}枚</p>
-    <button class="btnprime" onclick="doFudaExchange()">はい（30徳で交換）</button>
-    <button class="btnghost" onclick="closeModal();nav('achieve')">いいえ</button>
+    <h3>Exchange for a Talisman?</h3>
+    <p class="sub" style="text-align:center">A Talisman keeps your streak from breaking.<br>Use it yourself or send it to a friend.<br>Sensei grants one for 30 Virtue.<br>Virtue: ${toku} / Owned: ${fudaCount}</p>
+    <button class="btnprime" onclick="doFudaExchange()">Yes (30 Virtue)</button>
+    <button class="btnghost" onclick="closeModal();nav('achieve')">No</button>
   </div>`,true);
 }
 function doFudaExchange(){
-  if(toku<30){ toast('徳が足りません'); closeModal(); nav('achieve'); return; }
+  if(toku<30){ toast('Not enough Virtue'); closeModal(); nav('achieve'); return; }
   const n=fudaCount+1;
   addLedger({k:'fuda',amt:-30});
   vib([30,20,60]);
   closeModal();
   modal(`<div class="sheet card-c" style="text-align:center">
-    <img src="images/shihan.webp" alt="師範" style="width:96px;height:96px;object-fit:contain">
-    <h3>師匠より御札を授かった</h3>
-    <p class="sub" style="text-align:center">所有数: ${n}</p>
-    <button class="btnprime" onclick="closeModal();nav('achieve')">閉じる</button>
+    <img src="images/shihan.webp" alt="Sensei" style="width:96px;height:96px;object-fit:contain">
+    <h3>Sensei granted you a Talisman</h3>
+    <p class="sub" style="text-align:center">Owned: ${n}</p>
+    <button class="btnprime" onclick="closeModal();nav('achieve')">Close</button>
   </div>`,true);
 }
 
 /* ══ フレンドタブ ══ */
 /* ══ 立て札 ══ */
 const BOARD=[
-  {who:'ノリ',   me:true, type:'rank', text:'『修行僧』に昇格した', tm:'たった今'},
-  {who:'ノリ・タカシ・翔', me:true, em:'🤝', type:'quest', text:'道連れ修行「百八の煩悩退治」を成就した', tm:'30分前'},
-  {who:'タカシ', me:false,em:'🧙', type:'streak',text:'20日 連続修行を達成', tm:'1時間前'},
-  {who:'翔',     me:false,em:'⚔️', type:'step', text:'〈フル・プルアップ〉第8段に到達', tm:'3時間前'},
-  {who:'ノリ',   me:true, type:'step', text:'〈フル・プッシュアップ〉第5段に到達', tm:'今日'},
-  {who:'タカシ', me:false,em:'🧙', type:'rank', text:'『鍛錬者』に昇格した', tm:'昨日'},
-  {who:'翔',     me:false,em:'⚔️', type:'streak',text:'10日 連続修行を達成', tm:'昨日'},
-  {who:'ノリ',   me:true, type:'streak',text:'10日 連続修行を達成', tm:'2日前'},
+  {who:'Nori',   me:true, type:'rank', text:'ranked up to ASCETIC', tm:'just now'},
+  {who:'Nori, Takashi & Sho', me:true, em:'🤝', type:'quest', text:'completed the Party Training "Slay the 108 Desires"', tm:'30m ago'},
+  {who:'Takashi', me:false,em:'🧙', type:'streak',text:'hit a 20-day streak', tm:'1h ago'},
+  {who:'Sho',     me:false,em:'⚔️', type:'step', text:'reached Lv.8 in Full Pull-up', tm:'3h ago'},
+  {who:'Nori',   me:true, type:'step', text:'reached Lv.5 in Full Push-up', tm:'today'},
+  {who:'Takashi', me:false,em:'🧙', type:'rank', text:'ranked up to ADEPT', tm:'yesterday'},
+  {who:'Sho',     me:false,em:'⚔️', type:'streak',text:'hit a 10-day streak', tm:'yesterday'},
+  {who:'Nori',   me:true, type:'streak',text:'hit a 10-day streak', tm:'2d ago'},
 ];
 function viewBoard(){
   // 応援も立て札に流す（typeが'react'の項目）
-  const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`${emo(r.react)}「${r.serif}」を送った`, tm:r.tm}));
+  const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`sent ${emo(r.react)} “${r.serif}”`, tm:r.tm}));
   const feed=[BOARD[0],BOARD[1],reactEntries[0],...BOARD.slice(2,5),...(reactEntries[1]?[reactEntries[1]]:[]),...BOARD.slice(5)];
   return `
-  ${pageHead('BOARD','立て札')}
+  ${pageHead('BOARD','Board')}
   ${feed.filter(Boolean).map(b=>{
     const av = b.me ? currentAvatar : (b.em||'🧑');
     const icon=`<div style="width:64px;height:64px;flex:0 0 auto;border-radius:50%;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:34px">${av}</div>`;
     const shareable = b.me && (b.type==='rank' || b.type==='quest' || b.type==='streak');
-    const shareBtn = shareable ? `<span onclick='event.stopPropagation();openShareSunrise(${JSON.stringify(b.text)})' style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--kin);margin-top:8px;cursor:pointer;font-weight:700">📤 分かち合う</span>` : '';
+    const shareBtn = shareable ? `<span onclick='event.stopPropagation();openShareSunrise(${JSON.stringify(b.text)})' style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--kin);margin-top:8px;cursor:pointer;font-weight:700">📤 Share</span>` : '';
     const body=`<div style="flex:1;min-width:0;${b.me?'text-align:right':''}">
-       <div style="font-size:16px;line-height:1.5"><span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?'（自分）':''}</span> が ${b.text}</div>
+       <div style="font-size:16px;line-height:1.5"><span style="color:${b.me?'var(--kin)':'var(--washi)'};font-weight:700">${b.who}${b.me?' (you)':''}</span> ${b.text}</div>
        <div style="font-size:14px;color:var(--sub);margin-top:6px">${b.tm}</div>
        ${shareBtn?`<div>${shareBtn}</div>`:''}
      </div>`;
@@ -1810,13 +1838,13 @@ function viewFriends(){
   hasNewReact=false;
   return `
   <div class="brand">
-    <div><div class="eyebrow">DISCIPLES</div><div class="logo"><b>門下生</b></div></div>
-    <button class="addbtn" onclick="addFriend()">＋ 追加</button>
+    <div><div class="eyebrow">DISCIPLES</div><div class="logo"><b>Friends</b></div></div>
+    <button class="addbtn" onclick="addFriend()">+ Add</button>
   </div>
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
     <div class="av">${f.em}</div>
-    <div><div class="nm">${f.name}</div><div class="sk">${FLAME} 修行${f.streak}日目${f.trained?' ✓今日済み':' 未トレーニング'}</div>
-    ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:14px;color:var(--kin);font-weight:700;cursor:pointer">${FUDA} 御札を送る ›</div>`:''}
+    <div><div class="nm">${f.name}</div><div class="sk">${FLAME} ${f.streak}-day streak${f.trained?' · ✓ Done today':' · Not trained today'}</div>
+    ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:14px;color:var(--kin);font-weight:700;cursor:pointer">${FUDA} Send Talisman ›</div>`:''}
     </div>
     <div class="chev">›</div>
   </div>`).join('')}`;
@@ -1827,60 +1855,65 @@ function openSendFuda(idx){
   const f=FRIENDS[idx];
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:40px">${FUDA}</div>
-    <h3>${f.name} に御札を送りますか？</h3>
-    <p class="sub" style="text-align:center">今日はまだ修行していないようです。御札を送るとストリークの途切れを防げます。<br>手持ちの御札：${fudaCount}枚</p>
-    ${fudaCount>0?`<button class="btnprime" onclick="sendFuda(${idx},'stock')">手持ちの御札を送る</button>`:''}
-    <button class="btnghost" onclick="sendFuda(${idx},'new')">新しく交換して送る（30徳）</button>
-    <button class="btnghost" onclick="closeModal()">送らない</button>
+    <h3>Send a Talisman to ${f.name}?</h3>
+    <p class="sub" style="text-align:center">Looks like they haven’t trained today. A Talisman will keep their streak alive.<br>Talismans on hand: ${fudaCount}</p>
+    ${fudaCount>0?`<button class="btnprime" onclick="sendFuda(${idx},'stock')">Send one from your stock</button>`:''}
+    <button class="btnghost" onclick="sendFuda(${idx},'new')">Exchange & send (30 Virtue)</button>
+    <button class="btnghost" onclick="closeModal()">Not now</button>
   </div>`,true);
 }
 function sendFuda(idx,src){
   const f=FRIENDS[idx];
   if(src==='stock'){
-    if(fudaCount<=0){ toast('御札の手持ちがありません'); closeModal(); return; }
+    if(fudaCount<=0){ toast('No Talismans on hand'); closeModal(); return; }
     addLedger({k:'fudaGift',amt:10,to:f.name});
   } else {
-    if(toku<30){ toast('徳が足りません'); closeModal(); return; }
+    if(toku<30){ toast('Not enough Virtue'); closeModal(); return; }
     addLedger({k:'fudaGiftNew',amt:-20,to:f.name}); // 30徳で交換して送り、徳+10
   }
   vib([30,20,60]);
   closeModal();
-  toast(`${f.name} に御札を送りました（徳+10）`);
+  toast(`Talisman sent to ${f.name} (Virtue +10)`);
   nav('friends');
 }
 
 /* ══ プロフィール ══ */
 function viewProfile(){
-  const r=currentRank();
+  const r=currentRank(), nr=RANKS[RANKS.indexOf(r)+1], pct=nr?Math.max(0,Math.min(100,Math.round((SUM-r.min)/(nr.min-r.min)*100))):100;
   return `
   <div class="eyebrow" style="margin:2px 2px 12px">SELF · 己</div>
   <div class="prof-top">
     <div class="avatar" onclick="openAvatarSelect()">${currentAvatar}</div>
     <div class="prof-info">
-      <div class="pname">${escHtml(myName||'修行者')}</div>
-      <div class="pid">修行${daysSinceStart+1}日目</div>
+      <div class="pname">${escHtml(myName||'Trainee')}</div>
+      <div class="pid">Day ${daysSinceStart+1}</div>
     </div>
-    <div style="flex:1;display:flex;justify-content:center;align-items:center">
-      <span onclick="rankList()" style="cursor:pointer;font-size:16px;font-weight:800;font-family:var(--serif);color:#1a1206;background:linear-gradient(135deg,var(--kin),var(--kin2));padding:7px 16px;border-radius:12px;letter-spacing:.08em;white-space:nowrap;box-shadow:0 3px 10px rgba(217,172,82,.3)">${r.name}</span>
-    </div>
+    <div style="flex:1"></div>
     <div class="gear" onclick="openSettings()">⚙</div>
   </div>
-  <div class="stat3">
-    <div class="stat"><b>${totalDays}</b><small>全期間修行日数</small></div>
-    <div class="stat"><b>${monthXP}</b><small>今月の経験値</small></div>
-    <div class="stat" onclick="showTotalXP()" style="cursor:pointer"><b>${PREV_MONTH_XP}</b><small>前月の経験値</small></div>
+  <div class="rkcard" onclick="rankList()" style="border-left:8px solid ${r.belt}">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+      <div><div class="rk-en">${r.en}</div><div class="rk-ja">${r.name}</div></div>
+      <div class="rk-lbl">RANK ${RANKS.indexOf(r)+1} / ${RANKS.length}</div>
+    </div>
+    ${nr?`<div class="rk-bar"><i style="width:${pct}%"></i></div><div class="rk-next">${nr.min-SUM} more level${nr.min-SUM===1?'':'s'} to <b>${nr.en}</b></div>`:`<div class="rk-next">Highest rank reached</div>`}
   </div>
-  <div class="h">鍛錬の形</div>
+  <div class="stat3">
+    <div class="stat"><b>${totalDays}</b><small>Total training days</small></div>
+    <div class="stat"><b>${monthXP}</b><small>XP this month</small></div>
+    <div class="stat" onclick="showTotalXP()" style="cursor:pointer"><b>${PREV_MONTH_XP}</b><small>XP last month</small></div>
+  </div>
+  <div class="h">Training Balance</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
     ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
   </div>
-  <div class="h" style="cursor:pointer" onclick="showMonthCal()">修行の暦 <span style="font-size:14px;color:var(--sub)">（月表示）</span></div>
+  <div class="h" style="cursor:pointer" onclick="showMonthCal()">Training Calendar <span style="font-size:14px;color:var(--sub)">(monthly)</span></div>
   <div class="cal" id="calBox">${buildWeekCal()}</div>
-  <button class="btnghost" style="margin-top:16px" onclick="openFeedback()">✉ 開発者へ意見を送る</button>`;
+  <button class="btnghost" style="margin-top:16px" onclick="openFeedback()">✉ Send feedback to the developer</button>`;
 }
 
 /* ══ レーダー ══ */
-const RADAR_LABELS=['プッシュ','プル','スクワット','コア','ブリッジ','ハンド'];
+const RADAR_LABELS=['Push','Pull','Squat','Core','Bridge','Handstand'];
 function radar(setsArr,colors,perAxisColors){
   const W=340,H=300,cx=170,cy=150,R=88,MAX=15,N=6;
   const ang=i=>(-90+i*60)*Math.PI/180;
@@ -1921,9 +1954,9 @@ function monthlyXPThisYear(){
   return arr;
 }
 function growthChartData(period){
-  if(period==='m1'){ const d=currentMonthDailyXP(); return {values:d, title:'今月の推移（日次）'}; }
-  if(period==='m3'){ const w=weeklyXPFor3Months(); return {values:w, title:'直近3ヶ月の推移（週次）'}; }
-  return {values:monthlyXPThisYear(), title:'今年の推移（月次）'};
+  if(period==='m1'){ const d=currentMonthDailyXP(); return {values:d, title:'This month (daily)'}; }
+  if(period==='m3'){ const w=weeklyXPFor3Months(); return {values:w, title:'Last 3 months (weekly)'}; }
+  return {values:monthlyXPThisYear(), title:'This year (monthly)'};
 }
 function growthChartSVG(period){
   const {values}=growthChartData(period);
@@ -1947,11 +1980,11 @@ function growthChartBlock(){
   const {title}=growthChartData(calGrowthPeriod);
   return `<div class="chartbox calGrowthWrap" style="margin-bottom:14px">
     <div style="display:flex;gap:6px;margin-bottom:10px">
-      ${[['m1','1ヶ月'],['m3','3ヶ月'],['y1','年']].map(([id,l])=>`<button onclick="setGrowthPeriod('${id}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid ${calGrowthPeriod===id?'var(--kin)':'var(--line2)'};background:${calGrowthPeriod===id?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${calGrowthPeriod===id?'var(--kin2)':'var(--washi)'};font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">${l}</button>`).join('')}
+      ${[['m1','1M'],['m3','3M'],['y1','1Y']].map(([id,l])=>`<button onclick="setGrowthPeriod('${id}')" style="flex:1;padding:8px;border-radius:10px;border:1px solid ${calGrowthPeriod===id?'var(--kin)':'var(--line2)'};background:${calGrowthPeriod===id?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${calGrowthPeriod===id?'var(--kin2)':'var(--washi)'};font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans)">${l}</button>`).join('')}
     </div>
     <div>${growthChartSVG(calGrowthPeriod)}</div>
     <div style="text-align:center;font-size:13px;color:var(--sub);margin-top:6px">${title}</div>
-    <button class="btnghost" style="margin-top:10px" onclick="shareGrowth()">📤 この成長を分かち合う</button>
+    <button class="btnghost" style="margin-top:10px" onclick="shareGrowth()">📤 Share this progress</button>
   </div>`;
 }
 function setGrowthPeriod(id){
@@ -1961,13 +1994,13 @@ function setGrowthPeriod(id){
 }
 function shareGrowth(){
   const {title}=growthChartData(calGrowthPeriod);
-  buildShareCard('sunrise','修行の成長',title);
+  buildShareCard('sunrise','My Training Growth',title);
 }
 function showTotalXP(){
   modal(`<div class="sheet card-c" style="text-align:center">
-    <div style="font-size:14px;color:var(--sub)">累計経験値</div>
+    <div style="font-size:14px;color:var(--sub)">Total XP</div>
     <div style="font-size:36px;font-weight:800;color:var(--kin);font-family:var(--serif);margin:8px 0">${TOTAL_XP.toLocaleString()}</div>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 let calMonthOffset=0;
@@ -1975,7 +2008,7 @@ function showMonthCal(off){
   calMonthOffset=off||0;
   const base=new Date(); base.setDate(1); base.setMonth(base.getMonth()+calMonthOffset);
   const y=base.getFullYear(), m=base.getMonth()+1;
-  const DAYS=['日','月','火','水','木','金','土'];
+  const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const first=new Date(y,m-1,1).getDay();
   const last=new Date(y,m,0).getDate();
   const today=new Date(); const isThisMonth=(today.getFullYear()===y && today.getMonth()+1===m);
@@ -1995,16 +2028,16 @@ function showMonthCal(off){
     ${growthChartBlock()}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <span onclick="showMonthCal(${calMonthOffset-1})" style="cursor:pointer;padding:6px 12px;color:var(--kin);font-size:18px">‹</span>
-      <h3 style="margin:0">${y}年 ${m}月</h3>
+      <h3 style="margin:0">${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${y}</h3>
       <span onclick="${calMonthOffset<0?`showMonthCal(${calMonthOffset+1})`:''}" style="cursor:pointer;padding:6px 12px;color:var(--kin);font-size:18px;opacity:${calMonthOffset<0?1:.25}">›</span>
     </div>
     ${grid}
     <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;font-size:14px;color:var(--sub)">
-      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>修行済み</span>
-      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>休養日</span>
-      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>未修行</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(181,70,46,.7);margin-right:4px;vertical-align:middle"></span>Trained</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(255,182,193,.4);margin-right:4px;vertical-align:middle"></span>Rest day</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(110,147,166,.4);margin-right:4px;vertical-align:middle"></span>Missed</span>
     </div>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 
@@ -2015,7 +2048,7 @@ function loadScore(step,sets,reps){ return (STEP_COEFF[step]||1.0)*(sets*reps); 
 function lineChart(records){
   const step=state.step||1;
   const W=320,H=160,pl=36,pr=12,pt=14,pb=28,n=records.length;
-  if(!n) return '<div style="text-align:center;color:var(--sub);padding:18px;font-size:14px">記録がたまるとグラフが出ます</div>';
+  if(!n) return '<div style="text-align:center;color:var(--sub);padding:18px;font-size:14px">Log a few sessions to see your chart</div>';
 
   const scores=records.map(r=>+(loadScore(step,r.sets,r.reps)).toFixed(1));
   let maxV=Math.max(...scores,1);
@@ -2045,7 +2078,7 @@ function lineChart(records){
   if(n>1) s+=`<text x="${X(n-1)}" y="${H-8}" fill="#8b8f99" font-size="10" text-anchor="end">${records[n-1].date}</text>`;
   s+=`</svg>`;
 
-  const leg=`<div class="legend"><span style="color:var(--sub)">縦軸：総負荷スコア（強度係数 × 組数 × 回数）</span></div>`;
+  const leg=`<div class="legend"><span style="color:var(--sub)">Y-axis: total load score (intensity × sets × reps)</span></div>`;
   return s+leg;
 }
 
@@ -2055,10 +2088,10 @@ function showLoadTip(score,step,sets,reps,date){
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:14px;color:var(--sub)">${date}</div>
     <div style="font-size:32px;font-weight:700;color:var(--kin);margin:8px 0">${score}</div>
-    <div style="font-size:15px;color:var(--washi)">総負荷スコア</div>
-    <div style="font-size:14px;color:var(--sub);margin-top:8px">強度係数 ${coeff} × ${sets}組 × ${reps}回</div>
-    ${isPR?'<div style="color:#7FB069;font-size:15px;margin-top:8px">★ 過去最高スコア！</div>':''}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <div style="font-size:15px;color:var(--washi)">Total load score</div>
+    <div style="font-size:14px;color:var(--sub);margin-top:8px">Intensity ${coeff} × ${sets} sets × ${reps} reps</div>
+    ${isPR?'<div style="color:#7FB069;font-size:15px;margin-top:8px">★ New personal best!</div>':''}
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 
@@ -2098,13 +2131,13 @@ function clearWKTimers(){ if(WK){ if(WK.timer){ clearTimeout(WK.timer); clearInt
 
 function countdownThenGo(){
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
-  document.getElementById('dSet').textContent=`${WK.curSet} / ${WK.goalSets} 組目`;
+  document.getElementById('dSet').textContent=`SET ${WK.curSet} / ${WK.goalSets}`;
   btns.innerHTML='';
   let n=5;
   const tick=()=>{
-    if(n<=0){ stage.innerHTML=`<div class="dphase" style="color:var(--shu2)">始</div>`; vib(40); playTaiko();
+    if(n<=0){ stage.innerHTML=`<div class="dphase" style="color:var(--shu2)">GO</div>`; vib(40); playTaiko();
       WK.timer=setTimeout(()=> (WK.ty==='s'?holdSet():dynamicSet()), 700); return; }
-    stage.innerHTML=`<div class="dcdlabel">まもなく始まる</div><div class="dcd cdpop" key="${n}">${n}</div>`;
+    stage.innerHTML=`<div class="dcdlabel">Get ready</div><div class="dcd cdpop" key="${n}">${n}</div>`;
     vib(15); playTaiko();
     n--; WK.timer=setTimeout(tick,1000);
   };
@@ -2139,8 +2172,8 @@ function dynamicSet(){
   const stage=document.getElementById('dStage');
   const isNeg=WK.ty==='n';
   const phases = isNeg
-    ? [['下げる',5,'var(--ai)'],['戻す',1,'var(--shu2)']]
-    : [['上げる',1,'var(--shu2)'],['下げる',2,'var(--ai)'],['キープ',1,'var(--kin2)']];
+    ? [['Lower',5,'var(--ai)'],['Return',1,'var(--shu2)']]
+    : [['Up',1,'var(--shu2)'],['Down',2,'var(--ai)'],['Hold',1,'var(--kin2)']];
   const cycleDur=phases.reduce((a,p)=>a+p[1],0);
   // 高さ関数：上げ=上昇、下げ=下降、キープ=底で静止
   const yFn = isNeg
@@ -2160,13 +2193,13 @@ function dynamicSet(){
         <circle id="wDot" class="wdot" r="9" fill="var(--shu2)" cx="14" cy="${geo.H-14}"/>
       </svg>
     </div>
-    <div class="dtarget">目標 ${goal} 回　—　${WK.curSet}/${WK.goalSets}組</div>`;
+    <div class="dtarget">Goal ${goal} reps — Set ${WK.curSet}/${WK.goalSets}</div>`;
   startWaveRAF(yFn,cycleDur,geo);
   const stepPhase=()=>{
     const [label,sec,color]=phases[pi];
     const ph=document.getElementById('dPhase'); if(!ph) return;
     ph.textContent=label; ph.style.color=color;
-    vib(label==='上げる'||label==='戻す'?30:12); playTaiko();
+    vib(label==='Up'||label==='Return'?30:12); playTaiko();
     WK.timer=setTimeout(()=>{
       pi++;
       if(pi>=phases.length){ pi=0; rep++;
@@ -2191,7 +2224,7 @@ function holdSet(){
   stage.innerHTML=`
     <div class="dpulse" style="animation:phasePulse ${cycleDur}s ease-in-out infinite"></div>
     <div class="dcount" id="dCount" style="font-size:min(26vw,110px)">${left}</div>
-    <div class="dphase" style="color:var(--kin2);font-size:min(9vw,38px)">キープ　<span style="font-size:16px;color:var(--sub)">呼吸を合わせよ</span></div>
+    <div class="dphase" style="color:var(--kin2);font-size:min(9vw,38px)">Hold <span style="font-size:16px;color:var(--sub)">Breathe steady</span></div>
     <div class="wavewrap">
       <svg viewBox="0 0 ${geo.W} ${geo.H}">
         <line class="wmid" x1="14" y1="${geo.H/2}" x2="${geo.W-14}" y2="${geo.H/2}"/>
@@ -2199,7 +2232,7 @@ function holdSet(){
         <circle id="wDot" class="wdot" r="9" fill="var(--kin2)" cx="14" cy="${geo.H/2}"/>
       </svg>
     </div>
-    <div class="dtarget">秒キープ　—　${WK.curSet}/${WK.goalSets}組</div>`;
+    <div class="dtarget">sec hold — Set ${WK.curSet}/${WK.goalSets}</div>`;
   startWaveRAF(yFn,cycleDur,geo);
   playTaiko(); vib(20);
   WK.timer=setInterval(()=>{
@@ -2212,7 +2245,7 @@ function holdSet(){
 }
 
 function renderStopBtn(){
-  document.getElementById('dBtns').innerHTML=`<button class="dstop" onclick="stopSet()">止 め る</button>`;
+  document.getElementById('dBtns').innerHTML=`<button class="dstop" onclick="stopSet()">S T O P</button>`;
 }
 
 /* ユーザーが停止 → 実数確認 */
@@ -2221,14 +2254,14 @@ function stopSet(){ clearWKTimers(); endSetPrompt(true); }
 function endSetPrompt(auto){
   clearWKTimers();
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
-  const unit=WK.ty==='s'?'秒':'回';
+  const unit=WK.ty==='s'?'sec':'reps';
   const def=WK.goalReps;
   stage.innerHTML=`
-    <div class="dphase" style="font-size:min(9vw,34px);color:var(--washi)">${WK.curSet}組目 完了</div>
-    <div style="font-size:15px;color:var(--sub);margin:14px 0 6px">実際にできた${unit}数は？</div>
+    <div class="dphase" style="font-size:min(9vw,34px);color:var(--washi)">Set ${WK.curSet} done</div>
+    <div style="font-size:15px;color:var(--sub);margin:14px 0 6px">How many ${unit} did you actually do?</div>
     <input id="dActual" type="number" inputmode="numeric" value="${def}" style="width:150px;background:var(--sumi3);border:1.5px solid var(--kin);border-radius:14px;color:var(--kin2);padding:16px;font-size:32px;font-weight:800;text-align:center;font-family:var(--serif)">
-    <div style="font-size:14px;color:var(--faint);margin-top:8px">少なく終えた時はここで直せる</div>`;
-  btns.innerHTML=`<button class="dstop" onclick="commitSet()">この組を記録</button>`;
+    <div style="font-size:14px;color:var(--faint);margin-top:8px">Came up short? Adjust it here.</div>`;
+  btns.innerHTML=`<button class="dstop" onclick="commitSet()">Log this set</button>`;
 }
 
 function commitSet(){
@@ -2244,13 +2277,13 @@ function restPrompt(){
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
   const rec=criteria(WK.key,WK.step).rest;
   stage.innerHTML=`
-    <div class="dphase" style="font-size:min(8vw,30px);color:var(--kin2)">${WK.curSet}組目 記録</div>
-    <div style="font-size:16px;color:var(--sub);margin-top:14px">休息をとって次の組へ</div>
+    <div class="dphase" style="font-size:min(8vw,30px);color:var(--kin2)">Set ${WK.curSet} logged</div>
+    <div style="font-size:16px;color:var(--sub);margin-top:14px">Rest, then hit the next set</div>
     <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center">
-      ${[90,120,150,180,210].map(s=>`<button onclick="beginRest(${s})" style="padding:14px 18px;border-radius:14px;border:1px solid ${s===rec?'var(--kin)':'var(--line2)'};background:${s===rec?'rgba(217,172,82,.14)':'var(--card)'};color:var(--washi);font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans)">${s}<span style="font-size:13px;color:var(--sub)">秒</span></button>`).join('')}
+      ${[90,120,150,180,210].map(s=>`<button onclick="beginRest(${s})" style="padding:14px 18px;border-radius:14px;border:1px solid ${s===rec?'var(--kin)':'var(--line2)'};background:${s===rec?'rgba(217,172,82,.14)':'var(--card)'};color:var(--washi);font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans)">${s}<span style="font-size:13px;color:var(--sub)">s</span></button>`).join('')}
     </div>
-    <div style="font-size:14px;color:var(--kin);margin-top:12px">推奨 ${rec}秒</div>`;
-  btns.innerHTML=`<button class="dghost" onclick="beginRest(0)">休まず次へ</button><button class="dghost" onclick="finishWorkout()">修行を終える（ここまでを記録）</button>`;
+    <div style="font-size:14px;color:var(--kin);margin-top:12px">Recommended ${rec} sec</div>`;
+  btns.innerHTML=`<button class="dghost" onclick="beginRest(0)">Skip rest, next set</button><button class="dghost" onclick="finishWorkout()">End training (log progress so far)</button>`;
 }
 
 function beginRest(sec){
@@ -2259,12 +2292,12 @@ function beginRest(sec){
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
   let left=sec;
   const draw=()=>{
-    stage.innerHTML=`<div class="dcdlabel">休息</div>
+    stage.innerHTML=`<div class="dcdlabel">REST</div>
       <div class="dcount" style="color:var(--ai)">${left}</div>
-      <div class="dtarget">次は ${WK.curSet}/${WK.goalSets} 組目</div>`;
+      <div class="dtarget">Next: set ${WK.curSet}/${WK.goalSets}</div>`;
   };
   draw();
-  btns.innerHTML=`<button class="dstop" style="background:linear-gradient(135deg,#5b7a88,#82A7BC)" onclick="skipRest()">休息を省略</button>`;
+  btns.innerHTML=`<button class="dstop" style="background:linear-gradient(135deg,#5b7a88,#82A7BC)" onclick="skipRest()">Skip rest</button>`;
   WK.timer=setInterval(()=>{ left--; if(left<=0){ clearWKTimers(); vib([30,20,30]); countdownThenGo(); } else { const c=document.querySelector('#dStage .dcount'); if(c)c.textContent=left; } },1000);
 }
 function skipRest(){ clearWKTimers(); countdownThenGo(); }
@@ -2290,15 +2323,15 @@ function finishWorkout(){
   // 終了画面
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
   stage.innerHTML=`
-    <div class="dphase" style="font-size:min(10vw,40px);color:var(--kin2)">修行 成就</div>
+    <div class="dphase" style="font-size:min(10vw,40px);color:var(--kin2)">TRAINING COMPLETE</div>
     <div style="display:flex;gap:22px;margin:22px 0;text-align:center">
-      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${sets}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">組</div></div>
-      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${total}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">合計${ty==='s'?'秒':'回'}</div></div>
-      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--kin2)">+${xp}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">経験値</div></div>
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${sets}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">SETS</div></div>
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--washi)">${total}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">TOTAL ${ty==='s'?'SEC':'REPS'}</div></div>
+      <div><div style="font-family:var(--serif);font-size:40px;font-weight:800;color:var(--kin2)">+${xp}</div><div style="font-size:13px;color:var(--sub);letter-spacing:.1em">XP</div></div>
     </div>
-    <div style="font-size:15px;color:var(--sub)">各組：${WK.tally.join(' / ')}</div>
+    <div style="font-size:15px;color:var(--sub)">Per set: ${WK.tally.join(' / ')}</div>
     ${WK.rec?memoAskHtml('dMemo',WK.rec.note):''}`;
-  btns.innerHTML=`<button class="dstop" onclick="closeWorkout(${cleared},'${key}',${step})">記録する</button>`;
+  btns.innerHTML=`<button class="dstop" onclick="closeWorkout(${cleared},'${key}',${step})">Log it</button>`;
   vib([50,40,80]);
 }
 
@@ -2314,7 +2347,7 @@ function closeWorkout(cleared,key,step){
 
 function showXPBurst(){
   const pop=document.getElementById('xpPop'), num=document.getElementById('xpNum');
-  num.textContent='成就'; pop.style.display='block';
+  num.textContent='COMPLETE'; pop.style.display='block';
   pop.querySelectorAll('.sparkle').forEach(s=>s.remove());
   const colors=['#D9AC52','#F2CF7E','#fff','#E5482E'];
   for(let k=0;k<20;k++){ const s=document.createElement('div'); const size=5+Math.random()*7, ang=Math.random()*Math.PI*2, dist=70+Math.random()*110;
@@ -2345,32 +2378,33 @@ function bigClear(key,step){
     <div class="shock"></div><div class="shock s2"></div><div class="shock s3"></div>
     ${conf}
     <div class="seal"><div class="k">成</div></div>
-    <div style="font-family:var(--serif);font-size:26px;font-weight:800;color:var(--kin2);margin-top:14px;letter-spacing:.1em">第${step}段 クリア</div>
+    <div style="font-family:'Oswald',var(--sans);font-size:38px;font-weight:700;color:#fff;margin-top:14px;letter-spacing:.14em">COMPLETE</div>
+    <div style="font-family:'Oswald',var(--sans);font-size:15px;color:var(--kin2);letter-spacing:.2em;margin-top:2px">LEVEL ${step} CLEARED</div>
     ${nextName?`<div style="margin-top:14px;text-align:center">
       <img src="images/${ch.img}" alt="" style="height:min(24vh,200px);max-width:100%;object-fit:contain;display:block;margin:0 auto -6px">
       <div style="background:var(--card);border:1px solid var(--line2);border-radius:16px;padding:12px 16px;text-align:left"><div style="font-size:14px;color:var(--kin)">${ch.name}</div><div style="font-size:16px;line-height:1.6;margin-top:4px">${ch.say(nextName,nc.start)}</div></div>
     </div>
-    <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 この成就を分かち合う</button>
-    <button class="btnprime" onclick="afterBigClear('${key}',${step+1})">次の段へ進む</button>
-    <button class="btnghost" onclick="afterBigClear('${key}',${step})">まだこの段で鍛える</button>`
-    : `<div style="font-size:16px;color:var(--sub);margin-top:16px">この修行を極めた！</div>
-    <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 この成就を分かち合う</button>
-    <button class="btnprime" onclick="afterBigClear('${key}',${step})">戻る</button>`}
+    <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 Share this win</button>
+    <button class="btnprime" onclick="afterBigClear('${key}',${step+1})">Advance to next level</button>
+    <button class="btnghost" onclick="afterBigClear('${key}',${step})">Keep training this level</button>`
+    : `<div style="font-size:16px;color:var(--sub);margin-top:16px">You’ve mastered this training!</div>
+    <button class="btnghost" style="margin-top:16px" onclick="openShareTile(${step})">📤 Share this win</button>
+    <button class="btnprime" onclick="afterBigClear('${key}',${step})">Back</button>`}
   </div>`;
   vib([60,40,60,40,140]);
 }
-function afterBigClear(key,step){ document.getElementById('clearFx').style.display='none'; nav('record',{exKey:key,step:step}); }
+function afterBigClear(key,step){ document.getElementById('clearFx').style.display='none'; nav('record',{exKey:key,step:step}); if(RANK_UP!==null) setTimeout(showRankUp,300); }
 
 /* ══ シェアカード（瓦割り＝通常の段クリア／ご来光＝大きな節目） ══ */
 function openShareTile(step){
-  buildShareCard('tile', `第${step}段 クリア`, '瓦を割り、新たな道を拓いた');
+  buildShareCard('tile', `LEVEL ${step} CLEARED`, 'Tile broken. A new path opens.');
 }
 function openShareSunrise(text){
   const short = text.length>26 ? text.slice(0,26)+'…' : text;
-  buildShareCard('sunrise', short, '積み重ねた歩みに、光が射す');
+  buildShareCard('sunrise', short, 'Every step you stacked now catches the light');
 }
 function onPeakReached(){
-  buildShareCard('sunrise', `${Number(MTN.mk.split('-')[1])}月・登頂`, '頂の鳥居にて「印」を授かった');
+  buildShareCard('sunrise', `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(MTN.mk.split('-')[1])-1]} · Summit reached`, 'Received the Seal at the summit torii');
 }
 function buildShareCard(kind,title,sub){
   let fx=document.getElementById('shareFx');
@@ -2378,8 +2412,8 @@ function buildShareCard(kind,title,sub){
   fx.innerHTML=`<div class="sfClose" onclick="closeShareCard()">✕</div>
     <div class="sfCard" id="sfCardInner"></div>
     <div class="sfActions">
-      <button onclick="toast('画像として保存しました（デモ）')">📥 保存</button>
-      <button onclick="toast('共有シートを開きました（デモ）')">📤 共有</button>
+      <button onclick="toast('Image saved (demo)')">📥 Save</button>
+      <button onclick="toast('Share sheet opened (demo)')">📤 Share</button>
     </div>`;
   const inner=document.getElementById('sfCardInner');
   if(kind==='tile'){
@@ -2405,33 +2439,33 @@ function closeShareCard(){ const fx=document.getElementById('shareFx'); if(fx) f
 
 function quitWorkout(){
   modal(`<div class="sheet card-c" style="text-align:center">
-    <h3>修行を中断する？</h3>
-    <p class="sub" style="text-align:center">ここまでの記録は残りません</p>
-    <button class="btnprime btndanger" onclick="closeModal();forceQuitWorkout()">中断する</button>
-    <button class="btnghost" onclick="closeModal()">続ける</button>
+    <h3>Stop training?</h3>
+    <p class="sub" style="text-align:center">Progress from this session won’t be saved</p>
+    <button class="btnprime btndanger" onclick="closeModal();forceQuitWorkout()">Stop</button>
+    <button class="btnghost" onclick="closeModal()">Keep going</button>
   </div>`,true);
 }
 function forceQuitWorkout(){ clearWKTimers(); document.getElementById('dojo').style.display='none'; const k=WK?WK.key:null,s=WK?WK.step:null; WK=null; if(k) nav('record',{exKey:k,step:s}); }
 
 /* 実演なしで記録（従来の簡易記録） */
 function quickRecordSheet(key,step){
-  const ty=stepType(key,step), c=criteria(key,step), unit=ty==='s'?'秒':'回';
+  const ty=stepType(key,step), c=criteria(key,step), unit=ty==='s'?'sec':'reps';
   modal(`<div class="sheet">
-    <h3>実演なしで記録</h3>
-    <p class="sub">すでに終えた修行を手入力で記録します</p>
+    <h3>Log without guided session</h3>
+    <p class="sub">Manually log training you’ve already done</p>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <div style="flex:1"><label>組数</label><input id="qSets" type="number" inputmode="numeric" value="3"></div>
-      <div style="flex:1"><label>1組の${unit}数</label><input id="qReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
+      <div style="flex:1"><label>Sets</label><input id="qSets" type="number" inputmode="numeric" value="3"></div>
+      <div style="flex:1"><label>${unit==='sec'?'Sec':'Reps'} per set</label><input id="qReps" type="number" inputmode="numeric" placeholder="${c.goal}"></div>
     </div>
     ${memoAskHtml('qMemo',(document.getElementById('memoInput')||{}).value||'',true)}
-    <button class="btnprime" onclick="quickRecord('${key}',${step})">記録する</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnprime" onclick="quickRecord('${key}',${step})">Log it</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 function quickRecord(key,step){
   const sets=parseInt(document.getElementById('qSets')?.value)||0;
   const reps=parseInt(document.getElementById('qReps')?.value)||0;
-  if(sets<=0||reps<=0){ toast('組数と回数を入力してください'); return; }
+  if(sets<=0||reps<=0){ toast('Enter sets and reps'); return; }
   const ty=stepType(key,step), c=criteria(key,step);
   const per=ty==='s'?3:ty==='n'?20:10;
   addLog(key,step,Array(Math.min(sets,20)).fill(reps),(document.getElementById('qMemo')||{}).value||'');
@@ -2446,14 +2480,14 @@ function quickRecord(key,step){
 }
 
 const CHARS=[
-  {name:'師範',img:'shihan.webp',      say:(nm,st)=>`よくぞここまで来た。次は〈${nm}〉だ。3組×${st}回から始めよ。`},
-  {name:'師範',img:'shihan-f.webp',      say:(nm,st)=>`見事。驕らず、次は〈${nm}〉。まず3組×${st}回だ。`},
-  {name:'兄弟子',img:'senpai-a.webp',say:(nm,st)=>`お見事です。次は〈${nm}〉ですね。まずは${st}回を目安に。`},
-  {name:'姉弟子',img:'senpai-b.webp',say:(nm,st)=>`いい動きでした。〈${nm}〉へ。${st}回から無理なく。`},
-  {name:'好敵手',img:'rival-m.webp',  say:(nm,st)=>`へぇ、やるじゃん。次は〈${nm}〉な。${st}回もできりゃ上等だろ。`},
-  {name:'好敵手',img:'rival-f.webp',  say:(nm,st)=>`調子乗るなよ？次の〈${nm}〉は${st}回すらキツいぞ。`},
-  {name:'弟弟子',img:'deshi-m.webp',      say:(nm,st)=>`すごいすごい！次は〈${nm}〉だって！${st}回からやってみよ！`},
-  {name:'妹弟子',img:'deshi-f.webp',      say:(nm,st)=>`かっこいい！〈${nm}〉に進むんだね！まず${st}回！`},
+  {name:'Sensei',img:'shihan.webp',      say:(nm,st)=>`You have come far. Next is ${nm}. Begin with 3 × ${st} reps.`},
+  {name:'Sensei',img:'shihan-f.webp',      say:(nm,st)=>`Well done. Stay humble. Next: ${nm}. Start with 3 × ${st} reps.`},
+  {name:'Senpai',img:'senpai-a.webp',say:(nm,st)=>`Beautifully done. Next up is ${nm}. Aim for ${st} reps to start.`},
+  {name:'Senpai',img:'senpai-b.webp',say:(nm,st)=>`Great form. On to ${nm}. Start at ${st} reps, no need to push.`},
+  {name:'Rival',img:'rival-m.webp',  say:(nm,st)=>`Huh, not bad. Next is ${nm}. Hit ${st} reps and I’ll be impressed.`},
+  {name:'Rival',img:'rival-f.webp',  say:(nm,st)=>`Don’t get cocky. ${nm} is next, and even ${st} reps will wreck you.`},
+  {name:'Junior',img:'deshi-m.webp',      say:(nm,st)=>`Whoa, amazing! Next is ${nm}! Let’s try ${st} reps!`},
+  {name:'Junior',img:'deshi-f.webp',      say:(nm,st)=>`So cool! You’re moving up to ${nm}! ${st} reps first!`},
 ];
 
 function doRecord(step){
@@ -2462,7 +2496,7 @@ function doRecord(step){
   const c=criteria(e.key,step);
   const sets=parseInt(document.getElementById('inSets')?.value)||0;
   const reps=parseInt(document.getElementById('inReps')?.value)||0;
-  if(sets<=0||reps<=0){ toast('組数と回数を入力してください'); return; }
+  if(sets<=0||reps<=0){ toast('Enter sets and reps'); return; }
   const per = ty==='s'?3 : ty==='n'?20 : 10;
   const xp = sets*reps*per;
   vib(30);
@@ -2473,21 +2507,21 @@ function doRecord(step){
 
 function levelClear(key, step){
   const n=stepCount(key);
-  if(step>=n){ toast('この修行を極めた！'); return; }
+  if(step>=n){ toast('You’ve mastered this training!'); return; }
   const nextName=stepName(key, step+1);
   const nc=criteria(key, step+1);
   const ch=CHARS[Math.floor(Math.random()*CHARS.length)];
   vib([40,30,40]);
   modal(`<div class="sheet card-c" style="text-align:center">
     <div style="font-size:40px">🎊</div>
-    <h3 style="color:var(--kin2)">第${step}段 クリア！</h3>
+    <h3 style="color:var(--kin2)">LEVEL ${step} CLEARED!</h3>
     <img src="images/${ch.img}" alt="" style="height:min(34vh,240px);max-width:100%;object-fit:contain;display:block;margin:10px auto -6px">
     <div style="text-align:left;margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--glass)">
       <div style="font-size:14px;color:var(--kin)">${ch.name}</div>
       <div style="font-size:16px;margin-top:4px;line-height:1.5">${ch.say(nextName, nc.start)}</div>
     </div>
-    <button class="btnprime" onclick="closeModal();nav('record',{exKey:'${key}',step:${step+1}})">次の段へ進む</button>
-    <button class="btnghost" onclick="closeModal()">まだこの段で鍛える</button>
+    <button class="btnprime" onclick="closeModal();nav('record',{exKey:'${key}',step:${step+1}})">Advance to next level</button>
+    <button class="btnghost" onclick="closeModal()">Keep training this level</button>
   </div>`, true);
 }
 
@@ -2498,10 +2532,10 @@ function startRest(sec){
   let left=sec;
   const d=document.createElement('div'); d.id='restOvl';
   d.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;animation:fade .2s';
-  d.innerHTML=`<div style="font-size:15px;color:var(--sub);letter-spacing:.2em">休息</div>
+  d.innerHTML=`<div style="font-size:15px;color:var(--sub);letter-spacing:.2em">REST</div>
     <div id="restNum" style="font-family:var(--serif);font-size:72px;color:var(--kin2)">${left}</div>
-    <div style="font-size:14px;color:var(--sub)">次の組までじっくり回復せよ</div>
-    <button class="btnghost" style="width:auto;padding:10px 24px" onclick="stopRest()">省略して進む</button>`;
+    <div style="font-size:14px;color:var(--sub)">Recover fully before the next set</div>
+    <button class="btnghost" style="width:auto;padding:10px 24px" onclick="stopRest()">Skip and continue</button>`;
   document.body.appendChild(d);
   restTimer=setInterval(()=>{
     left--;
@@ -2519,12 +2553,12 @@ function toggleMetro(){
   const btn=document.getElementById('metroBtn');
   if(metroOn){
     try{ metroAudio=metroAudio||new Audio('sound/sound_reward.mp3'); }catch(e){}
-    if(btn){ btn.style.background='rgba(200,162,76,.2)'; btn.textContent='🥁 拍子 ●'; }
+    if(btn){ btn.style.background='rgba(200,162,76,.2)'; btn.textContent='🥁 Beat ●'; }
     const beat=()=>{ try{ metroAudio.currentTime=0; metroAudio.play().catch(()=>{}); }catch(e){} };
     metroTimer=setInterval(beat,1000);
   } else {
     if(metroTimer){clearInterval(metroTimer);metroTimer=null;}
-    if(btn){ btn.style.background=''; btn.textContent='🥁 拍子'; }
+    if(btn){ btn.style.background=''; btn.textContent='🥁 Beat'; }
   }
 }
 
@@ -2545,7 +2579,7 @@ function showXP(xp, after){
       animation-delay:${Math.random()*.2}s;`;
     pop.appendChild(s);
   }
-  setTimeout(()=>{ pop.style.display='none'; if(after){ after(); } else { toast('記録しました'); } },1800);
+  setTimeout(()=>{ pop.style.display='none'; if(after){ after(); } else { toast('Logged'); } },1800);
 }
 
 /* ══ モーダル ══ */
@@ -2559,47 +2593,47 @@ function closeModal(){ const m=document.getElementById('modal'); if(m)m.remove()
 
 function restConfirm(){
   modal(`<div class="sheet">
-    <h3>今日はどうしますか？</h3>
-    <p class="sub">休養日にしても連続記録は途切れません。あとで記すと修行日になります。</p>
-    <button class="btnprime" onclick="closeModal();toast('今日もトレーニング開始！')">トレーニングする</button>
-    <button class="btnghost" onclick="closeModal();toast('休養日にしました')">休む</button>
+    <h3>What’s the plan today?</h3>
+    <p class="sub">A rest day won’t break your streak. Log a workout later and it counts as a training day.</p>
+    <button class="btnprime" onclick="closeModal();toast('Let’s train today!')">Train</button>
+    <button class="btnghost" onclick="closeModal();toast('Marked as rest day')">Rest</button>
   </div>`);
 }
 
 function relicInfo(type,idx){
   const r=RELICS[idx];
-  const typeLabel=type==='in'?'印（月次課業達成）':'巻物（隠し条件）';
+  const typeLabel=type==='in'?'Seal (monthly goal)':'Scroll (hidden condition)';
   modal(`<div class="sheet card-c">
     <div style="text-align:center;font-size:40px;margin-bottom:6px">${r.got?r.em:(type==='in'?'🏵️':MAKI)}</div>
     <h3 style="text-align:center">${r.got?r.l:typeLabel}</h3>
-    <p class="sub" style="text-align:center">取得条件</p>
-    <p style="text-align:center;font-size:16px;margin:0 0 4px">${r.got?r.cond:'取得すると明らかになります'}</p>
-    <p style="text-align:center;font-size:14px;color:${r.got?'#7FB069':'#8b8f99'};margin-top:8px">${r.got?'✓ 獲得済み':'未獲得'}</p>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <p class="sub" style="text-align:center">How to earn</p>
+    <p style="text-align:center;font-size:16px;margin:0 0 4px">${r.got?r.cond:'Revealed once earned'}</p>
+    <p style="text-align:center;font-size:14px;color:${r.got?'#7FB069':'#8b8f99'};margin-top:8px">${r.got?'✓ Earned':'Not earned'}</p>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 
 function stampInfo(month, got){
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;margin-bottom:6px;opacity:${got?1:.4}"><img src="images/shirushi.webp" alt="印" style="width:72px;height:72px"></div>
-    <h3 style="text-align:center">${month}の印</h3>
-    <p style="text-align:center;font-size:15px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ 達成・獲得済み':'未達成'}</p>
-    <p style="text-align:center;font-size:14px;color:var(--sub);margin-top:6px">その月の山の頂に着くと獲得</p>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <div style="text-align:center;margin-bottom:6px;opacity:${got?1:.4}"><img src="images/shirushi.webp" alt="Seal" style="width:72px;height:72px"></div>
+    <h3 style="text-align:center">${month} Seal</h3>
+    <p style="text-align:center;font-size:15px;color:${got?'#7FB069':'#8b8f99'};margin-top:8px">${got?'✓ Achieved · Earned':'Not achieved'}</p>
+    <p style="text-align:center;font-size:14px;color:var(--sub);margin-top:6px">Earned by reaching that month’s summit</p>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 function scrollInfo(idx){
   const r=SCROLLS[idx];
   modal(`<div class="sheet card-c">
-    <div style="text-align:center;margin-bottom:6px;opacity:${r.got?1:.4}">${(r.secret&&!r.got)?'<span style="font-size:56px">🗝️</span>':`<img src="images/maki-${r.c}.webp" alt="巻物" style="width:120px;height:120px;object-fit:contain;${r.got?'':'filter:grayscale(1)'}">`}</div>
-    <h3 style="text-align:center">${r.got?r.l:'未取得の巻物'}</h3>
+    <div style="text-align:center;margin-bottom:6px;opacity:${r.got?1:.4}">${(r.secret&&!r.got)?'<span style="font-size:56px">🗝️</span>':`<img src="images/maki-${r.c}.webp" alt="Scroll" style="width:120px;height:120px;object-fit:contain;${r.got?'':'filter:grayscale(1)'}">`}</div>
+    <h3 style="text-align:center">${r.got?r.l:'Locked scroll'}</h3>
     ${r.got
-      ? `<p class="sub" style="text-align:center">取得条件</p>
+      ? `<p class="sub" style="text-align:center">How to earn</p>
          <p style="text-align:center;font-size:16px;margin:4px 0">${r.cond}</p>
-         <p style="text-align:center;font-size:14px;color:#7FB069;margin-top:8px">✓ 獲得済み</p>`
-      : `<p style="text-align:center;font-size:16px;color:var(--sub);margin-top:8px">取得すると条件が明らかになります</p>`
+         <p style="text-align:center;font-size:14px;color:#7FB069;margin-top:8px">✓ Earned</p>`
+      : `<p style="text-align:center;font-size:16px;color:var(--sub);margin-top:8px">The condition is revealed once earned</p>`
     }
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 
@@ -2607,21 +2641,21 @@ function friendCompare(idx){
   const f=FRIENDS[idx], me={streak:streakDays,monthXP:monthXP,totalXP:TOTAL_XP,vals:EX.map(e=>e.cur)};
   const trained=f.trained;
   const reactBtns = trained
-    ? `<button onclick="sendReact('🔥','${f.name}')"><span style="font-size:26px">${FLAME}</span> 熱い</button>
-       <button onclick="sendReact('💪','${f.name}')"><span style="font-size:26px">${emo('💪')}</span> 強い</button>
-       <button onclick="sendReact('💙','${f.name}')"><span style="font-size:26px">${emo('💙')}</span> 励まし</button>`
-    : `<button onclick="sendReact('👊','${f.name}')"><span style="font-size:26px">${emo('👊')}</span> 喝</button>`;
+    ? `<button onclick="sendReact('🔥','${f.name}')"><span style="font-size:26px">${FLAME}</span> Fire!</button>
+       <button onclick="sendReact('💪','${f.name}')"><span style="font-size:26px">${emo('💪')}</span> Strong!</button>
+       <button onclick="sendReact('💙','${f.name}')"><span style="font-size:26px">${emo('💙')}</span> Encourage</button>`
+    : `<button onclick="sendReact('👊','${f.name}')"><span style="font-size:26px">${emo('👊')}</span> Kiai!</button>`;
   modal(`<div class="sheet">
     <div style="display:grid;place-items:center;padding:6px 0">${radar([me.vals,f.vals],['#C8A24C','#6E93A6'])}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;padding:0 4px">
-      <span style="font-size:16px;font-weight:700;color:var(--kin)">${escHtml(myName||'己')} <span style="font-size:14px">●</span></span>
+      <span style="font-size:16px;font-weight:700;color:var(--kin)">${escHtml(myName||'Self')} <span style="font-size:14px">●</span></span>
       <span style="font-size:14px;color:var(--sub)">vs</span>
       <span style="font-size:16px;font-weight:700;color:#6E93A6"><span style="font-size:14px">●</span> ${f.name}</span>
     </div>
     <div style="border:1px solid var(--line);border-radius:12px;overflow:hidden">
-      ${[[`${FLAME} ストリーク`, me.streak+'日', f.streak+'日'],
-         ['今月の経験値', me.monthXP, f.monthXP],
-         ['累計経験値', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
+      ${[[`${FLAME} Streak`, me.streak+(me.streak===1?' day':' days'), f.streak+(f.streak===1?' day':' days')],
+         ['XP this month', me.monthXP, f.monthXP],
+         ['Total XP', me.totalXP.toLocaleString(), f.totalXP.toLocaleString()]
         ].map(([label,mv,fv])=>`
         <div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;border-bottom:1px solid var(--line)">
           <div style="padding:12px 8px;text-align:center;font-size:16px;font-weight:700;color:var(--kin)">${mv}</div>
@@ -2629,63 +2663,63 @@ function friendCompare(idx){
           <div style="padding:12px 8px;text-align:center;font-size:16px;font-weight:700;color:#6E93A6">${fv}</div>
         </div>`).join('')}
     </div>
-    <p style="font-size:14px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'今日トレーニング済み ✓':'今日まだトレーニングしていません'}</p>
+    <p style="font-size:14px;color:var(--sub);text-align:center;margin:10px 0 4px">${trained?'Trained today ✓':'Hasn’t trained yet today'}</p>
     <div class="react-btns">${reactBtns}</div>
-    ${!trained?'<p style="font-size:14px;color:var(--sub);text-align:center;margin-top:6px">トレーニング済みの日は全種類送れます</p>':''}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    ${!trained?'<p style="font-size:14px;color:var(--sub);text-align:center;margin-top:6px">On days they’ve trained, you can send any reaction</p>':''}
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 function sendReact(icon, name){
   const serif=randomSerif(icon);
   closeModal();
-  const lb={'🔥':'熱い','💪':'強い','💙':'励まし','👊':'喝'}[icon]||'応援';
-  toast(`${name}に「${lb}」を送りました`);
+  const lb={'🔥':'Fire!','💪':'Strong!','💙':'Encourage','👊':'Kiai!'}[icon]||'Cheer';
+  toast(`Sent "${lb}" to ${name}`);
 }
 
 function addFriend(){
   modal(`<div class="sheet">
-    <h3>門下生を追加</h3>
-    <p class="sub">現在の門下生：87名 ／ 最大100名</p>
-    <label>IDで検索</label><input type="text" placeholder="@相手のID">
-    <button class="btnprime" onclick="closeModal();toast('申請を送りました')">申請する</button>
+    <h3>Add Friends</h3>
+    <p class="sub">Friends: 87 / 100 max</p>
+    <label>Search by ID</label><input type="text" placeholder="@their ID">
+    <button class="btnprime" onclick="closeModal();toast('Request sent')">Send request</button>
     <div style="display:flex;gap:10px;margin-top:10px">
-      <button class="btnghost" style="margin:0" onclick="showMyQR()">📱 自分のQRを表示</button>
-      <button class="btnghost" style="margin:0" onclick="scanQR()">📷 QRを読み取る</button>
+      <button class="btnghost" style="margin:0" onclick="showMyQR()">📱 Show my QR</button>
+      <button class="btnghost" style="margin:0" onclick="scanQR()">📷 Scan QR</button>
     </div>
   </div>`);
 }
 function showMyQR(){
   closeModal();
   modal(`<div class="sheet card-c" style="text-align:center">
-    <h3>自分のQRコード</h3>
-    <p class="sub">相手にこの画面をスキャンしてもらう</p>
+    <h3>My QR code</h3>
+    <p class="sub">Have your friend scan this screen</p>
     <div style="width:180px;height:180px;margin:16px auto;background:#fff;border-radius:12px;display:grid;place-items:center;font-size:14px;color:#333;padding:10px">
-      QRコード表示エリア<br>（本番実装予定）<br><br>@nori_tanren
+      QR code area<br>(coming soon)<br><br>@nori_tanren
     </div>
     <p style="font-size:15px;color:var(--kin);margin-top:4px">@nori_tanren</p>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
 function scanQR(){
   closeModal();
   modal(`<div class="sheet card-c" style="text-align:center">
-    <h3>QRコードを読み取る</h3>
-    <p class="sub">カメラで相手のQRをスキャン</p>
+    <h3>Scan QR code</h3>
+    <p class="sub">Scan your friend’s QR with your camera</p>
     <div style="width:220px;height:220px;margin:16px auto;background:#0c0e12;border-radius:12px;border:2px solid var(--kin);display:grid;place-items:center;position:relative;overflow:hidden">
-      <div style="color:var(--sub);font-size:14px">カメラ起動エリア<br>（本番実装予定）</div>
+      <div style="color:var(--sub);font-size:14px">Camera area<br>(coming soon)</div>
       <div style="position:absolute;top:20px;left:20px;right:20px;bottom:20px;border:2px solid var(--kin);border-radius:4px;opacity:.5"></div>
     </div>
-    <button class="btnghost" onclick="closeModal()">キャンセル</button>
+    <button class="btnghost" onclick="closeModal()">Cancel</button>
   </div>`,true);
 }
 
 // アバターパーツデータ（本番は画像、プロトタイプは絵文字で表現）
 const AVATAR_PARTS={
-  hair:  {label:'髪型', options:['💆','🧑','👱','🧔','👳','🎅','🧕','👲']},
-  eye:   {label:'目',   options:['👁','😊','😎','🥺','😤','😴','🤩','😇']},
-  nose:  {label:'鼻',   options:['👃','🐽','⚗️','🔘','▪️','◾','⬛','🔲']},
-  mouth: {label:'口',   options:['👄','😁','😶','😬','🤐','😏','😮','😤']},
-  skin:  {label:'肌色', options:['🟫','🟧','🟨','⬜','🟪','🔵','🟢','🔴']},
+  hair:  {label:'Hair', options:['💆','🧑','👱','🧔','👳','🎅','🧕','👲']},
+  eye:   {label:'Eyes',   options:['👁','😊','😎','🥺','😤','😴','🤩','😇']},
+  nose:  {label:'Nose',   options:['👃','🐽','⚗️','🔘','▪️','◾','⬛','🔲']},
+  mouth: {label:'Mouth',   options:['👄','😁','😶','😬','🤐','😏','😮','😤']},
+  skin:  {label:'Skin', options:['🟫','🟧','🟨','⬜','🟪','🔵','🟢','🔴']},
 };
 let avatarSel={hair:0,eye:0,nose:0,mouth:0,skin:0};
 let avatarTab='hair';
@@ -2698,12 +2732,12 @@ function openAvatarSelect(){
   d.style.cssText='position:fixed;inset:0;z-index:85;background:var(--sumi);display:flex;flex-direction:column;animation:fade .2s';
   d.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line)">
-      <div style="font-family:var(--serif);font-size:18px;color:var(--washi)">アバターを作る</div>
+      <div style="font-family:var(--serif);font-size:18px;color:var(--washi)">Create Avatar</div>
       <button onclick="closeAvatarEditor()" style="background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer">✕</button>
     </div>
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--sumi2);gap:8px">
       <div style="font-size:100px;line-height:1;user-select:none" id="avEmoji">${getAvatarEmoji()}</div>
-      <div style="font-size:14px;color:var(--sub)">パーツを選んでカスタマイズ</div>
+      <div style="font-size:14px;color:var(--sub)">Pick parts to customize</div>
     </div>
     <div style="flex:0 0 auto;border-top:1px solid var(--line);background:var(--sumi)">
       <div style="display:flex;overflow-x:auto;border-bottom:1px solid var(--line)" id="avTabs">
@@ -2713,7 +2747,7 @@ function openAvatarSelect(){
         ${renderAvGrid()}
       </div>
       <div style="padding:0 14px calc(14px + env(safe-area-inset-bottom))">
-        <button class="btnprime" style="margin:0" onclick="saveAvatar()">保存する</button>
+        <button class="btnprime" style="margin:0" onclick="saveAvatar()">Save</button>
       </div>
     </div>`;
   document.body.appendChild(d);
@@ -2740,10 +2774,10 @@ function selectAvPart(i){
     vib(10);
     modal(`<div class="sheet card-c" style="text-align:center">
       <div style="font-size:44px">${getAvatarEmoji()}</div>
-      <h3>徳と交換しますか？</h3>
-      <p class="sub" style="text-align:center">この装いを20徳と交換して師匠より授かります。<br>現在の徳：${toku}</p>
-      <button class="btnprime" onclick="confirmAvatarPurchase('${tab}',${i})">はい（20徳で交換）</button>
-      <button class="btnghost" onclick="cancelAvatarPurchase('${tab}',${prev})">いいえ</button>
+      <h3>Trade Virtue?</h3>
+      <p class="sub" style="text-align:center">Trade 20 Virtue to receive this look from Sensei.<br>Your Virtue: ${toku}</p>
+      <button class="btnprime" onclick="confirmAvatarPurchase('${tab}',${i})">Yes (trade 20 Virtue)</button>
+      <button class="btnghost" onclick="cancelAvatarPurchase('${tab}',${prev})">No</button>
     </div>`,true);
     return;
   }
@@ -2752,11 +2786,11 @@ function selectAvPart(i){
   const grid=document.getElementById('avGrid'); if(grid) grid.innerHTML=renderAvGrid();
 }
 function confirmAvatarPurchase(tab,i){
-  if(toku<20){ toast('徳が足りません'); closeModal(); return; }
+  if(toku<20){ toast('Not enough Virtue'); closeModal(); return; }
   addLedger({k:'avatar',amt:-20,part:tab,idx:i});
   avatarUnlocked[tab].push(i);
   closeModal();
-  toast('師匠より授かりました');
+  toast('Received from Sensei');
   const grid=document.getElementById('avGrid'); if(grid) grid.innerHTML=renderAvGrid();
 }
 function cancelAvatarPurchase(tab,prevIdx){
@@ -2778,37 +2812,38 @@ function switchAvTab(tab){
 function saveAvatar(){
   currentAvatar=getAvatarEmoji();
   saveUser({avatarSel:Object.assign({},avatarSel)});
-  closeAvatarEditor(); render(); toast('アバターを保存しました');
+  closeAvatarEditor(); render(); toast('Avatar saved');
 }
 
 function rankList(){
   const cur=currentRank();
   const rows=RANKS.slice().reverse().map((r,ri)=>{
     const i=RANKS.length-1-ri; // 元の並びのインデックス
-    const next=RANKS[i+1]; const range=next?`${r.min}〜${next.min-1}`:r.min+'〜';
+    const next=RANKS[i+1]; const range=next?`${r.min}–${next.min-1}`:r.min+'+';
     const isCur=r.name===cur.name;
     return `<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;margin-bottom:7px;border:1px solid ${isCur?'var(--kin)':'var(--line)'};background:${isCur?'rgba(217,172,82,.14)':'rgba(255,255,255,.02)'}">
       <div style="width:26px;font-family:var(--serif);color:${isCur?'var(--kin2)':'var(--sub)'};font-size:16px">${i+1}</div>
-      <div style="flex:1;font-family:var(--serif);font-size:16px;color:${isCur?'var(--kin2)':'var(--washi)'}">${r.name}</div>
-      <div style="font-size:14px;color:var(--sub)">合計 ${range}</div>
-      ${isCur?'<div style="font-size:14px;color:var(--kin);font-weight:700">現在地</div>':''}
+      <div style="width:6px;align-self:stretch;border-radius:3px;background:${r.belt}"></div>
+      <div style="flex:1"><div style="font-family:'Oswald',var(--sans);font-size:17px;letter-spacing:.06em;color:${isCur?'#fff':'var(--washi)'}">${r.en}</div><div style="font-family:var(--serif);font-size:13px;color:var(--sub)">${r.name}</div></div>
+      <div style="font-size:14px;color:var(--sub)">Total ${range}</div>
+      ${isCur?'<div style="font-size:14px;color:var(--kin);font-weight:700">YOU</div>':''}
     </div>`;
   }).join('');
   modal(`<div class="sheet">
-    <h3>階級一覧</h3>
-    <p class="sub">六種の修行の合計段位（最大85）で昇級。現在：${cur.name}</p>
+    <h3>Ranks</h3>
+    <p class="sub">Rank up by your total Level across all six trainings (max 85). Current: ${cur.en} · ${cur.name}</p>
     <div style="max-height:60vh;overflow:auto;margin-top:6px">${rows}</div>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 
 function memoHistory(){
   const items=stepRecords(state.exKey,state.step).filter(l=>l.note).reverse();
   modal(`<div class="sheet">
-    <h3>覚書履歴</h3>
-    <p class="sub">このステップに残した過去のメモ</p>
-    ${items.length?items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln" style="display:block">📝 ${escHtml(m.note)}</div></div>`).join(''):'<p class="sub">まだ覚書はない</p>'}
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <h3>Notes History</h3>
+    <p class="sub">Past notes for this level</p>
+    ${items.length?items.map(m=>`<div class="log"><div class="lr"><span class="d">${m.date}</span><span class="r">${m.sets}×${m.reps}</span></div><div class="ln" style="display:block">📝 ${escHtml(m.note)}</div></div>`).join(''):'<p class="sub">No notes yet</p>'}
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 
@@ -2819,13 +2854,13 @@ function imgPopup(key,i){
   d.style.cssText='position:fixed;inset:0;z-index:85;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;animation:fade .2s';
   d.innerHTML=`<div id="ifimg" style="width:88%;max-width:430px;aspect-ratio:4/3;border:1px solid rgba(200,162,76,.3);border-radius:16px;display:grid;place-items:center;background:#0d0f13;color:#ECE6D8;font-size:54px;font-family:var(--serif)"></div>
     <div id="ifcap" style="color:#C8A24C;font-size:16px;font-family:var(--serif)"></div>
-    <div style="color:#8b8f99;font-size:14px">押下で戻る</div>`;
+    <div style="color:#8b8f99;font-size:14px">Tap to close</div>`;
   d.onclick=()=>{stopFlip();d.remove();};
   document.body.appendChild(d);
   const img=d.querySelector('#ifimg'), cap=d.querySelector('#ifcap');
   imgState='a';
   const two=STEP_ART.has(key+'-'+i);
-  function show(){img.innerHTML=`<img src="${stepImg(key,i,imgState)}" alt="" style="width:90%;height:90%;object-fit:contain">`;cap.textContent=`第${i}段 ${stepName(key,i)}`+(two?'　'+(imgState==='a'?'開始ポジション':'動作の終点'):'');}
+  function show(){img.innerHTML=`<img src="${stepImg(key,i,imgState)}" alt="" style="width:90%;height:90%;object-fit:contain">`;cap.textContent=`Lv. ${i} ${stepName(key,i)}`+(two?' · '+(imgState==='a'?'Start position':'End position'):'');}
   show();
   flipTimer=setInterval(()=>{imgState=imgState==='a'?'b':'a';show();},900);
 }
@@ -2840,19 +2875,19 @@ function openSettings(){
   const nextGoal=goalForWeek(nextMonday());
   modal(`<div class="sheet" style="border-radius:18px 18px 0 0;max-height:100vh;height:90vh">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h3 style="margin:0">設定</h3>
-      <span style="font-size:15px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">指南 ›</span>
+      <h3 style="margin:0">Settings</h3>
+      <span style="font-size:15px;color:var(--kin);cursor:pointer" onclick="closeModal();openTut()">Guide ›</span>
     </div>
-    <label>週の目標日数：<span id="goalv">${nextGoal}</span> 日</label>
+    <label>Weekly goal: <span id="goalv">${nextGoal}</span> days</label>
     <input type="range" min="1" max="7" id="weeklyGoalInput" value="${nextGoal}" oninput="document.getElementById('goalv').textContent=this.value">
-    <p style="font-size:13px;color:var(--sub);margin-top:4px">山を1基登るのに必要な、週の修行日数です。変更は来週の月曜から反映されます（今週は${weeklyGoalDays}日）。週2日以上で小さな誓いに挑戦できます。</p>
-    <label>1日の目標XP：<span id="xpv">50</span></label>
+    <p style="font-size:13px;color:var(--sub);margin-top:4px">Training days per week needed to climb one lantern up the mountain. Changes take effect next Monday (this week: ${weeklyGoalDays} day${weeklyGoalDays===1?'':'s'}). Set 2+ days a week to take on the Small Vow.</p>
+    <label>Daily XP goal: <span id="xpv">50</span></label>
     <input type="range" min="20" max="150" step="10" value="50" oninput="document.getElementById('xpv').textContent=this.value">
-    <label>修行名</label>
+    <label>Training name</label>
     <input type="text" value="${escHtml(myName)}" id="unameInput" maxlength="12">
-    <button class="btnprime" onclick="saveSettings()">保存する</button>
-    <button class="btnghost" onclick="openFeedback()">✉ 開発者へ意見を送る</button>
-    <button class="btnghost" style="margin-top:22px;color:var(--sub)" onclick="confirmSignOut()">ログアウト</button>
+    <button class="btnprime" onclick="saveSettings()">Save</button>
+    <button class="btnghost" onclick="openFeedback()">✉ Send feedback</button>
+    <button class="btnghost" style="margin-top:22px;color:var(--sub)" onclick="confirmSignOut()">Log out</button>
     <div style="text-align:center;font-size:13px;color:var(--faint);margin-top:12px">${APP_VERSION}</div>
   </div>`);
 }
@@ -2864,14 +2899,14 @@ function saveSettings(){
   const nm=(document.getElementById('unameInput')?.value||'').trim();
   if(nm && nm!==myName) p.name=nm.slice(0,12);
   if(Object.keys(p).length) saveUser(p);
-  closeModal();toast(p.weeklyGoals?'保存しました（週の目標は来週から）':'保存しました');
+  closeModal();toast(p.weeklyGoals?'Saved (weekly goal starts next week)':'Saved');
 }
 function confirmSignOut(){
   modal(`<div class="sheet card-c" style="text-align:center">
-    <h3>ログアウトしますか？</h3>
-    <p class="sub" style="text-align:center">記録はGoogleアカウントに保存されています。<br>もう一度ログインすれば続きから修行できます。</p>
-    <button class="btnprime" onclick="closeModal();FB.signOut()">ログアウトする</button>
-    <button class="btnghost" onclick="closeModal()">やめる</button>
+    <h3>Log out?</h3>
+    <p class="sub" style="text-align:center">Your records are saved to your Google account.<br>Log back in anytime to pick up where you left off.</p>
+    <button class="btnprime" onclick="closeModal();FB.signOut()">Log out</button>
+    <button class="btnghost" onclick="closeModal()">Cancel</button>
   </div>`,true);
 }
 
@@ -2880,47 +2915,47 @@ let fbType='要望';
 function openFeedback(){
   fbType='要望';
   modal(`<div class="sheet">
-    <h3>開発者へ意見を送る</h3>
-    <p class="sub">不具合や「こうしてほしい」を気軽に送ってください。送った内容は開発者だけが読みます。</p>
-    <label>種類</label>
-    <div style="display:flex;gap:8px;margin-top:6px">${['不具合','要望','その他'].map(t=>`<button onclick="markGoalBtn(this);fbType='${t}'" style="flex:1;padding:10px 4px;border-radius:12px;border:1px solid ${t===fbType?'var(--kin)':'var(--line2)'};background:${t===fbType?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${t===fbType?'var(--kin2)':'var(--washi)'};font-weight:700;font-size:16px;cursor:pointer;font-family:var(--sans)">${t}</button>`).join('')}</div>
-    <label>内容</label>
-    <textarea id="fbText" maxlength="1000" rows="6" placeholder="例：記録画面で〇〇を押すと〇〇になる" oninput="document.getElementById('fbCount').textContent=this.value.length" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:16px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea>
+    <h3>Send Feedback</h3>
+    <p class="sub">Found a bug or want something changed? Tell us. Only the developer reads this.</p>
+    <label>Type</label>
+    <div style="display:flex;gap:8px;margin-top:6px">${['不具合','要望','その他'].map(t=>`<button onclick="markGoalBtn(this);fbType='${t}'" style="flex:1;padding:10px 4px;border-radius:12px;border:1px solid ${t===fbType?'var(--kin)':'var(--line2)'};background:${t===fbType?'rgba(217,172,82,.16)':'var(--sumi3)'};color:${t===fbType?'var(--kin2)':'var(--washi)'};font-weight:700;font-size:16px;cursor:pointer;font-family:var(--sans)">${({'不具合':'Bug','要望':'Request','その他':'Other'})[t]}</button>`).join('')}</div>
+    <label>Message</label>
+    <textarea id="fbText" maxlength="1000" rows="6" placeholder="e.g. On the log screen, tapping X does Y" oninput="document.getElementById('fbCount').textContent=this.value.length" style="width:100%;background:var(--sumi3);border:1.5px solid var(--line2);border-radius:12px;color:var(--washi);padding:12px;font-size:16px;font-family:var(--sans);resize:vertical;box-sizing:border-box"></textarea>
     <div style="text-align:right;font-size:13px;color:var(--sub)"><span id="fbCount">0</span> / 1000</div>
-    <button class="btnprime" id="fbSend" onclick="sendFeedback()">送る</button>
-    <button class="btnghost" onclick="closeModal()">閉じる</button>
+    <button class="btnprime" id="fbSend" onclick="sendFeedback()">Send</button>
+    <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
 function sendFeedback(){
   const text=(document.getElementById('fbText')?.value||'').trim();
-  if(!text){ toast('内容を入力してください'); return; }
-  const btn=document.getElementById('fbSend'); if(btn){ btn.disabled=true; btn.textContent='送信中…'; }
+  if(!text){ toast('Please enter a message'); return; }
+  const btn=document.getElementById('fbSend'); if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
   FB.sendFeedback({type:fbType,text:text.slice(0,1000),name:myName||'',version:APP_VERSION})
-    .then(()=>{ closeModal(); toast('届けました。ありがとう！'); })
+    .then(()=>{ closeModal(); toast('Sent. Thank you!'); })
     .catch(e=>{
       console.warn(e);
-      if(btn){ btn.disabled=false; btn.textContent='送る'; }
+      if(btn){ btn.disabled=false; btn.textContent='Send'; }
       const code=(e&&e.code)||'';
-      toast(code==='permission-denied'?'送信が許可されていません（'+code+'）':code==='unavailable'?'電波がありません。つながる場所でもう一度':'送信できませんでした（'+(code||'不明なエラー')+'）');
+      toast(code==='permission-denied'?'Sending not permitted ('+code+')':code==='unavailable'?'No connection. Try again when you’re online.':'Couldn’t send ('+(code||'unknown error')+')');
     });
 }
 
 /* ══ 指南 ══ */
 const TUT=[
-  {big:'🏯', tt:'鍛錬寺へようこそ',
-   speech:'よく来た。ここは鍛錬寺。<br>器具はいらん、己の体だけで道を極める場所だ。<br>覚悟があるなら、門を開けてやろう。'},
-  {big:'🥋', tt:'六種の修行',
-   speech:'修行は6種目。それぞれ13〜15の段がある。<br>やさしい段から始まり、<br>片手・倒立などの極みへ至る道のりだ。'},
-  {big:'👤', tt:'まず名前を決めろ',
-   speech:'お前の修行名を決めろ。<br>あとから設定で変えられる。', uname:true},
-  {big:'📅', tt:'週の目標を決めろ',
-   speech:'週に何日 道場へ来るか。<br>1日でも構わん。続けることが全てだ。<br>目標は設定から変えられる。', slider:true},
-  {big:'⛩', tt:'毎月の山を登れ',
-   speech:'鍛錬寺は山の麓にある。毎月、頂の鳥居を目指して登れ。<br>週の目標日数だけ修行すれば、石灯籠に灯がともり一基進む。<br>頂に着けば「印」を授かる。'},
-  {big:'⛰️', tt:'己の段を選べ',
-   speech:'六種それぞれ、どの段から始めるか選べ。<br>迷ったら第1段からでよい。', steps:true},
-  {big:'🔥', tt:'始める時が来た',
-   speech:'アバターはプロフィールから作れる。<br>道着の色は階級と共に変わる。<br>さあ、最初の一歩を刻め。'},
+  {big:'🏯', tt:'Welcome to Tanrenji',
+   speech:'Welcome. This is Tanrenji.<br>No equipment. Only your own body, on the path to mastery.<br>If you are ready, I will open the gate.'},
+  {big:'🥋', tt:'Six Trainings',
+   speech:'There are six trainings, each with 13 to 15 levels.<br>You begin with the easy levels<br>and climb toward one-arm and handstand mastery.'},
+  {big:'👤', tt:'First, choose your name',
+   speech:'Choose your training name.<br>You can change it later in Settings.', uname:true},
+  {big:'📅', tt:'Set your weekly goal',
+   speech:'How many days a week will you come to the Dojo?<br>Even one day is enough. Consistency is everything.<br>You can change your goal in Settings.', slider:true},
+  {big:'⛩', tt:'Climb the mountain each month',
+   speech:'Tanrenji sits at the foot of a mountain. Each month, climb toward the Torii at the Summit.<br>Hit your weekly goal and a stone Lantern lights up as you advance.<br>Reach the Summit and you receive a Seal.'},
+  {big:'⛰️', tt:'Choose your levels',
+   speech:'Choose the starting level for each of the six trainings.<br>If unsure, start at Level 1.', steps:true},
+  {big:'🔥', tt:'Time to begin',
+   speech:'Create your avatar from your profile.<br>Your gi changes color as your Rank rises.<br>Now, take your first step.'},
 ];
 let tutI=0, tutOnboard=false;
 let ONB={name:'',weekly:4,steps:{}};
@@ -2933,20 +2968,20 @@ function openTut(onboard){
 function closeTut(){document.getElementById('tut').style.display='none';}
 function stepOptionsHtml(key,sel){
   let h='';
-  for(let i=1;i<=stepCount(key);i++) h+=`<option value="${i}"${i===sel?' selected':''}>第${i}段 ${stepName(key,i)}</option>`;
+  for(let i=1;i<=stepCount(key);i++) h+=`<option value="${i}"${i===sel?' selected':''}>Lv. ${i} ${stepName(key,i)}</option>`;
   return h;
 }
 function renderTut(){
   const t=TUT[tutI]; let extra='';
   // 入力欄は初回（入門時）だけ出す。設定から開いた時は説明のみ
-  if(tutOnboard && t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" id="tutName" maxlength="12" value="${escHtml(ONB.name)}" placeholder="修行名を入力" oninput="ONB.name=this.value" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center;box-sizing:border-box"></div>`;
-  if(tutOnboard && t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="1" max="7" value="${ONB.weekly}" style="width:100%;accent-color:#C8A24C" oninput="ONB.weekly=+this.value;document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px">週 <span id="tg">${ONB.weekly}</span> 日</div></div>`;
+  if(tutOnboard && t.uname) extra=`<div style="width:280px;margin-top:8px"><input type="text" id="tutName" maxlength="12" value="${escHtml(ONB.name)}" placeholder="Enter training name" oninput="ONB.name=this.value" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(200,162,76,.3);border-radius:12px;color:#ECE6D8;padding:12px;font-size:16px;text-align:center;box-sizing:border-box"></div>`;
+  if(tutOnboard && t.slider) extra=`<div style="width:280px;margin-top:8px"><input type="range" min="1" max="7" value="${ONB.weekly}" style="width:100%;accent-color:#C8A24C" oninput="ONB.weekly=+this.value;document.getElementById('tg').textContent=this.value"><div style="color:#C8A24C;font-family:serif;font-size:20px;margin-top:4px"><span id="tg">${ONB.weekly}</span> days / week</div></div>`;
   if(tutOnboard && t.steps) extra=`<div style="width:100%;max-width:330px;text-align:left;display:flex;flex-direction:column;gap:10px">${EX.map(e=>{
       const c=criteria(e.key,ONB.steps[e.key]);
       return `<div style="background:var(--card);border:1px solid var(--line2);border-left:4px solid ${CAT_COLORS[e.key]};border-radius:12px;padding:9px 12px">
         <div style="font-size:14px;color:var(--sub);font-weight:700">${e.name}</div>
         <select onchange="tutStep('${e.key}',+this.value)" style="width:100%;margin-top:4px;background:var(--sumi3);border:1px solid var(--line2);border-radius:8px;color:var(--washi);padding:8px;font-size:16px;font-family:var(--sans)">${stepOptionsHtml(e.key,ONB.steps[e.key])}</select>
-        <div id="tutCrit_${e.key}" style="font-size:13px;color:var(--kin);margin-top:4px">クリア基準 ${c.clearTxt}</div>
+        <div id="tutCrit_${e.key}" style="font-size:13px;color:var(--kin);margin-top:4px">To clear: ${c.clearTxt}</div>
       </div>`;}).join('')}</div>`;
   const stage=document.getElementById('tutStage');
   stage.style.justifyContent=(tutOnboard&&t.steps)?'flex-start':'';
@@ -2954,14 +2989,14 @@ function renderTut(){
   stage.innerHTML=`
     <img class="gimg${(tutOnboard&&t.steps)?' sm':''}" src="images/guide${tutI+1}.jpg" alt="">
     <div class="tt">${t.tt}</div>
-    <div class="sprow"><img src="images/shihan.webp" alt="師範"><div class="speech">${t.speech}</div></div>
+    <div class="sprow"><img src="images/shihan.webp" alt="Sensei"><div class="speech">${t.speech}</div></div>
     ${extra}`;
   document.getElementById('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===tutI?'on':''}"></i>`).join('');
-  document.getElementById('tutNext').textContent=tutI===TUT.length-1?(tutOnboard?'入門する':'道場へ入る'):'進む';
+  document.getElementById('tutNext').textContent=tutI===TUT.length-1?(tutOnboard?'Begin':'Enter the Dojo'):'Next';
 }
-function tutStep(key,i){ ONB.steps[key]=i; const el=document.getElementById('tutCrit_'+key); if(el) el.textContent='クリア基準 '+criteria(key,i).clearTxt; }
+function tutStep(key,i){ ONB.steps[key]=i; const el=document.getElementById('tutCrit_'+key); if(el) el.textContent='To clear: '+criteria(key,i).clearTxt; }
 function tutNext(){
-  if(tutOnboard && TUT[tutI].uname && !ONB.name.trim()){ toast('修行名を入力してください'); return; }
+  if(tutOnboard && TUT[tutI].uname && !ONB.name.trim()){ toast('Please enter a training name'); return; }
   if(tutI<TUT.length-1){tutI++;renderTut();return;}
   closeTut();
   if(tutOnboard){ tutOnboard=false; createUser(); return; }
@@ -2981,16 +3016,16 @@ function showLogin(msg){
   const el=document.getElementById('login');
   el.style.display='flex';
   document.getElementById('loginErr').textContent=msg||'';
-  const b=document.getElementById('loginBtn'); b.disabled=false; b.textContent='Googleで入門する';
+  const b=document.getElementById('loginBtn'); b.disabled=false; b.textContent='Begin with Google';
 }
 function hideLogin(){ document.getElementById('login').style.display='none'; }
 function doSignIn(){
-  const b=document.getElementById('loginBtn'); b.disabled=true; b.textContent='門を開いています…';
+  const b=document.getElementById('loginBtn'); b.disabled=true; b.textContent='Opening the gate…';
   document.getElementById('loginErr').textContent='';
   FB.signIn().catch(e=>{
     console.warn(e);
     const code=(e&&e.code)||'';
-    showLogin(code.includes('network')?'電波がありません。つながる場所でもう一度。':code.includes('cancelled')||code.includes('closed')?'':'ログインできませんでした。もう一度お試しください。');
+    showLogin(code.includes('network')?'No connection. Try again when you’re online.':code.includes('cancelled')||code.includes('closed')?'':'Couldn’t log in. Please try again.');
   });
 }
 function createUser(){
@@ -2998,7 +3033,7 @@ function createUser(){
   const data={name:ONB.name.trim().slice(0,12),startDate:today,startSteps:Object.assign({},ONB.steps),
     weeklyGoalDays:ONB.weekly,weeklyGoals:{[mondayOf(today)]:ONB.weekly},
     rests:[],fudaUsed:[],ledger:[],createdAt:Date.now(),appVersion:APP_VERSION};
-  FB.saveUser(data).catch(e=>{ console.warn(e); toast('保存に失敗しました'); });
+  FB.saveUser(data).catch(e=>{ console.warn(e); toast('Save failed'); });
   startSync();
 }
 let syncStarted=false;
@@ -3031,7 +3066,7 @@ function safeRender(){
 let lastPublic='';
 function publishProfile(){
   if(!FB||!USER) return;
-  const p={name:myName,avatar:currentAvatar,rank:currentRank().name,sum:SUM,vals:EX.map(e=>e.cur),
+  const p={name:myName,avatar:currentAvatar,rank:currentRank().en,rankJa:currentRank().name,sum:SUM,vals:EX.map(e=>e.cur),
     streak:streakDays,monthXP,totalXP:TOTAL_XP,lastTrained:Object.keys(DAY_LOG).sort((a,b)=>dayDiff(b,a))[0]||null};
   const js=JSON.stringify(p);
   if(js===lastPublic) return;
@@ -3050,7 +3085,7 @@ window.appBoot=function(api){
       else openTut(true);
     }catch(e){
       console.warn(e);
-      showLogin('読み込みに失敗しました。電波を確認してもう一度。');
+      showLogin('Failed to load. Check your connection and try again.');
     }
   });
 };
