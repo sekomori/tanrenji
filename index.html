@@ -1004,7 +1004,8 @@ function useFudaForFreeze(){
    ・連続系は週の目標日数が2日以上の人だけに出す
 */
 function vowStart(){ return todayStr(new Date(microGoal.startedAt||Date.now())); }
-function vowLogs(){ const st=vowStart(); return LOGS.filter(g=>dayDiff(st,g.date)>=0); }
+// 誓いを立てた「時刻」より後の記録だけ数える（その日の先の記録で即達成→徳を何度も取れてしまうのを防ぐ）
+function vowLogs(){ const t0=microGoal.startedAt||Date.now(); return LOGS.filter(g=>(g.ts||0)>=t0); }
 function vowDays(){ return [...new Set(vowLogs().map(g=>g.date))].sort((a,b)=>dayDiff(b,a)); }
 function vowRun(){ let best=0,run=0,prev=null; vowDays().forEach(d=>{ run=(prev&&dayDiff(prev,d)===1)?run+1:1; best=Math.max(best,run); prev=d; }); return best; }
 function lastDoneDays(key){ const ls=LOGS.filter(g=>g.ex===key); if(!ls.length) return 9999; return dayDiff(ls.map(g=>g.date).sort((a,b)=>dayDiff(b,a)).pop(),todayStr()); }
@@ -1062,7 +1063,9 @@ function completeMicroGoal(){
   if(!microGoal||!microGoal.active||microGoal.done) return;
   microGoal.done=true; microGoal.active=false;
   saveMicroGoal();
-  addLedger({k:'micro',amt:2});
+  // 同じ誓い（立てた時刻で区別）で二重に徳が入らないように
+  if(((USER&&USER.ledger)||[]).some(l=>l.k==='micro'&&l.sa===microGoal.startedAt)) return;
+  addLedger({k:'micro',amt:2,sa:microGoal.startedAt});
   vib([30,20,60]);
   toast('Small Vow complete! +2 Virtue');
   setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(microGoal.defId); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
@@ -1111,7 +1114,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.4';
+const APP_VERSION='v0.20.5';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
