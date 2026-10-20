@@ -826,6 +826,7 @@ function recompute(){
   SCROLLS[5].got=tokuEarned>=10000;
   // 小さな誓い
   microGoal=u.microGoal?Object.assign({},u.microGoal):(microGoal||pickNewMicroGoalCandidate());
+  if(READY) microGoalProgress();
 }
 
 /* 書き込み（Firestoreの画面反映は onSnapshot 経由。電波がなくても端末に保存され、戻ったら送られる） */
@@ -835,7 +836,6 @@ function saveMicroGoal(){ saveUser({microGoal:Object.assign({},microGoal)}); }
 function addLog(key,step,sets,noteIn){
   const memoEl=document.getElementById('memoInput');
   const note=noteIn!=null?String(noteIn).trim():(memoEl?memoEl.value.trim():'');
-  if(note) microGoalProgress('memo',1);
   const p=FB.addLog({date:todayStr(),ts:Date.now(),ex:key,step,sets,note});
   p.catch(e=>{ console.warn(e); toast('Couldn’t save your training log.'); });
   return {id:p.id,note};
@@ -852,7 +852,6 @@ function saveLaterMemo(rec,inputId){
   const el=document.getElementById(inputId); if(!el||!rec||!rec.id) return;
   const v=el.value.trim();
   if(v===rec.note) return;
-  if(v && !rec.note) microGoalProgress('memo',1);
   FB.updateLog(rec.id,{note:v}).catch(e=>{ console.warn(e); toast('Couldn’t save your note.'); });
 }
 
@@ -948,32 +947,49 @@ function useFudaForFreeze(){
   nav('home');
 }
 
-/* ══ 小さな誓い（2日で達成できる簡単な目標）══
+/* ══ 小さな誓い（1週間で達成する小さな目標・8種類）══
    ・好きなタイミングで挑戦を開始できる（常時進行ではない）
-   ・開始から1週間以内に達成しないと非クリア
-   ・達成しても徳の付与はなし
-   ・週の目標日数が1日の人は参加不可（2日以上で参加可）
-   ・休養日の翌日は「絶好の機会」として提案表示
+   ・開始から1週間以内に達成すれば徳+2。期限を過ぎたら非クリア
+   ・進み具合は記録（LOGS）から毎回計算する（開始日〜今日の記録が対象）
+   ・連続系は週の目標日数が2日以上の人だけに出す
 */
-const PREV_2DAY_XP=210; // モック：前回2日間の経験値実績（将来の目標追加用に保持）
+function vowStart(){ return todayStr(new Date(microGoal.startedAt||Date.now())); }
+function vowLogs(){ const st=vowStart(); return LOGS.filter(g=>dayDiff(st,g.date)>=0); }
+function vowDays(){ return [...new Set(vowLogs().map(g=>g.date))].sort((a,b)=>dayDiff(b,a)); }
+function vowRun(){ let best=0,run=0,prev=null; vowDays().forEach(d=>{ run=(prev&&dayDiff(prev,d)===1)?run+1:1; best=Math.max(best,run); prev=d; }); return best; }
+function lastDoneDays(key){ const ls=LOGS.filter(g=>g.ex===key); if(!ls.length) return 9999; return dayDiff(ls.map(g=>g.date).sort((a,b)=>dayDiff(b,a)).pop(),todayStr()); }
 const MICRO_GOAL_DEFS=[
-  {id:'streak2',  icon:'🔥', label:'2-Day Streak',   unit:' days',   target:()=>2,
-    desc:'Show up at the dojo two days running.'},
+  {id:'streak2', icon:'🔥', label:'2-Day Streak', unit:'days', streak:true, target:2,
+    desc:'Train two days in a row.', cur:()=>vowRun()},
+  {id:'streak3', icon:'🔥', label:'3-Day Streak', unit:'days', streak:true, target:3,
+    desc:'Train three days in a row.', cur:()=>vowRun()},
+  {id:'variety3', icon:'🥋', label:'Three Paths', unit:'exercises', target:3,
+    desc:'Train three or more different exercises.', cur:()=>new Set(vowLogs().map(g=>g.ex)).size},
+  {id:'beatLast', icon:'⚔️', label:'Beat Your Last Self', unit:'', target:1,
+    desc:'Do more reps than last time at the same level.',
+    cur:()=>vowLogs().some(g=>{ const prev=LOGS.filter(h=>h.ex===g.ex&&h.step===g.step&&(h.ts||0)<(g.ts||0)&&h!==g).pop(); return prev && logAvg(g)>logAvg(prev); })?1:0},
+  {id:'comeback', icon:'🌱', label:'Return to an Old Path', unit:'', target:1, needsEx:true,
+    desc:ex=>`Train ${exBy(ex).name} again. You haven’t done it in two weeks.`, cur:()=>vowLogs().some(g=>g.ex===microGoal.ex)?1:0},
+  {id:'xp500', icon:'✨', label:'500 XP in a Day', unit:'XP', target:500,
+    desc:'Earn 500 XP or more in a single day.',
+    cur:()=>{ const by={}; vowLogs().forEach(g=>{ by[g.date]=(by[g.date]||0)+logXP(g); }); return Math.max(0,...Object.values(by)); }},
+  {id:'afterRest', icon:'🌙', label:'Rise After Rest', unit:'', target:1,
+    desc:'Take a rest day, then train the next day.',
+    cur:()=>vowDays().some(d=>CAL_DATA[addDays(d,-1)]==='rest')?1:0},
+  {id:'memo', icon:'📝', label:'Leave a Note', unit:'', target:1,
+    desc:'Write a note after a training session.', cur:()=>vowLogs().some(g=>g.note)?1:0},
 ];
-function pickNewMicroGoalCandidate(){
-  const pick=MICRO_GOAL_DEFS[Math.floor(Math.random()*MICRO_GOAL_DEFS.length)];
-  return {defId:pick.id, cur:0, target:pick.target(), active:false, startedAt:null, deadline:null, done:false, failed:false, lastProgressDate:null};
+function comebackEx(){ const c=EX.filter(e=>lastDoneDays(e.key)>=14 && LOGS.some(g=>g.ex===e.key)); return c.length?c[Math.floor(Math.random()*c.length)].key:null; }
+function pickNewMicroGoalCandidate(skip){
+  const ex=comebackEx();
+  const pool=MICRO_GOAL_DEFS.filter(d=>d.id!==skip && (!d.streak||weeklyGoalDays>=2) && (!d.needsEx||ex));
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  return {defId:pick.id, ex:pick.needsEx?ex:null, cur:0, target:pick.target, active:false, startedAt:null, deadline:null, done:false, failed:false};
 }
-let microGoal=pickNewMicroGoalCandidate();
-function microGoalDef(){ return MICRO_GOAL_DEFS.find(d=>d.id===microGoal.defId); }
-function eligibleForMicroGoal(){ return weeklyGoalDays>=2; }
+let microGoal={defId:'streak2',cur:0,target:2,active:false,startedAt:null,deadline:null,done:false,failed:false};
+function microGoalDef(){ return MICRO_GOAL_DEFS.find(d=>d.id===microGoal.defId)||MICRO_GOAL_DEFS[0]; }
+function vowDesc(def){ return typeof def.desc==='function'?def.desc(microGoal.ex||'push'):def.desc; }
 function todayStr(d){ d=d||new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
-function isConsecutiveDay(prevStr,curStr){
-  if(!prevStr) return false;
-  const[py,pm,pd]=prevStr.split('-').map(Number), prev=new Date(py,pm-1,pd);
-  const[cy,cm,cd]=curStr.split('-').map(Number), cur=new Date(cy,cm-1,cd);
-  return Math.round((cur-prev)/(24*60*60*1000))===1;
-}
 function checkMicroGoalExpiry(){
   if(microGoal.active && !microGoal.done && microGoal.deadline && Date.now()>microGoal.deadline){
     microGoal.failed=true; microGoal.active=false;
@@ -981,29 +997,15 @@ function checkMicroGoalExpiry(){
   }
 }
 function startMicroGoal(){
-  if(!eligibleForMicroGoal()) return;
-  microGoal.active=true; microGoal.cur=0; microGoal.done=false; microGoal.failed=false; microGoal.lastProgressDate=null;
+  microGoal.active=true; microGoal.done=false; microGoal.failed=false;
   microGoal.startedAt=Date.now();
   microGoal.deadline=Date.now()+7*24*60*60*1000; // 起算日から1週間
   saveMicroGoal();
-  vib(20); toast('Small Vow started! Complete it within a week.');
+  vib(20); toast('Small Vow taken! Complete it within a week.');
   if(state.view==='quest') nav('quest');
 }
-// 連続が途切れた場合の再挑戦：起算日・期限はそのまま、進捗だけリセット
-function retryMicroGoal(){
-  microGoal.cur=0; microGoal.failed=false; microGoal.active=true; microGoal.lastProgressDate=null;
-  saveMicroGoal();
-  vib(20); toast('Retry started (same deadline)');
-  if(state.view==='quest') nav('quest');
-}
-// 起算日から1週間の期限が過ぎた場合：新しい起算日でやり直す
-function startFreshMicroGoal(){
-  microGoal=pickNewMicroGoalCandidate();
-  microGoal.active=true; microGoal.startedAt=Date.now(); microGoal.deadline=Date.now()+7*24*60*60*1000;
-  saveMicroGoal();
-  vib(20); toast('New challenge started!');
-  if(state.view==='quest') nav('quest');
-}
+function rerollMicroGoal(){ microGoal=pickNewMicroGoalCandidate(microGoal.defId); saveMicroGoal(); vib(10); if(state.view==='quest') nav('quest'); }
+function startFreshMicroGoal(){ microGoal=pickNewMicroGoalCandidate(microGoal.defId); saveMicroGoal(); if(state.view==='quest') nav('quest'); }
 function completeMicroGoal(){
   if(!microGoal||!microGoal.active||microGoal.done) return;
   microGoal.done=true; microGoal.active=false;
@@ -1011,80 +1013,53 @@ function completeMicroGoal(){
   addLedger({k:'micro',amt:2});
   vib([30,20,60]);
   toast('Small Vow complete! +2 Virtue');
-  setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
+  setTimeout(()=>{ microGoal=pickNewMicroGoalCandidate(microGoal.defId); saveMicroGoal(); if(state.view==='quest') nav('quest'); },1200);
 }
-// kind: 'streak'|'xp'|'memo' — 挑戦中で種類が一致する時だけ進捗を積む
-function microGoalProgress(kind, amount){
+// 記録が変わるたびに進み具合を計算し直し、届いていたら達成
+function microGoalProgress(){
   checkMicroGoalExpiry();
   if(!microGoal||!microGoal.active||microGoal.done||microGoal.failed) return;
   const def=microGoalDef();
-  const matches = (kind==='streak' && def.id==='streak2');
-  if(!matches) return;
-  const t=todayStr();
-  if(microGoal.lastProgressDate===t) return; // 今日の分はすでに加算済み
-  if(microGoal.lastProgressDate && !isConsecutiveDay(microGoal.lastProgressDate,t)){
-    // 連続が途切れた→非クリア（起算日から1週間以内ならまだ再挑戦できる）
-    microGoal.failed=true; microGoal.active=false;
-    saveMicroGoal();
-    return;
-  }
-  microGoal.lastProgressDate=t;
-  microGoal.cur=Math.min(microGoal.target, microGoal.cur+amount);
-  if(microGoal.cur>=microGoal.target) completeMicroGoal();
-  else saveMicroGoal();
+  microGoal.cur=Math.min(def.target,def.cur());
+  if(microGoal.cur>=def.target) completeMicroGoal();
 }
 function microGoalCard(){
   checkMicroGoalExpiry();
-  if(!eligibleForMicroGoal()){
-    return `<div class="mission" style="padding:16px;margin-bottom:14px;opacity:.75">
-      <div style="font-size:15px;color:var(--sub);line-height:1.6">Your weekly goal is too low for a Small Vow.<br>Set it to 2+ days a week in Settings to unlock it.</div>
-      <button class="btnghost" style="margin-top:10px" onclick="openSettings()">Open Settings</button>
-    </div>`;
-  }
   const def=microGoalDef();
-  if(microGoal.failed){
-    const withinWindow = microGoal.deadline && Date.now() < microGoal.deadline;
-    return `<div class="mission" style="padding:16px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:10px">
+  const head=sub=>`<div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:26px">${emo(def.icon)}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
-          <div style="font-size:13px;color:${withinWindow?'var(--kin)':'var(--shu2)'};margin-top:2px">${withinWindow?'Streak broken. Vow failed (you can still retry within 1 week of the start)':'Not completed within 1 week. Vow failed'}</div>
+          <div style="font-size:13px;color:var(--sub);margin-top:2px;line-height:1.5">${sub}</div>
         </div>
-      </div>
-      <button class="btnprime" style="margin-top:12px" onclick="${withinWindow?'retryMicroGoal()':'startFreshMicroGoal()'}">${withinWindow?'Retry':'Start a new Vow'}</button>
+      </div>`;
+  if(microGoal.failed){
+    return `<div class="mission" style="padding:16px;margin-bottom:14px">
+      ${head('<span style="color:var(--shu2)">Not completed within a week.</span>')}
+      <button class="btnprime" style="margin-top:12px" onclick="startFreshMicroGoal()">Find a new Vow</button>
     </div>`;
   }
   if(!microGoal.active){
     return `<div class="mission" style="padding:16px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:26px">${emo(def.icon)}</div>
-        <div style="flex:1">
-          <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
-          <div style="font-size:13px;color:var(--sub);margin-top:2px;line-height:1.5">${def.desc}</div>
-        </div>
-      </div>
+      ${head(vowDesc(def))}
       <div style="font-size:13px;color:var(--sub);margin-top:10px">Start anytime. Complete it within 1 week (+2 Virtue)</div>
       <button class="btnprime" style="margin-top:12px" onclick="startMicroGoal()">Take this Vow</button>
+      <button class="btnghost" style="margin-top:8px" onclick="rerollMicroGoal()">Show another</button>
     </div>`;
   }
-  const pct=Math.min(100,Math.round(microGoal.cur/microGoal.target*100));
+  microGoal.cur=Math.min(def.target,def.cur());
+  const pct=Math.min(100,Math.round(microGoal.cur/def.target*100));
   const hoursLeft=Math.max(0,Math.ceil((microGoal.deadline-Date.now())/(60*60*1000)));
+  const left=hoursLeft>=24?`${Math.ceil(hoursLeft/24)} day${Math.ceil(hoursLeft/24)===1?'':'s'} left`:`${hoursLeft}h left`;
   return `<div class="mission" style="padding:16px;margin-bottom:14px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:26px">${emo(def.icon)}</div>
-      <div style="flex:1">
-        <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
-        <div style="font-size:13px;color:var(--sub);margin-top:2px">${hoursLeft}h left</div>
-      </div>
-    </div>
-    <div class="pr" style="margin-top:12px"><span>Progress</span><b>${microGoal.cur} / ${microGoal.target} ${def.unit}</b></div>
+    ${head(`${vowDesc(def)}<br>${left}`)}
+    <div class="pr" style="margin-top:12px"><span>Progress</span><b>${microGoal.cur.toLocaleString()} / ${def.target.toLocaleString()}${def.unit?' '+def.unit:''}</b></div>
     <div class="bar"><i style="width:${pct}%"></i></div>
   </div>`;
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.8';
+const APP_VERSION='v0.18.9';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2418,8 +2393,6 @@ function finishWorkout(){
   // 記録を保存（当日）
   if(sets>0){
     WK.rec=addLog(key,step,WK.tally.slice());
-    microGoalProgress('streak',1);
-    microGoalProgress('xp',xp);
   }
   // 終了画面
   const stage=document.getElementById('dStage'), btns=document.getElementById('dBtns');
@@ -2571,8 +2544,6 @@ function quickRecord(key,step){
   const per=ty==='s'?3:ty==='n'?20:10;
   addLog(key,step,Array(Math.min(sets,20)).fill(reps),(document.getElementById('qMemo')||{}).value||'');
   const qxp=sets*reps*per;
-  microGoalProgress('streak',1);
-  microGoalProgress('xp',qxp);
   closeModal();
   const cleared=sets>=3&&reps>=c.goal;
   showXPBurst();
