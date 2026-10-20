@@ -1014,20 +1014,20 @@ const MICRO_GOAL_DEFS=[
     desc:'Train two days in a row.', cur:()=>vowRun()},
   {id:'streak3', icon:'🔥', label:'3-Day Streak', unit:'days', streak:true, days:3, target:3,
     desc:'Train three days in a row.', cur:()=>vowRun()},
-  {id:'variety3', icon:'🥋', label:'Three Paths', unit:'exercises', target:3,
+  {id:'variety3', icon:'🥋', img:'vow-variety', label:'Three Paths', unit:'exercises', target:3,
     desc:'Train three or more different exercises.', cur:()=>new Set(vowLogs().map(g=>g.ex)).size},
-  {id:'beatLast', icon:'⚔️', label:'Beat Your Last Self', unit:'', target:1,
+  {id:'beatLast', icon:'⚔️', img:'vow-beat', label:'Beat Your Last Self', unit:'', target:1,
     desc:'Do more reps than last time at the same level.',
     cur:()=>vowLogs().some(g=>{ const prev=LOGS.filter(h=>h.ex===g.ex&&h.step===g.step&&(h.ts||0)<(g.ts||0)&&h!==g).pop(); return prev && logAvg(g)>logAvg(prev); })?1:0},
-  {id:'comeback', icon:'🌱', label:'Return to an Old Path', unit:'', target:1, needsEx:true,
+  {id:'comeback', icon:'🌱', img:'vow-comeback', label:'Return to an Old Path', unit:'', target:1, needsEx:true,
     desc:ex=>`Train ${exBy(ex).name} again. You haven’t done it in two weeks.`, cur:()=>vowLogs().some(g=>g.ex===microGoal.ex)?1:0},
-  {id:'xp500', icon:'✨', label:'500 XP in a Day', unit:'XP', target:500,
+  {id:'xp500', icon:'✨', img:'vow-xp', label:'500 XP in a Day', unit:'XP', target:500,
     desc:'Earn 500 XP or more in a single day.',
     cur:()=>{ const by={}; vowLogs().forEach(g=>{ by[g.date]=(by[g.date]||0)+logXP(g); }); return Math.max(0,...Object.values(by)); }},
-  {id:'afterRest', icon:'🌙', label:'Rise After Rest', unit:'', target:1,
+  {id:'afterRest', icon:'🌙', img:'vow-rest', label:'Rise After Rest', unit:'', target:1,
     desc:'Take a rest day, then train the next day.',
     cur:()=>vowDays().some(d=>CAL_DATA[addDays(d,-1)]==='rest')?1:0},
-  {id:'memo', icon:'📝', label:'Leave a Note', unit:'', target:1,
+  {id:'memo', icon:'📝', img:'vow-memo', label:'Leave a Note', unit:'', target:1,
     desc:'Write a note after a training session.', cur:()=>vowLogs().some(g=>g.note)?1:0},
 ];
 function comebackEx(){ const c=EX.filter(e=>lastDoneDays(e.key)>=14 && LOGS.some(g=>g.ex===e.key)); return c.length?c[Math.floor(Math.random()*c.length)].key:null; }
@@ -1082,7 +1082,7 @@ function microGoalCard(){
   checkMicroGoalExpiry();
   const def=microGoalDef();
   const head=sub=>`<div style="display:flex;align-items:center;gap:10px">
-        <div style="font-size:26px">${emo(def.icon)}</div>
+        <div style="font-size:26px;flex:0 0 auto">${def.img?`<img src="images/${def.img}.webp" alt="" style="width:1.5em;height:1.5em;object-fit:contain;vertical-align:middle">`:emo(def.icon)}</div>
         <div style="flex:1">
           <div style="font-family:var(--serif);font-size:16px;font-weight:700">${def.label}</div>
           <div style="font-size:13px;color:var(--sub);margin-top:2px;line-height:1.5">${sub}</div>
@@ -1114,7 +1114,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.5';
+const APP_VERSION='v0.20.6';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1345,6 +1345,11 @@ for(let m=1;m<=12;m++) MTN_ART[m]={img:`images/mtn-${String(m).padStart(2,'0')}.
 const MTN_PATH2=[[20,70],[29,63.5],[39,59],[49,54.4],[58.6,49.9],[68,46],[76,42],[84,37.5],[88,33],[86,27.7],[81,23.2],[79.5,21.5]];
 const MTN_PATH2_JUN=[[18.5,70.7],[25.4,64.8],[37,59],[47,55],[54.7,51.8],[62.5,47.3],[72,44.7],[80,40.7],[86,36.2],[89,31.6],[84,27.7],[80,24.5],[79.5,22]];
 for(let m=1;m<=12;m++) Object.assign(MTN_ART[m],{path:((m>=6&&m<=9)||m===11)?MTN_PATH2_JUN:MTN_PATH2,v:2});
+// 灯籠の置き場所（Nori 指定、10月の絵で取った位置）。週の数ごと。まっすぐな道の月に使う
+const LAN_SPOTS={5:[[18.4,65.4],[38.8,54.4],[56.2,47.3],[76.7,36.6],[76,27.3]], 4:[[33.2,66.9],[56.1,52.6],[83.6,40.6],[87,32]]}; // 4週の最後は画面の端で切れないよう少し内側（指定は90）
+[1,2,3,4,5,10,12].forEach(m=>{ MTN_ART[m].spots=LAN_SPOTS; });
+// i番目（1始まり）の灯籠の位置：指定があればそれ、なければ山道に沿って均等に
+function lanPos(art,i,total){ const sp=art.spots&&art.spots[total]; return sp?sp[i-1]:pathPoint(art.path,i/total*0.86); }
 // 山道の折れ線上で、麓からの道のり t（0〜1）にある点を返す（%座標）
 function pathPoint(pts,t){
   // 画像は縦長(2:3)なので、長さは実寸比で測る
@@ -1435,7 +1440,7 @@ function viewHome(){
   if(art){
     let nodes='';
     for(let i=1;i<=total;i++){
-      const [x,y]=pathPoint(art.path,i/total*0.86); // 最後の灯籠は頂の鳥居の手前に置く
+      const [x,y]=lanPos(art,i,total); // 最後の灯籠は頂の鳥居の手前に置く
       // 石灯籠：登った週は灯がともり、まだの週は消えたまま。今の週の灯籠には自分が立つ
       const lit=isLit(i), here=i===cur, me=here;
       // 自分が立つ灯籠をタップすると修行開始（今日済んでいても再度できる）
@@ -1443,7 +1448,7 @@ function viewHome(){
       const side=x>55?'l':'r';
       const canRest=me && !trainedToday && CAL_DATA[todayStr()]!=='rest';
       // 休むボタンは一つ下の灯籠と反対側に出して重ならないようにする
-      const px=i>1?pathPoint(art.path,(i-1)/total*0.86)[0]:(x>55?100:0), restSide=px<x?'r':'l';
+      const px=i>1?lanPos(art,i-1,total)[0]:(x>55?100:0), restSide=px<x?'r':'l';
       const rk=lit?(MOUNTAIN_STEP_CATS[i-1]||[]):(here?weekCats(mondayOf(todayStr())):[]);
       const inner=`${lanRing(rk)}<img src="images/lantern-${lit?'on':'off'}.webp" alt="">`;
       const click=me?` onclick="tapFlash(this,()=>nav('choose'))"`:(lit?` onclick="stepDetail(${i})"`:'');
