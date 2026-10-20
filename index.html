@@ -466,7 +466,7 @@
   .party-stage{ position:relative;height:300px;margin:6px 0 10px;perspective:1000px;touch-action:pan-y; user-select:none; }
   .pchar{ position:absolute;left:50%;top:50%;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s,filter .45s;will-change:transform; }
   .pchar .plbl{ transition:opacity .2s; }
-  .pchar .pav{ width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--sumi3),var(--sumi2));border:2px solid var(--line2);display:grid;place-items:center;font-size:58px; }
+  .pchar .pav{ width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--sumi3),var(--sumi2));border:2px solid var(--line2);display:grid;place-items:center;font-size:68px; }
   .pchar .pname{ text-align:center;font-family:var(--serif);font-weight:800;font-size:16px;margin-top:8px; }
   .pchar .pmeta{ text-align:center;font-size:13px;color:var(--sub);margin-top:2px; }
   .pchar.front .pav{ border-color:var(--kin);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 0 5px rgba(217,172,82,.14); }
@@ -1079,7 +1079,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.18.5';
+const APP_VERSION='v0.18.6';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1746,12 +1746,12 @@ function renderParty(){
 }
 function layoutParty(anim){
   const stage=document.getElementById('partyStage'); if(!stage) return;
-  const n=PARTY.length, R=Math.min(110,stage.clientWidth*0.3);
+  const n=PARTY.length, R=Math.min(120,stage.clientWidth*0.32);
   stage.querySelectorAll('.pchar').forEach(el=>{
     const i=+el.dataset.i, th=(i-partyPos)*2*Math.PI/Math.max(n,3);
     const f=(1+Math.cos(th))/2; // 正面=1、真後ろ=0
     el.style.transition=anim?'':'none';
-    el.style.transform=`translate(-50%,-50%) translate(${(R*Math.sin(th)).toFixed(1)}px,${(10-40*(1-f)).toFixed(1)}px) scale(${(.62+.38*f).toFixed(3)})`;
+    el.style.transform=`translate(-50%,-50%) translate(${(R*Math.sin(th)).toFixed(1)}px,${(10-40*(1-f)).toFixed(1)}px) scale(${(.45+.55*f).toFixed(3)})`;
     el.style.opacity=(.45+.55*f).toFixed(2);
     el.style.filter=`blur(${(1.5*(1-f)).toFixed(2)}px)`;
     el.style.zIndex=Math.round(f*10);
