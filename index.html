@@ -1071,7 +1071,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.19.4';
+const APP_VERSION='v0.19.5';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1186,7 +1186,7 @@ function renderTabs(){
        <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div><div class="tl">${t.lb}</div></div>`).join('');
 }
 function openSelfMenu(){
-  closeSelfMenu();
+  if(document.getElementById('selfMenuOvl')){ closeSelfMenu(); return; } // 2回目のタップで閉じる
   const d=document.createElement('div');
   d.className='ovl'; d.id='selfMenuOvl';
   d.style.zIndex='18'; // タブバー(z-index:20)より下＝タブの裏から出てくる見た目に
