@@ -407,7 +407,10 @@
   /* 新しい山の絵：道の麓が下の操作パネルの上、鳥居が見出しの下に収まる大きさ */
   /* 絵の上の空を上へ伸ばす：絵の上端15%（空だけの部分）を反転してぼかし、継ぎ目なく続ける */
   .mart.v2 .mart-in.p2::before{ content:'';position:absolute;left:0;right:0;bottom:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 666%;background-position:top;transform:scaleY(-1);filter:blur(2px); }
-  .mart.v2 .mart-in.p2{ --H:max(150cqw, min(171cqw, calc((100cqh - 470px) * 2.06))); height:var(--H);width:calc(var(--H) / 1.5);left:calc(50cqw - var(--H) / 3);top:calc(100cqh - 205px - .707 * var(--H)); }
+  /* 鳥居（絵の上から約20%）を見出し「GROW STRONG.」と同じ高さ（上から約130px）に合わせる */
+  .mart.v2 .mart-in.p2{ --H:171cqw; height:var(--H);width:calc(var(--H) / 1.5);left:calc(50cqw - var(--H) / 3);top:calc(130px - .2 * var(--H)); }
+  /* 絵の下が足りない背の高い画面では、絵の下端15%を反転して下へ続ける */
+  .mart.v2 .mart-in.p2::after{ content:'';position:absolute;left:0;right:0;top:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 666%;background-position:bottom;transform:scaleY(-1);filter:blur(2px); }
   .mart.v2::before{ content:'';position:absolute;inset:0 0 auto 0;height:50%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(12,10,9,.85) 0%,rgba(12,10,9,.45) 50%,rgba(12,10,9,0) 100%); }
   .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:44%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 55%,rgba(12,10,9,0) 100%); }
   .hx{ position:absolute;left:20px;right:20px;top:16px;z-index:4; }
@@ -1142,7 +1145,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.2';
+const APP_VERSION='v0.21.3';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
