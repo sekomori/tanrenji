@@ -229,6 +229,7 @@
   @keyframes sfxRing{ 0%{ transform:scale(.3);opacity:.9 } 100%{ transform:scale(1.5);opacity:0 } }
   @keyframes sfxSp{ 0%{ transform:translate(0,0);opacity:1 } 100%{ transform:translate(var(--x),var(--y));opacity:0 } }
   @keyframes sfxUp{ from{ transform:translateY(14px);opacity:0 } to{ transform:none;opacity:1 } }
+  .newline{ height:2px;background:var(--shu);border-radius:2px;margin:4px 6px 16px; }
   .tab .tdot{ position:absolute;top:4px;right:12px;width:10px;height:10px;border-radius:50%;background:var(--shu);box-shadow:0 0 0 2px var(--sumi); }
   .pclear{ position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(10,8,7,.72);backdrop-filter:blur(3px);animation:fade .25s;cursor:pointer; }
   .pclear.out{ opacity:0;transition:opacity .4s; }
@@ -1116,7 +1117,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.20.9';
+const APP_VERSION='v0.21.0';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1228,7 +1229,7 @@ function renderTabs(){
   const cur=['home','choose','steps','record'].includes(state.view)?'home':(state.view==='achieve'?'profile':state.view);
   document.getElementById('tabbar').innerHTML=TABS.map(t=>
     `<div class="tab ${t.id===cur?'on':''}" onclick="${t.id==='profile'?'vib(10);openSelfMenu()':`tabTap('${t.id}')`}">
-       <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div><div class="tl">${t.lb}</div>${t.id==='quest'&&partyReady()?'<i class="tdot"></i>':''}</div>`).join('');
+       <div class="ti" style="--m:url(images/tab-${t.id}.webp)"></div><div class="tl">${t.lb}</div>${(t.id==='quest'&&partyReady())||(t.id==='board'&&state.view!=='board'&&boardHasNew())?'<i class="tdot"></i>':''}</div>`).join('');
 }
 // 今いる画面のタブをもう一度押しても何もしない（描き直さない）
 function tabTap(id){ closeSelfMenu(); if(state.view===id) return; vib(10); nav(id); }
@@ -1478,7 +1479,6 @@ function viewHome(){
         <h1 class="hx-h">SHOW UP.<br>GROW STRONG.</h1>
         <div class="hx-sub">Your next step starts here.</div>
         <div class="hx-stats">
-          <div><b>${streakDays}</b><small>DAY STREAK</small></div>
           <div><b class="rk">${currentRank().en}</b><small class="jp">${currentRank().name}</small></div>
           <div><b>${fmtXP(TOTAL_XP)}</b><small>TOTAL XP</small></div>
         </div>
@@ -2017,13 +2017,25 @@ const BOARD=[
   {who:'Sho',     me:false,em:AV_SHO, type:'streak',text:'hit a 10-day streak', tm:'yesterday'},
   {who:'Nori',   me:true, type:'streak',text:'hit a 10-day streak', tm:'2d ago'},
 ];
-function viewBoard(){
-  // 応援も立て札に流す（typeが'react'の項目）
+// 立て札の新着：最後に開いた時刻より新しい項目。モックは「◯分前」から時刻を作る
+const BOARD_T0=Date.now();
+function tmAgo(tm){ const t=String(tm).toLowerCase(), n=parseInt(t)||1;
+  return t==='just now'?0 : /m ago/.test(t)?n : /h ago/.test(t)?n*60 : t==='today'?300 : t==='yesterday'?1440 : /d ago/.test(t)?n*1440 : 9999; }
+function boardFeed(){
+  // 応援も立て札に流す（typeが'react'の項目）。新しい順
   const reactEntries=REACT_HIST.map(r=>({who:r.who, me:false, em:r.em, type:'react', text:`sent ${emo(r.react)} “${r.serif}”`, tm:r.tm}));
-  const feed=[BOARD[0],BOARD[1],reactEntries[0],...BOARD.slice(2,5),...(reactEntries[1]?[reactEntries[1]]:[]),...BOARD.slice(5)];
+  return [...BOARD,...reactEntries].filter(Boolean).map(b=>Object.assign({at:BOARD_T0-tmAgo(b.tm)*60000},b)).sort((a,b)=>b.at-a.at);
+}
+function boardSeen(){ try{ const v=localStorage.getItem('tanren_board_seen'); return v?+v:BOARD_T0-150*60000; }catch(e){ return 0; } } // 初回はモックの2.5時間以内を新着に
+function boardHasNew(){ const seen=boardSeen(); return boardFeed().some(b=>!b.me&&b.at>seen); }
+function viewBoard(){
+  const feed=boardFeed(), seen=boardSeen();
+  const lastNew=feed.reduce((a,b,i)=>(!b.me&&b.at>seen)?i:a,-1);
+  try{ localStorage.setItem('tanren_board_seen',String(Date.now())); }catch(e){}
+  setTimeout(renderTabs,0);
   return `
   ${pageHead('BOARD','Board')}
-  ${feed.filter(Boolean).map(b=>{
+  ${feed.map((b,bi)=>{
     const av = b.me ? currentAvatar : (b.em||'🧑');
     const icon=`<div style="width:64px;height:64px;flex:0 0 auto;border-radius:22%;overflow:hidden;background:var(--sumi3);border:1px solid var(--line2);display:grid;place-items:center;font-size:34px">${av}</div>`;
     const shareable = b.me && (b.type==='rank' || b.type==='quest' || b.type==='streak');
@@ -2035,7 +2047,7 @@ function viewBoard(){
      </div>`;
     return `<div style="display:flex;gap:14px;align-items:center;padding:18px;border-radius:18px;background:var(--card);border:1px solid ${b.me?'rgba(217,172,82,.5)':'var(--line)'};margin-bottom:12px">
       ${b.me? body+icon : icon+body}
-    </div>`;
+    </div>${bi===lastNew?'<div class="newline"></div>':''}`;
   }).join('')}`;
 }
 
@@ -2043,7 +2055,7 @@ function viewFriends(){
   hasNewReact=false;
   return `
   <div class="brand">
-    <div><div class="eyebrow">DISCIPLES</div><div class="logo"><b>Friends</b></div></div>
+    <div><div class="eyebrow">DISCIPLES</div><div class="logo"><b>Friends</b> <span style="font-family:'Oswald',var(--sans);font-size:.7em;color:var(--kin2);letter-spacing:.05em">${FRIENDS.length}</span></div></div>
     <button class="addbtn" onclick="addFriend()">+ Add</button>
   </div>
   ${FRIENDS.map((f,idx)=>`<div class="friend" onclick="tapFlash(this,()=>friendCompare(${idx}))">
@@ -2052,7 +2064,20 @@ function viewFriends(){
     ${!f.trained?`<div onclick="event.stopPropagation();openSendFuda(${idx})" style="margin-top:6px;font-size:14px;color:var(--kin);font-weight:700;cursor:pointer">${FUDA} Send Talisman ›</div>`:''}
     </div>
     <div class="chev">›</div>
-  </div>`).join('')}`;
+  </div>`).join('')}
+  <div class="h" style="margin-top:22px">Dojo Companions</div>
+  <p class="sub" style="margin-top:-4px">They can join your Party Training. On days you train, they add a share of your XP.</p>
+  <div class="npcgrid">${CHARS.map((c,i)=>`<div class="npc" onclick="charInfo(${i})"><img src="images/${c.img}" alt=""><div>${c.name}</div><small>${npcRateTxt(c.img).replace(' of your XP','')}</small></div>`).join('')}</div>`;
+}
+function charInfo(i){
+  const c=CHARS[i], inParty=PARTY.some(p=>p.img===c.img);
+  modal(`<div class="sheet card-c" style="text-align:center">
+    <img src="images/${c.img}" alt="" style="width:140px;height:140px;object-fit:cover;object-position:50% 12%;border-radius:50%;border:1px solid var(--line2);background:var(--sumi2)">
+    <h3 style="margin-top:10px">${c.name}</h3>
+    <p class="sub" style="text-align:center">Party Training: ${npcRateTxt(c.img)} on days you train</p>
+    ${inParty?'<p class="sub" style="text-align:center;color:var(--kin2)">Already in your party</p>':PARTY.length<3?`<button class="btnprime" onclick="doInviteChar(${i})">Invite to Party Training</button>`:'<p class="sub" style="text-align:center">Your party is full</p>'}
+    <button class="btnghost" onclick="closeModal()">Close</button>
+  </div>`,true);
 }
 
 /* ══ 御札を友に送る ══ */
@@ -2120,7 +2145,8 @@ function viewProfile(){
 /* ══ レーダー ══ */
 const RADAR_LABELS=['Push','Pull','Squat','Core','Bridge','Handstand'];
 function radar(setsArr,colors,perAxisColors){
-  const W=340,H=300,cx=170,cy=150,R=88,MAX=15,N=6;
+  const W=340,H=300,cx=170,cy=150,R=88,N=6;
+  const MX=EX.map(e=>stepCount(e.key)); // 種目ごとの最大段で割る（ブリッジは13段など）
   const ang=i=>(-90+i*60)*Math.PI/180;
   const pt=(i,r)=>[cx+r*Math.cos(ang(i)),cy+r*Math.sin(ang(i))];
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:340px">`;
@@ -2133,9 +2159,9 @@ function radar(setsArr,colors,perAxisColors){
   }
   setsArr.forEach((vals,si)=>{
     const col=colors[si];let p='';
-    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}
+    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,Math.min(1,vals[i]/MX[i])));p+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}
     s+=`<path d="${p}Z" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="2"/>`;
-    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,vals[i]/MAX));const dc=perAxisColors&&si===0?perAxisColors[i]:col;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${dc}"/>`;}
+    for(let i=0;i<N;i++){const[x,y]=pt(i,R*Math.max(.04,Math.min(1,vals[i]/MX[i])));const dc=perAxisColors&&si===0?perAxisColors[i]:col;s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${dc}"/>`;}
   });
   return s+'</svg>';
 }
@@ -2957,7 +2983,8 @@ function avImg(n){ return `<img class="avimg" src="images/avatar-${String(n).pad
 function avTier(n){ return AV_TIERS.find(t=>n>=t.from&&n<=t.to); }
 function avOpen(t){ return RANKS.indexOf(currentRank())>=t.rank; }
 function avCost(n){ const t=avTier(n); return t?t.cost:(avatarFree?AV_COST:0); }
-function openAvatarSelect(){
+let avScrollTop=0; // 確認画面から戻ったとき、さっき見ていた位置に戻す
+function openAvatarSelect(keep){
   const cell=n=>{ const own=avatarOwned.has(n), cur=n===avatarNo, c=avCost(n);
     return `<div class="avcell${cur?' cur':''}${own||!c?'':' lock'}" onclick="pickAvatar(${n})">${avImg(n)}</div>`; };
   const range=(a,b)=>[...Array(b-a+1).keys()].map(i=>cell(a+i)).join('');
@@ -2975,9 +3002,11 @@ function openAvatarSelect(){
       ${tiers}
     </div>
   </div>`);
+  const sc=document.querySelector('.avscroll'); if(sc) sc.scrollTop=keep?avScrollTop:0;
 }
 function setAvatar(n,extra){ avatarNo=n; currentAvatar=avImg(n); saveUser(Object.assign({avatarNo:n},extra||{})); closeModal(); render(); }
 function pickAvatar(n){
+  const sc=document.querySelector('.avscroll'); if(sc) avScrollTop=sc.scrollTop;
   if(avatarOwned.has(n)){ setAvatar(n); vib(20); toast('Avatar updated'); return; }
   const t=avTier(n), c=avCost(n);
   if(t && !avOpen(t)) return;
@@ -2987,7 +3016,7 @@ function pickAvatar(n){
       <h3>Choose this avatar?</h3>
       <p class="sub" style="text-align:center">Only one avatar is free.<br>After this, each new one costs ${AV_COST} Virtue.</p>
       <button class="btnprime" onclick="confirmFreeAvatar(${n})">Yes, this is me</button>
-      <button class="btnghost" onclick="openAvatarSelect()">Look again</button>
+      <button class="btnghost" onclick="openAvatarSelect(true)">Look again</button>
     </div>`,true);
     return;
   }
@@ -2996,7 +3025,7 @@ function pickAvatar(n){
     <h3>Unlock this avatar?</h3>
     <p class="sub" style="text-align:center">${c} Virtue · You have ${toku}</p>
     ${toku>=c?`<button class="btnprime" onclick="unlockAvatar(${n})">Unlock and use</button>`:`<p class="sub" style="text-align:center;color:var(--shu2)">Not enough Virtue yet</p>`}
-    <button class="btnghost" onclick="openAvatarSelect()">Back</button>
+    <button class="btnghost" onclick="openAvatarSelect(true)">Back</button>
   </div>`,true);
 }
 function confirmFreeAvatar(n){ if(avatarFree) return; avatarFree=n; avatarOwned.add(n); setAvatar(n,{avatarFree:n}); vib([30,20,60]); toast('Avatar chosen'); }
