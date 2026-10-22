@@ -514,6 +514,7 @@
   .npcgrid{ display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 14px; }
   .npc{ text-align:center;cursor:pointer;font-size:13px;color:var(--washi); }
   .npc small{ display:block;font-size:12px;color:var(--kin2); }
+  .npc.used{ opacity:.35;filter:grayscale(1); }
   .npc img{ width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 12%;border-radius:50%;background:var(--sumi2);border:1px solid var(--line2);margin-bottom:4px; }
   .pchar .pname{ text-align:center;font-family:var(--serif);font-weight:800;font-size:16px;margin-top:8px; }
   .pchar .pmeta{ text-align:center;font-size:13px;color:var(--sub);margin-top:2px; }
@@ -1141,7 +1142,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.1';
+const APP_VERSION='v0.21.2';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1773,6 +1774,7 @@ let hasParty=true; // モック：パーティー結成済みか（falseで未�
 let partyClaimedWk=''; // 徳+3を受け取った週（保存が戻るまでの二重取り防止）
 // 今週のチームXP：自分＝今週の実績、仲間キャラ＝自分が修行した日の経験値×キャラごとの割合、友だち＝モック
 function partyCalc(){
+  syncPartyNpc();
   const goal=PARTY.reduce((a,p)=>a+p.lvxp*p.week,0);
   const mon=mondayOf(todayStr()); let myWk=0; const npcWk={};
   for(let k=0;k<7;k++){ const dk=addDays(mon,k), x=(DAY_LOG[dk]||[]).reduce((a,l)=>a+l.xp,0); if(!x) continue; myWk+=x;
@@ -1861,7 +1863,8 @@ function inviteFriend(){
     </div>`).join(''):'<p class="sub">No friends left to invite</p>'}
     <div class="h" style="margin-top:18px">Or train with a companion</div>
     <p class="sub" style="margin-top:-4px">No friends here yet? A dojo companion can join. On days you train, they add a share of your XP to the team.</p>
-    <div class="npcgrid">${CHARS.map((c,i)=>PARTY.some(p=>p.img===c.img)?'':`<div class="npc" onclick="doInviteChar(${i})"><img src="images/${c.img}" alt=""><div>${c.name}</div><small>${npcRateTxt(c.img).replace(' of your XP','')}</small></div>`).join('')}</div>
+    <div class="npcgrid">${CHARS.map((c,i)=>PARTY.some(p=>p.img===c.img)?'':`<div class="npc${npcBlocked(c.img)?' used':''}" onclick="doInviteChar(${i})"><img src="images/${c.img}" alt=""><div>${c.name}</div><small>${npcBlocked(c.img)?'Last week':npcRateTxt(c.img).replace(' of your XP','')}</small></div>`).join('')}</div>
+    ${CHARS.some(c=>npcBlocked(c.img))?'<p class="sub" style="margin-top:-6px">Companions you trained with last week can’t join again this week.</p>':''}
     <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`);
 }
@@ -1874,10 +1877,23 @@ function npcRate(img,dk){
   return .2+(h%61)/100;
 }
 function npcRateTxt(img){ return /^deshi/.test(img)?'20–80% of your XP':`${Math.round(npcRate(img,'')*100)}% of your XP`; }
+// 仲間キャラは週ごとに記録（partyNpc: {月曜日: [img,...]}）。先週組んだキャラは今週は選べない
+function npcWeek(off){ return ((USER&&USER.partyNpc)||{})[addDays(mondayOf(todayStr()),-7*(off||0))]||[]; }
+function npcBlocked(img){ return npcWeek(1).includes(img); }
+// 今週の仲間キャラをパーティーに反映（保存から読み直す）
+function syncPartyNpc(){
+  for(let k=PARTY.length-1;k>=0;k--) if(PARTY[k].npc) PARTY.splice(k,1);
+  npcWeek(0).forEach(img=>{ const c=CHARS.find(x=>x.img===img); if(c && PARTY.length<3) PARTY.push({name:c.name,img:c.img,lvxp:35,week:10,me:false,npc:true}); });
+}
 function doInviteChar(i){
   if(PARTY.length>=3){ toast('Party is full'); closeModal(); return; }
   const c=CHARS[i];
+  if(npcBlocked(c.img)){ toast(`You trained with ${c.name} last week. Pick someone else.`); return; }
   PARTY.push({name:c.name,img:c.img,lvxp:35,week:10,me:false,npc:true});
+  // 今週と先週の分だけ残して保存
+  const wk=mondayOf(todayStr()), prev=addDays(wk,-7), pn=(USER&&USER.partyNpc)||{};
+  const keep={}; if(pn[prev]) keep[prev]=pn[prev]; keep[wk]=[...new Set([...(pn[wk]||[]),c.img])];
+  saveUser({partyNpc:keep});
   hasParty=true;
   closeModal(); vib(30); toast(`${c.name} joined your party!`);
   nav('quest');
@@ -2099,7 +2115,7 @@ function charInfo(i){
     <img src="images/${c.img}" alt="" style="width:140px;height:140px;object-fit:cover;object-position:50% 12%;border-radius:50%;border:1px solid var(--line2);background:var(--sumi2)">
     <h3 style="margin-top:10px">${c.name}</h3>
     <p class="sub" style="text-align:center">Party Training: ${npcRateTxt(c.img)} on days you train</p>
-    ${inParty?'<p class="sub" style="text-align:center;color:var(--kin2)">Already in your party</p>':PARTY.length<3?`<button class="btnprime" onclick="doInviteChar(${i})">Invite to Party Training</button>`:'<p class="sub" style="text-align:center">Your party is full</p>'}
+    ${inParty?'<p class="sub" style="text-align:center;color:var(--kin2)">Already in your party</p>':npcBlocked(c.img)?'<p class="sub" style="text-align:center">You trained together last week. Available again next week.</p>':PARTY.length<3?`<button class="btnprime" onclick="doInviteChar(${i})">Invite to Party Training</button>`:'<p class="sub" style="text-align:center">Your party is full</p>'}
     <button class="btnghost" onclick="closeModal()">Close</button>
   </div>`,true);
 }
