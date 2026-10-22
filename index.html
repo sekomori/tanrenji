@@ -419,7 +419,7 @@
   .mart.v2 .mart-in.p3::before{ content:'';position:absolute;left:0;right:0;bottom:calc(100% - 1px);height:30%;background-image:inherit;background-size:100% 333%;background-position:top;transform:scaleY(-1);filter:blur(2px); }
   .mart.v2 .mart-in.p3::after{ content:'';position:absolute;left:0;right:0;top:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 250%;background-position:bottom;transform:scaleY(-1);filter:blur(2px); }
   .mart.v2::before{ content:'';position:absolute;inset:0 0 auto 0;height:50%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(12,10,9,.85) 0%,rgba(12,10,9,.45) 50%,rgba(12,10,9,0) 100%); }
-  .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:44%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 55%,rgba(12,10,9,0) 100%); }
+  .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:32%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 60%,rgba(12,10,9,0) 100%); }
   .hx{ position:absolute;left:20px;right:20px;top:16px;z-index:4; }
   .hx-top{ display:flex;justify-content:space-between;align-items:center; }
   .brand{ font-family:'Oswald',var(--sans);font-weight:700;font-size:18px;letter-spacing:.32em;color:var(--washi); }
@@ -1152,7 +1152,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.5';
+const APP_VERSION='v0.21.6';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
