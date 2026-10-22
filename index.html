@@ -633,8 +633,25 @@ const RANKS=[ // 昇格演出で階級ごとに変える部分：称号(name/en)
 function rankOf(s){ let r=RANKS[0]; for(const x of RANKS){ if(s>=x.min)r=x; } return r; }
 // 名前を決めてから最初の3日間は強制的に「門前払い」
 let daysSinceStart=8; // モック：開始からの日数（3未満なら門前払い固定）
-function currentRank(){ return daysSinceStart<3 ? RANKS[0] : rankOf(SUM); }
+// 段の合計で決まる階級から、週の目標を落とした分（RANK_PEN）だけ下げる
+let RANK_PEN=0, RANK_DOWN=null; // RANK_DOWN：下がったときの演出用（{from,to}）
+function levelRank(){ return rankOf(SUM); }
+function currentRank(){ return daysSinceStart<3 ? RANKS[0] : RANKS[Math.max(0,RANKS.indexOf(levelRank())-RANK_PEN)]; }
+// 週ごとに見て、目標日数に届かなかった週の翌週から1つ下がる。目標を達成した週ごとに1つ戻る（段の階級まで）
+// 始めた週と、まだ終わっていない今週は数えない
+function rankPenalty(){
+  const cap=RANKS.indexOf(levelRank()), start=(USER&&USER.startDate)||todayStr(), thisMon=mondayOf(todayStr());
+  let pen=0;
+  for(let w=addDays(mondayOf(start),7); dayDiff(w,thisMon)>0; w=addDays(w,7))
+    pen = trainedDaysInWeek(w)>=goalForWeek(w) ? Math.max(0,pen-1) : Math.min(cap,pen+1);
+  return pen;
+}
 let lastRankIdx=null, RANK_UP=null, RANK_FROM=0; // 昇格した瞬間だけ大きな称号を出す
+// 降格のお知らせ（仮）。本番の演出はあとで差し替える
+function showRankDown(){
+  const d=RANK_DOWN; if(!d) return; RANK_DOWN=null;
+  setTimeout(()=>toast(`Rank down: ${RANKS[d.to].en}. Hit this week’s goal to climb back.`),600);
+}
 function showRankUp(){
   // 共通：暗転（0–0.5s）→ 太鼓と朱印「昇」（0.5s）→ 称号の登場（1.2–3s）。階級ごとに称号・印・差し色・小さな効果を変える
   const ri=RANK_UP; RANK_UP=null; const r=RANKS[ri]; if(!r) return;
@@ -812,7 +829,6 @@ function recompute(){
     e.cur=cur;
   });
   SUM=EX.reduce((a,e)=>a+e.cur,0);
-  { const ri=RANKS.indexOf(currentRank()); if(READY && lastRankIdx!==null && ri>lastRankIdx){ RANK_UP=ri; RANK_FROM=lastRankIdx; } lastRankIdx=ri; }
   // 日ごとの状態
   CAL_DATA={}; DAY_LOG={};
   (u.rests||[]).forEach(k=>{ CAL_DATA[k]='rest'; });
@@ -822,6 +838,14 @@ function recompute(){
       detail:`${g.sets.length}×${logAvg(g)}${stepType(g.ex,g.step)==='s'?' sec':''}`,xp:logXP(g)});
   });
   totalDays=Object.keys(DAY_LOG).length;
+  // 階級（週の目標を落とすと下がる）。上がったら昇格演出、下がったら降格（演出はあとで）
+  RANK_PEN=rankPenalty();
+  { const ri=RANKS.indexOf(currentRank()); if(READY && lastRankIdx!==null && ri>lastRankIdx){ RANK_UP=ri; RANK_FROM=lastRankIdx; }
+    // 降格はアプリを閉じている間（週明け）に起きるので、前に見た階級を端末に覚えておく
+    let seen=null; try{ seen=localStorage.getItem('tanren_rank_seen'); }catch(e){}
+    if(READY && seen!==null && ri<+seen){ RANK_DOWN={from:+seen,to:ri}; showRankDown(); }
+    if(READY){ try{ localStorage.setItem('tanren_rank_seen',String(ri)); }catch(e){} }
+    lastRankIdx=ri; }
   trainedToday=!!DAY_LOG[today];
   // ストリーク：修行した日を数える。休養日と御札を使った日は途切れない（日数には入らない）
   const fudaDays=new Set(u.fudaUsed||[]);
@@ -1117,7 +1141,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.0';
+const APP_VERSION='v0.21.1';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -2126,7 +2150,7 @@ function viewProfile(){
       <div><div class="rk-en">${r.en}</div><div class="rk-ja">${r.name}</div></div>
       <div class="rk-lbl">RANK ${RANKS.indexOf(r)+1} / ${RANKS.length}</div>
     </div>
-    ${nr?`<div class="rk-bar"><i style="width:${pct}%"></i></div><div class="rk-next">${nr.min-SUM} more level${nr.min-SUM===1?'':'s'} to <b>${nr.en}</b></div>`:`<div class="rk-next">Highest rank reached</div>`}
+    ${RANK_PEN>0?`<div class="rk-next" style="color:var(--shu2)">Missed weekly goal${RANK_PEN>1?`s (${RANK_PEN})`:''}. Hit this week’s goal to climb back toward <b>${levelRank().en}</b>.</div>`:nr?`<div class="rk-bar"><i style="width:${pct}%"></i></div><div class="rk-next">${nr.min-SUM} more level${nr.min-SUM===1?'':'s'} to <b>${nr.en}</b></div>`:`<div class="rk-next">Highest rank reached</div>`}
   </div>
   <div class="stat3">
     <div class="stat"><b>${totalDays}</b><small>Total training days</small></div>
