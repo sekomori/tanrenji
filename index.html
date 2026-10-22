@@ -411,6 +411,9 @@
   .mart.v2 .mart-in.p2{ --H:171cqw; height:var(--H);width:calc(var(--H) / 1.5);left:calc(50cqw - var(--H) / 3);top:calc(130px - .2 * var(--H)); }
   /* 絵の下が足りない背の高い画面では、絵の下端15%を反転して下へ続ける */
   .mart.v2 .mart-in.p2::after{ content:'';position:absolute;left:0;right:0;top:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 666%;background-position:bottom;transform:scaleY(-1);filter:blur(2px); }
+  .mart.v2 .mart-in.p3{ aspect-ratio:auto;width:100cqw;left:0;height:150cqw;top:calc(125px - 12cqw); }
+  .mart.v2 .mart-in.p3::before{ content:'';position:absolute;left:0;right:0;bottom:calc(100% - 1px);height:30%;background-image:inherit;background-size:100% 333%;background-position:top;transform:scaleY(-1);filter:blur(2px); }
+  .mart.v2 .mart-in.p3::after{ content:'';position:absolute;left:0;right:0;top:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 250%;background-position:bottom;transform:scaleY(-1);filter:blur(2px); }
   .mart.v2::before{ content:'';position:absolute;inset:0 0 auto 0;height:50%;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(12,10,9,.85) 0%,rgba(12,10,9,.45) 50%,rgba(12,10,9,0) 100%); }
   .mart.v2::after{ content:'';position:absolute;inset:auto 0 0 0;height:44%;z-index:2;pointer-events:none;background:linear-gradient(0deg,rgba(12,10,9,.97) 0%,rgba(12,10,9,.85) 55%,rgba(12,10,9,0) 100%); }
   .hx{ position:absolute;left:20px;right:20px;top:16px;z-index:4; }
@@ -1145,7 +1148,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.3';
+const APP_VERSION='v0.21.4';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1379,6 +1382,9 @@ for(let m=1;m<=12;m++) Object.assign(MTN_ART[m],{path:((m>=6&&m<=9)||m===11)?MTN
 // 灯籠の置き場所（Nori 指定、10月の絵で取った位置）。週の数ごと。まっすぐな道の月に使う
 const LAN_SPOTS={5:[[18.4,65.4],[38.8,54.4],[56.2,47.3],[76.7,36.6],[76,27.3]], 4:[[33.2,66.9],[56.1,52.6],[83.6,40.6],[87,32]]}; // 4週の最後は画面の端で切れないよう少し内側（指定は90）
 [1,2,3,4,5,10,12].forEach(m=>{ MTN_ART[m].spots=LAN_SPOTS; });
+// 縦いっぱいの新しい山の絵（v:3）。灯籠は絵に描かれた位置、鳥居は (79.1,8.1)
+const TALL_SPOTS={10:{5:[[19.2,78.1],[63.8,62.5],[44.5,51.8],[71,44.9],[82.6,37.5]]}};
+Object.keys(TALL_SPOTS).forEach(m=>{ const sp=TALL_SPOTS[m][5]; MTN_ART[m]={img:`images/mtn-${String(m).padStart(2,'0')}t.jpg`,path:[[sp[0][0],92],...sp,[79.1,8.1]],spots:TALL_SPOTS[m],v:3}; });
 // i番目（1始まり）の灯籠の位置：指定があればそれ、なければ山道に沿って均等に
 function lanPos(art,i,total){ const sp=art.spots&&art.spots[total]; return sp?sp[i-1]:pathPoint(art.path,i/total*0.86); }
 // 山道の折れ線上で、麓からの道のり t（0〜1）にある点を返す（%座標）
@@ -1498,7 +1504,7 @@ function viewHome(){
     const t=homeLine(), canRest=!trainedToday && CAL_DATA[todayStr()]!=='rest';
     return `
     <div class="mart v2">
-      <div class="mart-in${art.v===2?' p2':''}" style="background-image:url('${art.img}')">
+      <div class="mart-in${art.v===2?' p2':art.v===3?' p3':''}" style="background-image:url('${art.img}')">
         ${reached?`<div class="mlabel peak reached" style="left:${tx}%;top:${ty-7}%" onclick="onPeakReached()">${MTN.allLit?'Summit reached! Share':'Summit reached'}</div>`:''}
         ${nodes}
       </div>
