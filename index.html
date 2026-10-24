@@ -415,8 +415,8 @@
   .mart.v2 .mnode.lan.pt.go{ width:52px;height:52px;background:none; }
   .mart.v2 .mnode.lan.pt .lglow{ position:absolute;left:50%;top:42%;width:56px;height:56px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:radial-gradient(circle,rgba(255,236,170,1) 0%,rgba(255,190,90,.75) 20%,rgba(255,150,50,.3) 45%,transparent 70%);animation:lflick 3s ease-in-out infinite; }
   @keyframes lflick{ 0%,100%{opacity:.9;} 50%{opacity:1;} 70%{opacity:.8;} }
-  /* 横に広い画面では、一番下の灯籠が下のボタン群に隠れないよう山を縮めて右に寄せ、左端は墨色へフェード */
-  .mart.v2 .mart-in.p3{ --H:min(150cqw, calc((100cqh - 330px) / .7)); aspect-ratio:auto;height:var(--H);width:calc(var(--H) / 1.5);left:auto;right:0;top:calc(125px - .081 * var(--H));--F:clamp(0px, calc(100cqw - var(--H) / 1.5), 110px);-webkit-mask:linear-gradient(90deg,transparent 0,#000 var(--F));mask:linear-gradient(90deg,transparent 0,#000 var(--F)); }
+  /* 横に広い画面では、一番下の灯籠が下のボタン群に隠れないよう山を縮めて中央に置き、左右は墨色へフェード */
+  .mart.v2 .mart-in.p3{ --H:min(150cqw, calc((100cqh - 330px) / .7)); aspect-ratio:auto;height:var(--H);width:calc(var(--H) / 1.5);left:calc(50cqw - var(--H) / 3);top:calc(125px - .081 * var(--H));--F:clamp(0px, calc((100cqw - var(--H) / 1.5) / 2), 80px);-webkit-mask:linear-gradient(90deg,transparent 0,#000 var(--F),#000 calc(100% - var(--F)),transparent 100%);mask:linear-gradient(90deg,transparent 0,#000 var(--F),#000 calc(100% - var(--F)),transparent 100%); }
   .hx-ban>div{ background:rgba(14,12,11,.88)!important;margin:12px 0 0!important; }
   .mart.v2 .mart-in.p3::before{ content:'';position:absolute;left:0;right:0;bottom:calc(100% - 1px);height:30%;background-image:inherit;background-size:100% 333%;background-position:top;transform:scaleY(-1);filter:blur(2px); }
   .mart.v2 .mart-in.p3::after{ content:'';position:absolute;left:0;right:0;top:calc(100% - 1px);height:40%;background-image:inherit;background-size:100% 250%;background-position:bottom;transform:scaleY(-1);filter:blur(2px); }
@@ -1154,7 +1154,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.8';
+const APP_VERSION='v0.21.9';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
