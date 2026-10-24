@@ -848,7 +848,7 @@ function recompute(){
   (u.rests||[]).forEach(k=>{ CAL_DATA[k]='rest'; });
   LOGS.forEach(g=>{
     CAL_DATA[g.date]='done';
-    (DAY_LOG[g.date]=DAY_LOG[g.date]||[]).push({key:g.ex,ex:exBy(g.ex).name,step:g.step,
+    (DAY_LOG[g.date]=DAY_LOG[g.date]||[]).push({id:g.id,key:g.ex,ex:exBy(g.ex).name,step:g.step,
       detail:`${g.sets.length}×${logAvg(g)}${stepType(g.ex,g.step)==='s'?' sec':''}`,xp:logXP(g)});
   });
   totalDays=Object.keys(DAY_LOG).length;
@@ -1155,7 +1155,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.10';
+const APP_VERSION='v0.21.11';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1318,14 +1318,18 @@ function bindLogLongPress(){
 }
 
 function logById(id){ return LOGS.find(g=>g.id===id); }
-function logMenu(id){
+// back: 編集・削除・閉じたあとに開き直す画面（週の記録・種目の1週間など）
+let LOG_BACK=null;
+function logBack(){ const b=LOG_BACK; LOG_BACK=null; if(b) setTimeout(()=>{ try{ new Function(b)(); }catch(e){} },350); }
+function logMenu(id,back){
   const g=logById(id); if(!g) return;
+  LOG_BACK=back||null;
   modal(`<div class="sheet">
     <h3>Edit record</h3>
-    <p class="sub">${logMD(g)} · ${g.sets.length}×${logAvg(g)}</p>
+    <p class="sub">${exBy(g.ex).name} Lv.${g.step} · ${logMD(g)} · ${g.sets.length}×${logAvg(g)}</p>
     <button class="btnprime" onclick="closeModal();editLog('${id}')">Edit</button>
     <button class="btnghost btndanger" style="margin-top:8px" onclick="closeModal();confirmDeleteLog('${id}')">Delete</button>
-    <button class="btnghost" onclick="closeModal()">Close</button>
+    <button class="btnghost" onclick="closeModal();logBack()">Close</button>
   </div>`);
 }
 
@@ -1339,7 +1343,7 @@ function editLog(id){
     </div>
     <label>Notes</label><input type="text" id="eMemo" value="${escHtml(g.note||'')}">
     <button class="btnprime" onclick="saveEditLog('${id}')">Save</button>
-    <button class="btnghost" onclick="closeModal()">Close</button>
+    <button class="btnghost" onclick="closeModal();logBack()">Close</button>
   </div>`);
 }
 
@@ -1352,7 +1356,7 @@ function saveEditLog(id){
   // 組数か平均回数が変わった時だけ、各組を同じ回数として書き直す
   const newSets=(sets===g.sets.length && reps===logAvg(g)) ? g.sets : Array(Math.min(sets,20)).fill(reps);
   FB.updateLog(id,{sets:newSets,note}).catch(e=>{ console.warn(e); toast('Couldn’t save'); });
-  closeModal(); toast('Updated');
+  closeModal(); toast('Updated'); logBack();
 }
 
 function confirmDeleteLog(id){
@@ -1361,13 +1365,13 @@ function confirmDeleteLog(id){
     <h3>Delete this record?</h3>
     <p class="sub">${logMD(g)} · ${g.sets.length}×${logAvg(g)} will be deleted. This can’t be undone.</p>
     <button class="btnprime btndanger" onclick="doDeleteLog('${id}')" style="background:var(--shu);border-color:var(--shu)">Delete</button>
-    <button class="btnghost" onclick="closeModal()">Cancel</button>
+    <button class="btnghost" onclick="closeModal();logBack()">Cancel</button>
   </div>`);
 }
 
 function doDeleteLog(id){
   FB.deleteLog(id).catch(e=>{ console.warn(e); toast('Couldn’t delete'); });
-  closeModal(); toast('Deleted');
+  closeModal(); toast('Deleted'); logBack();
 }
 function escHtml(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -1638,7 +1642,7 @@ function weekDetail(i){
     if(dayDiff(dk,today)<0) return '';
     const xp=logs.reduce((a,l)=>a+l.xp,0); total+=xp;
     const body=logs.length
-      ? logs.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:10px;height:10px;border-radius:3px;background:${CAT_COLORS[l.key]};flex:0 0 auto"></span><span style="flex:1;font-size:15px">${l.ex} <small style="color:var(--sub)">Lv.${l.step} · ${l.detail}</small></span><span style="font-size:14px;color:var(--kin2);font-weight:700">+${l.xp}</span></div>`).join('')
+      ? logs.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer" onclick="logMenu('${l.id}','weekDetail(${i})')"><span style="width:10px;height:10px;border-radius:3px;background:${CAT_COLORS[l.key]};flex:0 0 auto"></span><span style="flex:1;font-size:15px">${l.ex} <small style="color:var(--sub)">Lv.${l.step} · ${l.detail}</small></span><span style="font-size:14px;color:var(--kin2);font-weight:700">+${l.xp}</span><span style="color:var(--sub);font-size:16px">›</span></div>`).join('')
       : `<div style="font-size:14px;color:var(--faint);padding:3px 0">${CAL_DATA[dk]==='rest'?'🌙 Rest day':'—'}</div>`;
     return `<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
       <div style="width:54px;flex:0 0 auto;font-family:'Oswald',var(--sans);letter-spacing:.08em;font-size:14px;color:${logs.length?'var(--washi)':'var(--sub)'}">${w}<br><small style="color:var(--sub);font-size:12px">${fmt(dk)}</small></div>
@@ -1647,7 +1651,7 @@ function weekDetail(i){
   modal(`<div class="sheet">
     <div style="font-family:'Oswald',var(--sans);letter-spacing:.2em;font-size:13px;color:var(--kin2)">WEEK ${i} · ${fmt(mon)} – ${fmt(addDays(mon,6))}</div>
     <h3 style="margin-top:4px">${lit?'Lantern lit':isNow?'This week':'Lantern not lit'}</h3>
-    <p class="sub">${done} / ${goal} days trained · ${total.toLocaleString()} XP</p>
+    <p class="sub">${done} / ${goal} days trained · ${total.toLocaleString()} XP${total?' · Tap a record to edit':''}</p>
     ${days}
     ${isNow?`<button class="btnprime" style="margin-top:14px" onclick="closeModal();nav('choose')">START TRAINING</button>`:''}
     <button class="btnghost" onclick="closeModal()">Close</button>
@@ -2193,16 +2197,39 @@ function viewProfile(){
   </div>
   <div class="h">Training Balance</div>
   <div class="chartbox" style="display:grid;place-items:center;padding:14px">
-    ${radar([EX.map(e=>e.cur)],['#C8A24C'])}
+    ${radar([EX.map(e=>e.cur)],['#C8A24C'],null,true)}
+    <div style="font-size:13px;color:var(--sub);margin-top:4px">Tap an exercise to see the last 7 days</div>
   </div>
   <div class="h" style="cursor:pointer" onclick="showMonthCal()">Training Calendar <span style="font-size:14px;color:var(--sub)">(monthly)</span></div>
   <div class="cal" id="calBox">${buildWeekCal()}</div>
   <button class="btnghost" style="margin-top:16px" onclick="openFeedback()">✉ Send feedback to the developer</button>`;
 }
 
+/* 種目ごとの過去1週間の記録（タップで編集・削除） */
+function exWeekHistory(key){
+  const ex=exBy(key), today=todayStr(), DW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let total=0, n=0;
+  const rows=[0,1,2,3,4,5,6].map(k=>{
+    const dk=addDays(today,-k), d=parseDay(dk), logs=(DAY_LOG[dk]||[]).filter(l=>l.key===key);
+    n+=logs.length;
+    const body=logs.length?logs.map(l=>{ total+=l.xp; return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer" onclick="logMenu('${l.id}','exWeekHistory(\\'${key}\\')')"><span style="flex:1;font-size:15px">Lv.${l.step} <small style="color:var(--sub)">${l.detail}</small></span><span style="font-size:14px;color:var(--kin2);font-weight:700">+${l.xp}</span><span style="color:var(--sub);font-size:16px">›</span></div>`; }).join('')
+      :`<div style="font-size:14px;color:var(--faint);padding:3px 0">—</div>`;
+    return `<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">
+      <div style="width:54px;flex:0 0 auto;font-family:'Oswald',var(--sans);letter-spacing:.08em;font-size:14px;color:${logs.length?'var(--washi)':'var(--sub)'}">${k===0?'Today':DW[d.getDay()]}<br><small style="color:var(--sub);font-size:12px">${MO[d.getMonth()]} ${d.getDate()}</small></div>
+      <div style="flex:1">${body}</div></div>`;
+  }).join('');
+  modal(`<div class="sheet">
+    <div style="font-family:'Oswald',var(--sans);letter-spacing:.2em;font-size:13px;color:${CAT_COLORS[key]}">LAST 7 DAYS</div>
+    <h3 style="margin-top:4px">${ex.name}</h3>
+    <p class="sub">${n} session${n===1?'':'s'} · ${total.toLocaleString()} XP${n?' · Tap a record to edit':''}</p>
+    ${rows}
+    <button class="btnghost" onclick="closeModal()">Close</button>
+  </div>`);
+}
+
 /* ══ レーダー ══ */
 const RADAR_LABELS=['Push','Pull','Squat','Core','Bridge','Handstand'];
-function radar(setsArr,colors,perAxisColors){
+function radar(setsArr,colors,perAxisColors,tap){
   const W=340,H=300,cx=170,cy=150,R=88,N=6;
   const MX=EX.map(e=>stepCount(e.key)); // 種目ごとの最大段で割る（ブリッジは13段など）
   const ang=i=>(-90+i*60)*Math.PI/180;
@@ -2213,7 +2240,9 @@ function radar(setsArr,colors,perAxisColors){
     const[x,y]=pt(i,R);
     s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(200,162,76,.12)"/>`;
     const[lx,ly]=pt(i,R+28);
-    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="${perAxisColors?perAxisColors[i]:'#C8A24C'}" font-size="13" text-anchor="middle" font-family="sans-serif">${RADAR_LABELS[i]}</text>`;
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="${perAxisColors?perAxisColors[i]:'#C8A24C'}" font-size="13" text-anchor="middle" font-family="sans-serif"${tap?' text-decoration="underline"':''}>${RADAR_LABELS[i]}</text>`;
+    // SELFでは項目名をタップするとその種目の過去1週間の記録
+    if(tap) s+=`<rect x="${(lx-40).toFixed(1)}" y="${(ly-14).toFixed(1)}" width="80" height="30" fill="transparent" style="cursor:pointer" onclick="exWeekHistory('${EX[i].key}')"/>`;
   }
   setsArr.forEach((vals,si)=>{
     const col=colors[si];let p='';
