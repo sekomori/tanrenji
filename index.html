@@ -1157,7 +1157,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.13';
+const APP_VERSION='v0.21.14';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1711,7 +1711,7 @@ function restToday(){
 // 段ごとの見本の絵。STEP_ART に入れた段だけ images/step-種目-段-a|b.webp を使い、それ以外は種目の絵を出す
 const STEP_ART=new Set([]);   // 例：'push-1'
 // 1枚に動きを2〜3コマ並べた横長(3:2)の絵：images/step-種目-段2桁.webp
-const STEP_PIC=new Set(['push-1','push-2','push-3']);
+const STEP_PIC=new Set(Array.from({length:14},(_,k)=>'push-'+(k+1)));
 function stepWide(key,i){ return STEP_PIC.has(key+'-'+i); }
 function stepImg(key,i,ab){ if(stepWide(key,i)) return `images/step-${key}-${String(i).padStart(2,'0')}.webp`; return STEP_ART.has(key+'-'+i)?`images/step-${key}-${i}-${ab||'a'}.webp`:`images/ex-${key}.webp`; }
 function viewSteps(){
