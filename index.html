@@ -111,6 +111,8 @@
   .srow.current{ border:1.5px solid var(--shu);background:linear-gradient(145deg,rgba(229,72,46,.10),var(--card)); }
   .srow.current .nm{ font-size:18px; }
   .srow.current .th{ width:84px;height:84px; }
+  .srow .th.wide{ width:84px; }
+  .srow.current .th.wide{ width:126px; }
   .srow .txt{ flex:1;min-width:0; }
   .srow .n{ font-size:13px;color:var(--sub);letter-spacing:.1em;font-weight:700; }
   .srow .nm{ font-size:16px;font-weight:700;margin-top:3px;line-height:1.35; }
@@ -1155,7 +1157,7 @@ function microGoalCard(){
 }
 
 let currentAvatar='🧘';
-const APP_VERSION='v0.21.11';
+const APP_VERSION='v0.21.12';
 // 六種の修行のカテゴリ色（すごろくの円グラフ配色に使用）
 const CAT_COLORS={ push:'#D55E00', pull:'#E69F00', squat:'#56B4E9', core:'#F0E442', bridge:'#0072B2', hand:'#009E73' };
 let SUM=EX.reduce((a,e)=>a+e.cur,0);
@@ -1708,7 +1710,10 @@ function restToday(){
 /* ══ ステップ一覧 ══ */
 // 段ごとの見本の絵。STEP_ART に入れた段だけ images/step-種目-段-a|b.webp を使い、それ以外は種目の絵を出す
 const STEP_ART=new Set([]);   // 例：'push-1'
-function stepImg(key,i,ab){ return STEP_ART.has(key+'-'+i)?`images/step-${key}-${i}-${ab||'a'}.webp`:`images/ex-${key}.webp`; }
+// 1枚に動きを2〜3コマ並べた横長(3:2)の絵：images/step-種目-段2桁.webp
+const STEP_PIC=new Set(['push-1','push-2','push-3']);
+function stepWide(key,i){ return STEP_PIC.has(key+'-'+i); }
+function stepImg(key,i,ab){ if(stepWide(key,i)) return `images/step-${key}-${String(i).padStart(2,'0')}.webp`; return STEP_ART.has(key+'-'+i)?`images/step-${key}-${i}-${ab||'a'}.webp`:`images/ex-${key}.webp`; }
 function viewSteps(){
   const e=EX.find(x=>x.key===state.exKey);
   const col=CAT_COLORS[e.key];
@@ -1721,7 +1726,7 @@ function viewSteps(){
         <div class="n">${isDone?'✓ ':''}Lv.${i}${isCur?`<span class="badge" style="background:${col}">NOW</span>`:''} <span style="color:var(--faint);font-weight:500">· ${TYPE_LABEL[ty]}</span></div>
         <div class="nm">${nm}</div>
       </div>
-      <div class="th" style="${isCur?`border-color:${col}`:''}"><img src="${stepImg(e.key,i)}" alt="" style="width:86%;height:86%;object-fit:contain"></div>
+      <div class="th${stepWide(e.key,i)?' wide':''}" style="${isCur?`border-color:${col}`:''}"><img src="${stepImg(e.key,i)}" alt="" style="width:${stepWide(e.key,i)?94:86}%;height:${stepWide(e.key,i)?94:86}%;object-fit:contain"></div>
     </div>`;
   }
   return `
@@ -1744,8 +1749,8 @@ function viewRecord(){
   return `
   <div class="top"><div class="back" onclick="history.back()">‹</div>
     <div class="ttl">Lv.${i} / ${nm}<small>${e.name} · Clear: ${c.clearTxt}</small></div></div>
-  <div style="width:100%;aspect-ratio:1/1;max-height:300px;border-radius:16px;border:1px solid ${col}55;background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
-    <img src="${stepImg(e.key,i)}" alt="${nm}" style="position:absolute;inset:8%;width:84%;height:84%;object-fit:contain">
+  <div style="width:100%;aspect-ratio:${stepWide(e.key,i)?'3/2':'1/1'};max-height:300px;border-radius:16px;border:1px solid ${col}55;background:var(--sumi3);display:grid;place-items:center;gap:4px;cursor:pointer;margin-bottom:12px;position:relative" onclick="imgPopup('${e.key}',${i})">
+    <img src="${stepImg(e.key,i)}" alt="${nm}" style="position:absolute;inset:${stepWide(e.key,i)?'4%':'8%'};width:${stepWide(e.key,i)?92:84}%;height:${stepWide(e.key,i)?92:84}%;object-fit:contain">
     <div style="position:absolute;bottom:10px;right:12px;font-size:14px;color:${col}">Tap to enlarge</div>
   </div>
   <div style="text-align:center;font-size:15px;color:${col};margin-bottom:14px">🥋 ${tempoJP}</div>
@@ -3257,10 +3262,11 @@ function imgPopup(key,i){
   document.body.appendChild(d);
   const img=d.querySelector('#ifimg'), cap=d.querySelector('#ifcap');
   imgState='a';
-  const two=STEP_ART.has(key+'-'+i);
+  const two=STEP_ART.has(key+'-'+i)&&!stepWide(key,i);
+  if(stepWide(key,i)){ img.style.width='96%';img.style.maxWidth='720px';img.style.aspectRatio='3/2'; }
   function show(){img.innerHTML=`<img src="${stepImg(key,i,imgState)}" alt="" style="width:90%;height:90%;object-fit:contain">`;cap.textContent=`Lv. ${i} ${stepName(key,i)}`+(two?' · '+(imgState==='a'?'Start position':'End position'):'');}
   show();
-  flipTimer=setInterval(()=>{imgState=imgState==='a'?'b':'a';show();},900);
+  if(two) flipTimer=setInterval(()=>{imgState=imgState==='a'?'b':'a';show();},900);
 }
 function stopFlip(){if(flipTimer){clearInterval(flipTimer);flipTimer=null;}}
 
